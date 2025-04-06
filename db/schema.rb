@@ -29,9 +29,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_06_194728) do
     t.string "user"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "order_correios_id"
-    t.integer "id_nota_fiscal"
-    t.string "tracking"
     t.bigint "bling_order_id"
     t.bigint "bling_numero"
     t.string "external_reference"
