@@ -21,6 +21,6 @@ test:
 production:
   <<: *default
   host: <%= ENV['PRODUCTION_DATABASE_HOST'] %>
-  username: <%= ENV['PRODUCTION_DATABASE_USERNAME'] || 'quimicenter' %>
+  username: <%= ENV['PRODUCTION_DATABASE_USERNAME'] %>
   password: <%= ENV['PRODUCTION_DATABASE_PASSWORD'] %>
   database: <%= ENV['PRODUCTION_DATABASE_NAME'] || 'quimicenter_production' %>
