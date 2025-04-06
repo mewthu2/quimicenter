@@ -1,6 +1,6 @@
 # app/models/bling/oauth.rb
 module Bling
-  class Oauth
+  class OAuth
     class << self
       def authorization_url(state)
         "#{ENV['BLING_AUTH_URL']}?" + {
