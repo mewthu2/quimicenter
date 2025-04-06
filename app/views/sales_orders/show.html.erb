@@ -1,0 +1,122 @@
+<%# app/views/sales_orders/show.html.erb %>
+<div class="container-fluid mt-4">
+  <% if @order.nil? || @order['data'].nil? %>
+    <div class="alert alert-danger">
+      Pedido não encontrado ou não pôde ser carregado
+    </div>
+  <% else %>
+    <% order_data = @order['data'] %>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 mb-0 text-gray-800">Pedido #<%= order_data['numero'] %></h1>
+      <%= link_to "Voltar", sales_orders_path, class: "btn btn-secondary" %>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Informações do Pedido</h6>
+        <div>
+          <%= status_badge(order_data['situacao']) %>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5 class="mb-3">Dados do Cliente</h5>
+            <p><strong>Nome:</strong> <%= order_data.dig('contato', 'nome') %></p>
+            <p><strong>Documento:</strong> <%= format_document(order_data.dig('contato', 'numeroDocumento'), order_data.dig('contato', 'tipoPessoa')) %></p>
+            
+            <h5 class="mt-4 mb-3">Datas</h5>
+            <p><strong>Emissão:</strong> <%= format_date(order_data['data']) %></p>
+            <p><strong>Previsão Entrega:</strong> <%= format_date(order_data['dataPrevista']) %></p>
+          </div>
+          
+          <div class="col-md-6">
+            <h5 class="mb-3">Valores</h5>
+            <p><strong>Total Produtos:</strong> <%= format_currency(order_data['totalProdutos']) %></p>
+            <p><strong>Desconto:</strong> <%= format_currency(order_data.dig('desconto', 'valor')) %></p>
+            <p><strong>Frete:</strong> <%= format_currency(order_data.dig('transporte', 'frete') || 0) %></p>
+            <p><strong>Total Pedido:</strong> <span class="font-weight-bold"><%= format_currency(order_data['total']) %></span></p>
+            
+            <% if order_data['numeroPedidoCompra'].present? %>
+              <h5 class="mt-4 mb-3">Referência</h5>
+              <p><strong>Pedido Compra:</strong> <%= order_data['numeroPedidoCompra'] %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <% if order_data['observacoes'].present? %>
+          <div class="alert alert-info mb-4">
+            <h5 class="alert-heading">Observações</h5>
+            <%= simple_format(order_data['observacoes']) %>
+          </div>
+        <% end %>
+
+        <div class="row">
+          <div class="col-md-8">
+            <h4 class="mb-3">Itens do Pedido</h4>
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                  <tr>
+                    <th width="50%">Descrição</th>
+                    <th class="text-center">Qtd</th>
+                    <th class="text-center">Unidade</th>
+                    <th class="text-end">Unitário</th>
+                    <th class="text-end">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% order_data['itens'].each do |item| %>
+                    <tr>
+                      <td><%= item['descricao'] %></td>
+                      <td class="text-center"><%= item['quantidade'] %></td>
+                      <td class="text-center"><%= item['unidade'] %></td>
+                      <td class="text-end"><%= format_currency(item['valor']) %></td>
+                      <td class="text-end"><%= format_currency(item['valor'] * item['quantidade']) %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <% if order_data['parcelas'].present? %>
+              <h4 class="mb-3">Pagamento</h4>
+              <div class="card">
+                <div class="card-body">
+                  <% order_data['parcelas'].each do |parcela| %>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span><%= format_date(parcela['dataVencimento']) %></span>
+                      <span class="font-weight-bold"><%= format_currency(parcela['valor']) %></span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if order_data.dig('transporte', 'etiqueta').present? %>
+              <h4 class="mt-4 mb-3">Entrega</h4>
+              <div class="card">
+                <div class="card-body">
+                  <p>
+                    <%= order_data.dig('transporte', 'etiqueta', 'nome') %><br>
+                    <%= order_data.dig('transporte', 'etiqueta', 'endereco') %>, 
+                    <%= order_data.dig('transporte', 'etiqueta', 'numero') %><br>
+                    <%= order_data.dig('transporte', 'etiqueta', 'complemento').presence %><br>
+                    <%= order_data.dig('transporte', 'etiqueta', 'bairro') %><br>
+                    <%= order_data.dig('transporte', 'etiqueta', 'municipio') %> - 
+                    <%= order_data.dig('transporte', 'etiqueta', 'uf') %><br>
+                    CEP: <%= order_data.dig('transporte', 'etiqueta', 'cep') %>
+                  </p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,300 @@
+<%# app/views/purchase_orders/new.html.erb %>
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800">Novo Pedido de Compra</h1>
+      <p class="text-muted">Selecione as quantidades e fornecedores para cada item</p>
+    </div>
+    <div class="col-md-6 text-right">
+      <%= link_to "Cancelar", sales_orders_path, class: "btn btn-secondary" %>
+      <%= button_tag "Gerar Pedido", type: "submit", form: "new-purchase-order", class: "btn btn-primary" %>
+    </div>
+  </div>
+
+  <%= form_tag purchase_orders_path, id: "new-purchase-order" do %>
+    <%= hidden_field_tag "data", Date.today.strftime('%Y-%m-%d') %>
+    <%= hidden_field_tag "dataPrevista", (Date.today + 7.days).strftime('%Y-%m-%d') %>
+    <%= hidden_field_tag "situacao[valor]", '0' %>
+    <%= hidden_field_tag "observacoes", 'Pedido gerado automaticamente' %>
+    <%= hidden_field_tag "selected_orders", @selected_order_ids %>
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Pedidos Selecionados</h6>
+        <span class="badge bg-primary">
+          <%= @sales_orders.size %> pedido(s) selecionado(s)
+        </span>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+          <% @sales_orders.each do |order| %>
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1">Pedido #<%= order['numero'] %></h6>
+                  <small class="text-muted">
+                    Cliente: <%= order.dig('contato', 'nome') %> | 
+                    Total: <%= number_to_currency(order['total']) %> | 
+                    Data: <%= format_date(order['data']) %>
+                  </small>
+                </div>
+                <%= hidden_field_tag 'sales_order_ids[]', order['id'] %>
+                <%= link_to "Ver Itens", "#items-order-#{order['id']}", 
+                    class: "btn btn-sm btn-info toggle-items", 
+                    data: { order_id: order['id'] } %>
+              </div>
+              
+              <div id="items-order-<%= order['id'] %>" class="items-container mt-3" style="display: none;">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                      <tr>
+                        <th width="30%">Produto</th>
+                        <th class="text-center">Estoque Atual</th>
+                        <th class="text-center">Qtd Original</th>
+                        <th class="text-center">Qtd Sugerida</th>
+                        <th class="text-center">Qtd Compra</th>
+                        <th class="text-center">Fornecedor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% order['itens'].each do |item| %>
+                        <% 
+                          product = item['produto'] || {}
+                          stock = item['current_stock'] || 0
+                          suggested_qty = [item['quantidade'] - stock, 0].max
+                          has_specific_suppliers = item['product_suppliers'].present?
+                          suppliers = has_specific_suppliers ? item['product_suppliers'] : @suppliers_fallback
+                          preferred_supplier = suppliers.find { |s| s[:padrao] } || suppliers.first
+                          valor_item = item['valor'] || item['valorUnitario'] || '0.01'
+                        %>
+                        <tr>
+                          <td>
+                            <%= item['descricao'] %>
+                            <% if item['codigo'].present? %>
+                              <br><small class="text-muted">Código: <%= item['codigo'] %></small>
+                            <% end %>
+                            <small class="text-muted d-block">ID: <%= product['id'] %></small>
+                            
+                            <%# Campos ocultos com os dados necessários %>
+                            <%= hidden_field_tag "items[#{item['id']}][descricao]", item['descricao'] %>
+                            <%= hidden_field_tag "items[#{item['id']}][codigo]", item['codigo'] %>
+                            <%= hidden_field_tag "items[#{item['id']}][unidade]", 'UN' %>
+                            <%= hidden_field_tag "items[#{item['id']}][aliquotaIPI]", '0' %>
+                            <%= hidden_field_tag "items[#{item['id']}][descricaoDetalhada]", item['descricao'] %>
+                            <%= hidden_field_tag "items[#{item['id']}][valor]", valor_item %>
+                            <%= hidden_field_tag "items[#{item['id']}][produto][id]", product['id'] %>
+                          </td>
+                          <td class="text-center <%= stock < item['quantidade'] ? 'text-danger fw-bold' : 'text-success' %>">
+                            <%= stock %>
+                            <% if stock == 0 %>
+                              <small class="text-warning d-block">(sem estoque)</small>
+                            <% elsif stock < item['quantidade'] %>
+                              <small class="text-danger d-block">(estoque insuficiente)</small>
+                            <% end %>
+                          </td>
+                          <td class="text-center">
+                            <%= item['quantidade'] %>
+                          </td>
+                          <td class="text-center">
+                            <%= suggested_qty %>
+                          </td>
+                          <td class="text-center">
+                            <%= number_field_tag "items[#{item['id']}][quantity]", 
+                                suggested_qty, 
+                                min: 0, 
+                                step: 1, 
+                                class: "form-control text-center item-quantity" %>
+                          </td>
+                          <td>
+                            <% if suppliers.any? %>
+                              <div class="supplier-selection">
+                                <% if preferred_supplier %>
+                                  <div class="supplier-select-container">
+                                    <%= select_tag "items[#{item['id']}][supplier_id]", 
+                                        options_for_select(
+                                          suppliers.map { |s| [s[:nome], s[:id]] },
+                                          preferred_supplier[:id]
+                                        ),
+                                        include_blank: "Selecione...", 
+                                        class: "form-control supplier-select",
+                                        required: false %> <!-- Removido o required aqui -->
+                                    
+                                    <small class="text-muted d-block mt-1">
+                                      <% if has_specific_suppliers %>
+                                        Fornecedor preferencial: <%= preferred_supplier[:nome] %>
+                                      <% else %>
+                                        Fornecedor disponível: <%= preferred_supplier[:nome] %>
+                                      <% end %>
+                                    </small>
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2 toggle-supplier-input">
+                                      Usar outro fornecedor
+                                    </button>
+                                  </div>
+                                  
+                                  <div class="supplier-input-container" style="display: none;">
+                                    <%= text_field_tag "items[#{item['id']}][supplier_name]", 
+                                        nil,
+                                        class: "form-control supplier-input",
+                                        placeholder: "Digite o id do fornecedor",
+                                        required: false %> <!-- Removido o required aqui -->
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2 toggle-supplier-input">
+                                      Voltar para lista
+                                    </button>
+                                  </div>
+                                <% else %>
+                                  <%= text_field_tag "items[#{item['id']}][supplier_name]", 
+                                      nil,
+                                      class: "form-control supplier-input",
+                                      placeholder: "Digite o id do fornecedor",
+                                      required: false %> <!-- Removido o required aqui -->
+                                  <small class="text-muted d-block mt-1">
+                                    Nenhum fornecedor preferencial definido
+                                  </small>
+                                <% end %>
+                              </div>
+                            <% else %>
+                              <div class="alert alert-danger p-2 mb-0">
+                                Nenhum fornecedor cadastrado no sistema
+                              </div>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Alternar exibição dos itens
+    document.querySelectorAll('.toggle-items').forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const orderId = this.dataset.orderId;
+        const container = document.getElementById(`items-order-${orderId}`);
+        container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        
+        // Atualiza o texto do botão
+        this.textContent = container.style.display === 'none' ? 'Ver Itens' : 'Ocultar Itens';
+      });
+    });
+    
+    // Auto-selecionar fornecedor preferencial
+    document.querySelectorAll('.supplier-select').forEach(select => {
+      const preferredSupplierNote = select.nextElementSibling?.textContent;
+      if (preferredSupplierNote && preferredSupplierNote.includes('Fornecedor')) {
+        const preferredSupplierName = preferredSupplierNote.split(': ')[1];
+        Array.from(select.options).some(option => {
+          if (option.text.includes(preferredSupplierName)) {
+            option.selected = true;
+            return true;
+          }
+        });
+      }
+    });
+
+    // Alternar entre select e input de fornecedor
+    document.querySelectorAll('.toggle-supplier-input').forEach(button => {
+      button.addEventListener('click', function() {
+        const container = this.closest('.supplier-selection');
+        const selectContainer = container.querySelector('.supplier-select-container');
+        const inputContainer = container.querySelector('.supplier-input-container');
+        
+        if (selectContainer.style.display === 'none') {
+          selectContainer.style.display = 'block';
+          inputContainer.style.display = 'none';
+          // Limpa o input quando volta para o select
+          container.querySelector('.supplier-input').value = '';
+        } else {
+          selectContainer.style.display = 'none';
+          inputContainer.style.display = 'block';
+          // Limpa o select quando vai para o input
+          container.querySelector('.supplier-select').value = '';
+        }
+      });
+    });
+
+    // Validação antes de enviar o formulário
+    document.getElementById('new-purchase-order').addEventListener('submit', function(e) {
+      let isValid = true;
+      const errorMessages = [];
+      const invalidItems = new Set();
+
+      // Verificar quantidades
+      document.querySelectorAll('.item-quantity').forEach(input => {
+        const quantity = parseInt(input.value);
+        const row = input.closest('tr');
+        
+        if (isNaN(quantity) || quantity <= 0) {
+          isValid = false;
+          input.classList.add('is-invalid');
+          errorMessages.push('Quantidades devem ser maiores que zero');
+          invalidItems.add(row);
+        } else {
+          input.classList.remove('is-invalid');
+          invalidItems.delete(row);
+        }
+      });
+
+      // Verificar fornecedores
+      document.querySelectorAll('.supplier-selection').forEach(container => {
+        const row = container.closest('tr');
+        const select = container.querySelector('.supplier-select');
+        const input = container.querySelector('.supplier-input');
+        
+        const selectVisible = select && getComputedStyle(select.closest('.supplier-select-container')).display !== 'none';
+        const inputVisible = input && getComputedStyle(input.closest('.supplier-input-container')).display !== 'none';
+        
+        // Verifica se pelo menos um dos campos (select ou input) está preenchido
+        const hasSupplier = (selectVisible && select?.value) || (inputVisible && input?.value);
+        
+        if (!hasSupplier) {
+          isValid = false;
+          if (selectVisible && select) {
+            select.classList.add('is-invalid');
+          }
+          if (inputVisible && input) {
+            input.classList.add('is-invalid');
+          }
+          errorMessages.push('Informe um fornecedor para todos os itens');
+          invalidItems.add(row);
+        } else {
+          if (select) select.classList.remove('is-invalid');
+          if (input) input.classList.remove('is-invalid');
+        }
+      });
+
+      // Destacar linhas com problemas
+      document.querySelectorAll('tbody tr').forEach(row => {
+        if (invalidItems.has(row)) {
+          row.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+        } else {
+          row.style.backgroundColor = '';
+        }
+      });
+
+      if (!isValid) {
+        e.preventDefault();
+        const uniqueMessages = [...new Set(errorMessages)];
+        alert('Por favor, corrija os seguintes erros:\n\n' + uniqueMessages.join('\n'));
+        
+        // Rolar para o primeiro erro
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+  });
+</script>

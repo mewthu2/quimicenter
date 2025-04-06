@@ -1,0 +1,214 @@
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800">Contatos</h1>
+      <p class="text-muted">Lista de contatos cadastrados no sistema</p>
+    </div>
+    <div class="col-md-6 text-end">
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+        <i class="fas fa-filter"></i> Filtros Avançados
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros Rápidos -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <%= form_with url: contacts_path, method: :get, local: true, class: "form-inline" do |f| %>
+        <div class="form-group me-2 mb-2">
+          <%= f.text_field :pesquisa, class: "form-control", placeholder: "Nome, CPF/CNPJ, e-mail...", value: params[:pesquisa] %>
+        </div>
+        <div class="form-group me-2 mb-2">
+          <%= f.select :criterio, options_for_select(@criteria_options, params[:criterio]), {}, class: "form-control" %>
+        </div>
+        <div class="form-group me-2 mb-2">
+          <%= f.select :uf, options_for_select(@uf_options, params[:uf]), { include_blank: "Todos UF" }, class: "form-control" %>
+        </div>
+        <%= f.button "Filtrar", type: :submit, class: "btn btn-primary mb-2", name: nil %>
+        <%= link_to "Limpar", contacts_path, class: "btn btn-secondary mb-2 ms-2" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Tabela de Contatos -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">Resultados</h6>
+      <span class="badge bg-primary">
+        Página <%= @current_page %>
+      </span>
+    </div>
+    <div class="card-body">
+      <% if @contacts.empty? %>
+        <div class="alert alert-info">
+          Nenhum contato encontrado com os filtros atuais.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>CNPJ/CPF</th>
+                <th>Cidade/UF</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @contacts.each do |contact| %>
+                <tr>
+                  <td><%= contact['id'] %></td>
+                  <td><%= contact['nome'] %></td>
+                  <td>
+                    <span class="badge <%= contact['tipo'] == 'Fornecedor' ? 'bg-info' : 'bg-secondary' %>">
+                      <%= contact['tipo'] || 'Não especificado' %>
+                    </span>
+                  </td>
+                  <td><%= contact['cpf_cnpj'] %></td>
+                  <td>
+                    <% if contact['cidade'].present? || contact['uf'].present? %>
+                      <%= [contact['cidade'], contact['uf']].compact.join('/') %>
+                    <% end %>
+                  </td>
+                  <td><%= contact['telefone'] %></td>
+                  <td><%= contact['email'] %></td>
+                  <td>
+                    <span class="badge <%= contact['situacao'] == 'A' ? 'bg-success' : 'bg-secondary' %>">
+                      <%= contact['situacao'] == 'A' ? 'Ativo' : 'Inativo' %>
+                    </span>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginação Simplificada -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="mb-3">
+            Mostrando <%= (@current_page - 1) * @per_page + 1 %> a 
+            <%= [@current_page * @per_page, @total_contacts].min %> de 
+            <%= @total_contacts %> contatos
+          </div>
+          <div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm">
+                <% if @prev_page %>
+                  <li class="page-item">
+                    <%= link_to 'Anterior', contacts_path(request.query_parameters.merge(page: @prev_page)), class: 'page-link' %>
+                  </li>
+                <% else %>
+                  <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                  </li>
+                <% end %>
+
+                <li class="page-item active">
+                  <span class="page-link"><%= @current_page %></span>
+                </li>
+
+                <% if @next_page && @contacts.size >= @per_page %>
+                  <li class="page-item">
+                    <%= link_to 'Próximo', contacts_path(request.query_parameters.merge(page: @next_page)), class: 'page-link' %>
+                  </li>
+                <% else %>
+                  <li class="page-item disabled">
+                    <span class="page-link">Próximo</span>
+                  </li>
+                <% end %>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Modal de Filtros Avançados -->
+  <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="filterModalLabel">Filtros Avançados</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <%= form_with url: contacts_path, method: :get, local: true do |f| %>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :dataInclusaoInicial, "Data Inclusão Inicial", class: "form-label text-dark" %>
+                  <%= f.datetime_local_field :dataInclusaoInicial, class: "form-control", value: params[:dataInclusaoInicial] %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :dataInclusaoFinal, "Data Inclusão Final", class: "form-label text-dark" %>
+                  <%= f.datetime_local_field :dataInclusaoFinal, class: "form-control", value: params[:dataInclusaoFinal] %>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :dataAlteracaoInicial, "Data Alteração Inicial", class: "form-label text-dark" %>
+                  <%= f.datetime_local_field :dataAlteracaoInicial, class: "form-control", value: params[:dataAlteracaoInicial] %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :dataAlteracaoFinal, "Data Alteração Final", class: "form-label text-dark" %>
+                  <%= f.datetime_local_field :dataAlteracaoFinal, class: "form-control", value: params[:dataAlteracaoFinal] %>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :idTipoContato, "ID do Tipo de Contato", class: "form-label text-dark" %>
+                  <%= f.text_field :idTipoContato, class: "form-control", value: params[:idTipoContato] %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :idVendedor, "ID do Vendedor", class: "form-label text-dark" %>
+                  <%= f.text_field :idVendedor, class: "form-control", value: params[:idVendedor] %>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :telefone, "Telefone", class: "form-label text-dark" %>
+                  <%= f.text_field :telefone, class: "form-control", value: params[:telefone] %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :numeroDocumento, "CPF/CNPJ (sem pontuação)", class: "form-label text-dark" %>
+                  <%= f.text_field :numeroDocumento, class: "form-control", value: params[:numeroDocumento] %>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :idsContatos, "IDs dos Contatos (separados por vírgula)", class: "form-label text-dark" %>
+              <%= f.text_field :idsContatos, class: "form-control", value: params[:idsContatos] %>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <%= f.button "Aplicar Filtros", type: :submit, class: "btn btn-primary", name: nil %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800">Attempts</h1>
+    </div>
+    <div class="col-md-6 text-right">
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-filter"></i> Filtrar Status
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+          <li><a href="?filter=all" class="dropdown-item">Todos</a></li>
+          <li><a href="?filter=success" class="dropdown-item">Success</a></li>
+          <li><a href="?filter=fail" class="dropdown-item">Fail</a></li>
+          <li><a href="?filter=error" class="dropdown-item">Error</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">Lista de Attempts</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="attempts-datatable" class="table table-striped table-hover" style="width:100%">
+          <thead class="thead-light">
+            <tr>
+              <th>ID</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Mensagem</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @attempts.each do |attempt| %>
+              <tr>
+                <td><%= attempt.id %></td>
+                <td><%= attempt.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+                <td>
+                  <span class="badge <%= attempt.status == 'success' ? 'bg-success' : attempt.status == 'fail' ? 'bg-danger' : 'bg-warning' %>">
+                    <%= attempt.status.capitalize %>
+                  </span>
+                </td>
+                <td><%= attempt.message %></td>
+              
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('#attempts-datatable').DataTable({
+      responsive: true,
+      language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+      order: [[1, 'desc']]
+    });
+  });
+</script>

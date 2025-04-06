@@ -1,0 +1,198 @@
+<div class="container-fluid mt-4">
+  <%= form_tag new_purchase_order_path, method: :get, id: 'generate-purchase-form' do %>
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <h1 class="h3 mb-0 text-gray-800">Pedidos de Venda</h1>
+        <p class="text-muted">Lista de pedidos de venda cadastrados no sistema</p>
+      </div>
+      <div class="col-md-6 text-right">
+        <div class="btn-group" role="group">
+          <%= submit_tag "Gerar Pedido de Compra", class: "btn btn-primary", id: "generate-purchase-btn", disabled: true %>
+          <button type="button" class="btn btn-outline-primary" id="select-all-btn">
+            <i class="fas fa-check-double"></i> Selecionar Todos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Lista de Pedidos</h6>
+        <div>
+          <span class="badge bg-primary">
+            <%= @orders.size %> pedido(s) encontrado(s)
+          </span>
+          <span class="badge bg-success ms-2">
+            <%= @exported_attempts&.count || 0 %> exportado(s)
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if @orders.empty? %>
+          <div class="alert alert-info">
+            Nenhum pedido encontrado.
+          </div>
+        <% else %>
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="orders-table">
+              <thead class="table-light">
+                <tr>
+                  <th width="40px"></th>
+                  <th>Número</th>
+                  <th>Data</th>
+                  <th>Cliente</th>
+                  <th>Documento</th>
+                  <th class="text-end">Total</th>
+                  <th>Situação</th>
+                  <th>Exportado</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @orders.each do |order| %>
+                  <% 
+                    order_id = order['id'].to_s
+                    exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
+                  %>
+                  <tr class="<%= 'table-success' if exported_attempt %>">
+                    <td>
+                      <%= check_box_tag 'selected_orders[]', order['id'], false, 
+                          class: "order-checkbox form-check-input",
+                          disabled: exported_attempt.present?,
+                          data: { order_id: order_id } %>
+                    </td>
+                    <td><%= order['numero'] %></td>
+                    <td><%= format_date(order['data']) %></td>
+                    <td><%= order.dig('contato', 'nome') %></td>
+                    <td><%= format_document(order.dig('contato', 'numeroDocumento'), order.dig('contato', 'tipoPessoa')) %></td>
+                    <td class="text-end"><%= number_to_currency(order['total'], unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                    <td>
+                      <span class="badge <%= status_badge_class(order['situacao']) %>">
+                        <%= status_text(order['situacao']) %>
+                      </span>
+                    </td>
+                    <td>
+                      <% if exported_attempt %>
+                        <%= link_to "https://www.bling.com.br/pedidos.compra.php#edit/#{exported_attempt.bling_order_id}", 
+                            target: "_blank",
+                            class: "badge bg-success",
+                            title: "Ver pedido de compra no Bling (ID: #{exported_attempt.bling_order_id})",
+                            data: { toggle: "tooltip" } do %>
+                          <i class="fas fa-external-link-alt me-1"></i> <%= exported_attempt.bling_numero %>
+                        <% end %>
+                      <% else %>
+                        <span class="badge bg-secondary" data-toggle="tooltip" title="Aguardando exportação">
+                          <i class="fas fa-clock me-1"></i> Pendente
+                        </span>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <%= link_to sales_order_path(order['id']), class: "btn btn-info", title: "Visualizar", data: { toggle: "tooltip" } do %>
+                          <i class="fas fa-eye"></i>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm">
+                <% if @page.to_i > 1 %>
+                  <li class="page-item">
+                    <%= link_to 'Anterior', sales_orders_path(page: @page.to_i - 1, **@filters), class: 'page-link' %>
+                  </li>
+                <% else %>
+                  <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                  </li>
+                <% end %>
+
+                <li class="page-item active">
+                  <span class="page-link"><%= @page %></span>
+                </li>
+
+                <% if @orders.size >= 20 %>
+                  <li class="page-item">
+                    <%= link_to 'Próxima', sales_orders_path(page: @page.to_i + 1, **@filters), class: 'page-link' %>
+                  </li>
+                <% else %>
+                  <li class="page-item disabled">
+                    <span class="page-link">Próxima</span>
+                  </li>
+                <% end %>
+              </ul>
+            </nav>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Selection control logic
+    let allSelected = false;
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const generateBtn = document.getElementById('generate-purchase-btn');
+    const checkboxes = document.querySelectorAll('.order-checkbox:not(:disabled)');
+
+    selectAllBtn.addEventListener('click', function() {
+      allSelected = !allSelected;
+      checkboxes.forEach(checkbox => checkbox.checked = allSelected);
+      updateButtons();
+    });
+
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateButtons);
+    });
+
+    function updateButtons() {
+      const checkedCount = document.querySelectorAll('.order-checkbox:checked:not(:disabled)').length;
+      
+      // Update select all button
+      allSelected = checkedCount === checkboxes.length && checkboxes.length > 0;
+      selectAllBtn.innerHTML = `<i class="fas ${allSelected ? 'fa-times' : 'fa-check-double'}"></i> ${allSelected ? 'Desmarcar Todos' : 'Selecionar Todos'}`;
+      
+      // Update generate button
+      generateBtn.disabled = checkedCount === 0;
+    }
+
+    // Adiciona classe para linhas com checkbox marcado
+    document.getElementById('orders-table').addEventListener('change', function(e) {
+      if (e.target.classList.contains('order-checkbox')) {
+        const row = e.target.closest('tr');
+        if (e.target.checked) {
+          row.classList.add('table-primary');
+        } else {
+          row.classList.remove('table-primary');
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .table-success {
+    background-color: rgba(25, 135, 84, 0.1);
+  }
+  .table-primary {
+    background-color: rgba(13, 110, 253, 0.1);
+  }
+  .badge i {
+    margin-right: 3px;
+  }
+  a.badge:hover {
+    opacity: 0.9;
+    text-decoration: none;
+  }
+</style>

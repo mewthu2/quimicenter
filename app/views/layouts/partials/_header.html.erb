@@ -1,0 +1,52 @@
+<header class="app-header">
+  <div class="header-container">
+    <!-- Left side - Menu toggle and brand -->
+    <div class="header-left">
+      <button class="menu-toggle-btn d-md-none" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <div class="brand-container d-none d-md-flex">
+        <%= image_tag "admin/logo-320X118px.webp", width: '40%;', alt: "Quimicenter Logo", class: "img-fluid logo-image" %>
+      </div>
+    </div>
+    
+    <!-- Middle - Page title -->
+    <div class="header-middle">
+      <div class="page-title">
+        <%= yield :title %>
+      </div>
+    </div>
+    
+    <!-- Right side - User profile -->
+    <div class="header-right">
+      <div class="dropdown user-dropdown">
+        <button class="btn dropdown-toggle user-dropdown-btn" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="d-flex align-items-center">
+            <div class="user-avatar">
+              <%= image_tag 'admin/usuario-200x200', class: 'avatar-img' %>
+            </div>
+            <div class="user-info d-none d-md-block">
+              <span class="user-name"><%= current_user.name %></span>
+            </div>
+          </div>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <li class="dropdown-header">
+            <strong><%= current_user.name %></strong>
+            <p class="text-muted mb-0 small"><%= current_user.email %></p>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+           
+          </li>
+          <li>
+            <%= link_to destroy_user_session_path(current_user), class: 'dropdown-item text-danger', data: { turbo: :false } do %>
+              <i class="fas fa-sign-out-alt me-2"></i> Sair
+            <% end %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>

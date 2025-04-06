@@ -1,0 +1,195 @@
+<%# app/views/purchase_orders/index.html.erb %>
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800">Pedidos de Compra</h1>
+      <p class="text-muted mb-0">Lista de pedidos de compra cadastrados no sistema</p>
+    </div>
+    <div class="col-md-6 text-right">
+      <div class="dropdown d-inline-block mr-2">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-filter"></i> Filtrar por Situação
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+          <li><%= link_to "Todos", purchase_orders_path, class: "dropdown-item #{'active' if @filter == 'all'}" %></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><%= link_to "Rascunho", purchase_orders_path(filter: 'draft'), class: "dropdown-item #{'active' if @filter == 'draft'}" %></li>
+          <li><%= link_to "Verificado", purchase_orders_path(filter: 'verified'), class: "dropdown-item #{'active' if @filter == 'verified'}" %></li>
+          <li><%= link_to "Recebido", purchase_orders_path(filter: 'received'), class: "dropdown-item #{'active' if @filter == 'received'}" %></li>
+          <li><%= link_to "Parcialmente Recebido", purchase_orders_path(filter: 'partially_received'), class: "dropdown-item #{'active' if @filter == 'partially_received'}" %></li>
+          <li><%= link_to "Cancelado", purchase_orders_path(filter: 'canceled'), class: "dropdown-item #{'active' if @filter == 'canceled'}" %></li>
+        </ul>
+      </div>
+      <%= link_to new_purchase_order_path, class: "btn btn-success" do %>
+        <i class="fas fa-plus"></i> Novo Pedido
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+      <div class="mb-2 mb-md-0">
+        <h6 class="m-0 font-weight-bold text-primary">Lista de Pedidos</h6>
+        <% if @filter != 'all' %>
+          <small class="text-muted">Filtrado por: <%= t("purchase_orders.status.#{@filter}") %></small>
+        <% end %>
+      </div>
+      <div class="d-flex">
+        <div class="input-group input-group-sm mr-2" style="width: 200px;">
+          <input type="text" id="search-input" class="form-control" placeholder="Pesquisar...">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="search-clear">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline-secondary" id="refresh-table">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <%= link_to "#", id: "export-excel", class: "btn btn-sm btn-success mr-2" do %>
+            <i class="fas fa-file-excel"></i>
+          <% end %>
+          <%= link_to "#", id: "print-table", class: "btn btn-sm btn-primary" do %>
+            <i class="fas fa-print"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="purchase-orders-datatable" class="table table-striped table-hover table-bordered" style="width:100%">
+          <thead class="thead-light">
+            <tr>
+              <th width="70px">Número</th>
+              <th width="100px">Data</th>
+              <th width="100px">Previsão</th>
+              <th>Fornecedor</th>
+              <th class="text-end" width="120px">Produtos</th>
+              <th class="text-end" width="120px">Total</th>
+              <th width="120px">Situação</th>
+              <th class="text-center" width="100px">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @purchase_orders.each do |order| %>
+              <tr>
+                <td><%= order['numero'] %></td>
+                <td><%= format_date(order['data']) %></td>
+                <td><%= format_date(order['dataPrevista']) %></td>
+                <td>
+                  <% if order.dig('fornecedor', 'nome').present? %>
+                    <%= order.dig('fornecedor', 'nome') %>
+                  <% else %>
+                    <span class="text-muted">#<%= order.dig('fornecedor', 'id') %></span>
+                  <% end %>
+                </td>
+                <td class="text-end"><%= number_to_currency(order['totalProdutos'], unit: "R$ ", precision: 2) %></td>
+                <td class="text-end font-weight-bold"><%= number_to_currency(order['total'], unit: "R$ ", precision: 2) %></td>
+                <td>
+                  <span class="badge <%= purchase_status_badge_class(order['situacao']['valor']) %>">
+                    <%= purchase_status_text(order['situacao']['valor']) %>
+                  </span>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <%= link_to purchase_order_path(order['id']), class: "btn btn-info", title: "Visualizar", data: { toggle: "tooltip" } do %>
+                      <i class="fas fa-eye"></i>
+                    <% end %>
+                    <%= link_to edit_purchase_order_path(order['id']), class: "btn btn-warning", title: "Editar", data: { toggle: "tooltip" } do %>
+                      <i class="fas fa-edit"></i>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // Inicializa tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    const table = $('#purchase-orders-datatable').DataTable({
+      dom: '<"top"<"row"<"col-md-6"l><"col-md-6"f>>>rt<"bottom"<"row"<"col-md-6"i><"col-md-6"p>>><"clear">',
+      buttons: [
+        {
+          extend: 'excel',
+          text: '<i class="fas fa-file-excel"></i> Excel',
+          className: 'btn btn-success btn-sm',
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6],
+            format: {
+              body: function(data, row, column, node) {
+                // Remove ícones e formatação para exportação
+                return $(node).text().trim() || data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'print',
+          text: '<i class="fas fa-print"></i> Imprimir',
+          className: 'btn btn-primary btn-sm',
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6]
+          },
+          customize: function(win) {
+            $(win.document.body).find('table').addClass('table-bordered').css('font-size', '10pt');
+            $(win.document.body).find('tr:nth-child(odd) td').css('background-color','#f9f9f9');
+          }
+        }
+      ],
+      responsive: true,
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
+        search: "_INPUT_",
+        searchPlaceholder: "Pesquisar..."
+      },
+      columnDefs: [
+        { targets: [4, 5], className: 'text-end' },
+        { targets: 7, orderable: false, searchable: false, className: 'text-center' },
+        { targets: [1, 2], render: function(data) {
+            return data === 'N/A' ? '<span class="text-muted">N/A</span>' : data;
+          }
+        }
+      ],
+      order: [[1, 'desc']],
+      initComplete: function() {
+        // Vincula eventos aos botões externos
+        $('#export-excel').on('click', function() {
+          table.button('.buttons-excel').trigger();
+        });
+        
+        $('#print-table').on('click', function() {
+          table.button('.buttons-print').trigger();
+        });
+        
+        $('#refresh-table').on('click', function() {
+          table.ajax.reload();
+        });
+        
+        // Pesquisa personalizada
+        $('#search-input').keyup(function() {
+          table.search(this.value).draw();
+        });
+        
+        $('#search-clear').on('click', function() {
+          $('#search-input').val('');
+          table.search('').draw();
+        });
+      }
+    });
+    
+    // Ajusta a largura das colunas ao redimensionar a janela
+    $(window).on('resize', function() {
+      table.columns.adjust().responsive.recalc();
+    });
+  });
+</script>

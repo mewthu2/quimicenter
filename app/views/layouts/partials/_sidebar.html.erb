@@ -1,0 +1,143 @@
+<aside class="app-sidebar" id="sidebar">
+  <div class="sidebar-container">
+    <!-- Logo container - Only visible on mobile -->
+    <div class="sidebar-logo d-md-none">
+      <div class="logo-container text-center py-3">
+        <h1 class="brand-name text-white mb-0">Quimicenter</h1>
+        <button class="btn-close-sidebar d-md-none" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="divider"></div>
+    </div>
+    
+    <!-- Navigation menu -->
+    <div class="sidebar-menu">
+      <ul class="nav flex-column">
+        <!-- Home button -->
+        <li class="nav-item">
+          <a class="nav-link sidebar-link" href="/">
+            <i class="fas fa-home"></i>
+            <span class="menu-text">Home</span>
+          </a>
+        </li>
+
+        <!-- Dashboard dropdown -->
+        <li class="nav-item">
+          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-dashboard" role="button" aria-expanded="false" aria-controls="collase-dashboard">
+            <div class="d-flex align-items-center justify-content-between w-100">
+              <div>
+                <i class="fas fa-tachometer-alt"></i>
+                <span class="menu-text">Dashboard</span>
+              </div>
+              <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+          </a>
+          
+          <div class="collapse submenu" id="collase-dashboard">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <%= link_to dashboard_index_path, class: 'nav-link submenu-link' do %>
+                  <i class="fas fa-binoculars"></i>
+                  <span class="menu-text">Resumo dos pedidos</span>
+                <% end %>
+              </li>
+            </ul>
+          </div>
+        </li>
+        
+        <!-- Seção de Pedidos -->
+        <li class="nav-item">
+          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-orders" role="button" aria-expanded="false" aria-controls="collase-orders">
+            <div class="d-flex align-items-center justify-content-between w-100">
+              <div>
+                <i class="fas fa-shopping-cart"></i>
+                <span class="menu-text">Pedidos</span>
+              </div>
+              <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+          </a>
+          
+          <div class="collapse submenu" id="collase-orders">
+            <ul class="nav flex-column">
+              <!-- Pedidos de Venda -->
+              <li class="nav-item">
+                <%= link_to sales_orders_path, class: 'nav-link submenu-link' do %>
+                  <i class="fas fa-list-ul"></i>
+                  <span class="menu-text">Pedidos de Venda</span>
+                <% end %>
+              </li>
+              
+            </ul>
+          </div>
+        </li>
+
+        <!-- Nova Seção de Contatos -->
+        <li class="nav-item">
+          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-contacts" role="button" aria-expanded="false" aria-controls="collase-contacts">
+            <div class="d-flex align-items-center justify-content-between w-100">
+              <div>
+                <i class="fas fa-address-book"></i>
+                <span class="menu-text">Contatos</span>
+              </div>
+              <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+          </a>
+          
+          <div class="collapse submenu" id="collase-contacts">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <%= link_to contacts_path, class: 'nav-link submenu-link' do %>
+                  <i class="fas fa-users"></i>
+                  <span class="menu-text">Todos os Contatos</span>
+                <% end %>
+              </li>
+            </ul>
+          </div>
+        </li>
+        
+        <!-- Histórico de Tentativas dropdown -->
+        <li class="nav-item">
+          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-attempts" role="button" aria-expanded="false" aria-controls="collase-attempts">
+            <div class="d-flex align-items-center justify-content-between w-100">
+              <div>
+                <i class="fas fa-hourglass-half"></i>
+                <span class="menu-text">Histórico de Tentativas</span>
+              </div>
+              <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+          </a>
+          
+          <div class="collapse submenu" id="collase-attempts">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <%= link_to attempts_path, class: 'nav-link submenu-link' do %>
+                  <i class="fas fa-file-invoice"></i>
+                  <span class="menu-text">Integração pedidos fornecedor</span>
+                <% end %>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="divider"></div>
+      <div class="footer-content">
+        <small class="text-light">
+          Quimicenter <i class="fas fa-registered"></i> <%= Date.today.year %>
+        </small>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .divider-menu {
+    height: 1px;
+    margin: 0.5rem 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+</style>
