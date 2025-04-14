@@ -62,7 +62,7 @@ class SyncSaleOrdersJob < ApplicationJob
     end
   end
 
-  def fetch_orders_page(page, filters)
+ def fetch_orders_page(page, filters)
     retries = 0
     begin
       Bling::Orders.all(page, filters)
@@ -70,7 +70,7 @@ class SyncSaleOrdersJob < ApplicationJob
       retries += 1
       if retries <= MAX_RETRIES
         sleep RETRY_DELAY
-        retry
+        retry 
       else
         raise "Falha ao buscar página #{page} de pedidos: #{e.message}"
       end

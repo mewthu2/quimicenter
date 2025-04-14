@@ -9,8 +9,16 @@
   padding: 15px 20px;
 }
 .wrapper > section:not(.sem-menu) {
-  margin-left: 250px;
+  margin-left: 280px;
 }
+
+@media (max-width: 768px) {
+  .wrapper > section:not(.sem-menu) {
+    margin-left: 0;
+    margin-top: 4em;
+  }
+}
+
 @media only screen and (min-width: 768px) {
   .wrapper > section {
     margin-top: 45px;

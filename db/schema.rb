@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_14_032010) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_14_053154) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -76,6 +76,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_14_032010) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "produto_estoque"
+    t.boolean "checked_order", default: false
+    t.boolean "ignore_order", default: false
+    t.string "quantity_order"
     t.index ["produto_codigo"], name: "index_sale_order_items_on_produto_codigo"
     t.index ["produto_id"], name: "index_sale_order_items_on_produto_id"
     t.index ["sale_order_id"], name: "index_sale_order_items_on_sale_order_id"

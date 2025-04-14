@@ -57,4 +57,11 @@ Rails.application.routes.draw do
       get :suppliers  # Rota específica para fornecedores
     end
   end
+
+  resources :sale_order_items do
+    member do
+      post :assign_supplier
+      patch :update_item
+    end
+  end
 end

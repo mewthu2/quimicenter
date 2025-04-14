@@ -4,7 +4,7 @@ class SaleOrderItemSupply < ApplicationRecord
   validates :supplier_id, presence: true, uniqueness: { scope: :sale_order_item_id }
 
   def self.sync_from_bling(sale_order_item, product_id)
-    suppliers_data = Bling::ProductSuppliers.list(product_id: product_id)['data'] || []
+    suppliers_data = Bling::ProductSuppliers.list(product_id:)['data'] || []
 
     suppliers_data.each do |supplier_data|
       next unless supplier_data['fornecedor'] && supplier_data['fornecedor']['id'].present?

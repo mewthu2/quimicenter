@@ -80,7 +80,7 @@ class SaleOrder < ApplicationRecord
       item.assign_attributes(
         sale_order_id: order.id,
         produto_id: item_data.dig('produto', 'id'),
-        produto_codigo: item_data.dig('produto', 'codigo'),
+        produto_codigo: item_data['codigo'],
         produto_descricao: item_data['descricao'],
         produto_estoque: stock,
         quantidade: item_data['quantidade'],
@@ -97,7 +97,7 @@ class SaleOrder < ApplicationRecord
     end
   end
 
-  def current_stock_for(product_id)
+  def self.current_stock_for(product_id)
     return 0 unless product_id.present?
 
     begin
