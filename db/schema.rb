@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_06_194728) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_14_032010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -46,6 +46,66 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_06_194728) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "sale_order_item_supplies", force: :cascade do |t|
+    t.bigint "sale_order_item_id", null: false
+    t.bigint "supplier_id", null: false
+    t.string "supplier_name"
+    t.string "supplier_type"
+    t.boolean "default", default: false
+    t.datetime "last_sync_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sale_order_item_id", "supplier_id"], name: "index_item_supplier_unique", unique: true
+    t.index ["sale_order_item_id"], name: "index_sale_order_item_supplies_on_sale_order_item_id"
+    t.index ["supplier_id"], name: "index_sale_order_item_supplies_on_supplier_id"
+  end
+
+  create_table "sale_order_items", force: :cascade do |t|
+    t.bigint "sale_order_id", null: false
+    t.bigint "produto_id"
+    t.string "produto_codigo"
+    t.string "produto_descricao"
+    t.decimal "quantidade", precision: 15, scale: 4
+    t.decimal "valor_unitario", precision: 15, scale: 2
+    t.decimal "valor_total", precision: 15, scale: 2
+    t.string "unidade"
+    t.decimal "desconto", precision: 15, scale: 2
+    t.decimal "aliquota_ipi", precision: 15, scale: 2
+    t.string "descricao_detalhada"
+    t.jsonb "dados_adicionais"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "produto_estoque"
+    t.index ["produto_codigo"], name: "index_sale_order_items_on_produto_codigo"
+    t.index ["produto_id"], name: "index_sale_order_items_on_produto_id"
+    t.index ["sale_order_id"], name: "index_sale_order_items_on_sale_order_id"
+  end
+
+  create_table "sale_orders", force: :cascade do |t|
+    t.bigint "bling_id", null: false
+    t.string "numero"
+    t.string "numero_loja"
+    t.date "data"
+    t.date "data_saida"
+    t.date "data_prevista"
+    t.decimal "total_produtos", precision: 15, scale: 2
+    t.decimal "total", precision: 15, scale: 2
+    t.bigint "contato_id"
+    t.string "contato_nome"
+    t.string "contato_tipo_pessoa"
+    t.string "contato_numero_documento"
+    t.integer "situacao_id"
+    t.string "situacao_valor"
+    t.bigint "loja_id"
+    t.datetime "last_sync_at", precision: nil
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bling_id"], name: "index_sale_orders_on_bling_id", unique: true
+    t.index ["data"], name: "index_sale_orders_on_data"
+    t.index ["numero"], name: "index_sale_orders_on_numero"
+    t.index ["situacao_id"], name: "index_sale_orders_on_situacao_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "phone"
@@ -71,4 +131,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_06_194728) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
+
+  add_foreign_key "sale_order_item_supplies", "sale_order_items"
+  add_foreign_key "sale_order_items", "sale_orders"
 end

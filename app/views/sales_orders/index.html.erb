@@ -1,133 +1,241 @@
 <div class="container-fluid mt-4">
   <%= form_tag new_purchase_order_path, method: :get, id: 'generate-purchase-form' do %>
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <h1 class="h3 mb-0 text-gray-800">Pedidos de Venda</h1>
-        <p class="text-muted">Lista de pedidos de venda cadastrados no sistema</p>
+    <!-- Header Section -->
+    <div class="row mb-4 align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-shopping-cart fa-2x text-primary me-3"></i>
+          <div>
+            <h1 class="h3 mb-1 text-gray-800">Pedidos de Venda</h1>
+            <p class="text-muted mb-0">Gerencie e exporte pedidos de venda para pedidos de compra</p>
+          </div>
+        </div>
       </div>
-      <div class="col-md-6 text-right">
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
         <div class="btn-group" role="group">
-          <%= submit_tag "Gerar Pedido de Compra", class: "btn btn-primary", id: "generate-purchase-btn", disabled: true %>
+          <%= submit_tag "Gerar Pedido de Compra", class: "btn btn-primary px-4", id: "generate-purchase-btn", disabled: true %>
           <button type="button" class="btn btn-outline-primary" id="select-all-btn">
-            <i class="fas fa-check-double"></i> Selecionar Todos
+            <i class="fas fa-check-double me-1"></i> Selecionar Todos
           </button>
         </div>
       </div>
     </div>
 
-    <div class="card shadow mb-4">
-      <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Lista de Pedidos</h6>
-        <div>
-          <span class="badge bg-primary">
-            <%= @orders.size %> pedido(s) encontrado(s)
-          </span>
-          <span class="badge bg-success ms-2">
-            <%= @exported_attempts&.count || 0 %> exportado(s)
-          </span>
+    <!-- Filtros Section -->
+    <div class="card shadow mb-4 border-top-primary">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-filter me-2"></i>Filtros Avançados
+        </h6>
+        <div class="d-flex">
+          <%= submit_tag "Aplicar", class: "btn btn-sm btn-primary me-2" %>
+          <%= link_to "Limpar", sales_orders_path, class: "btn btn-sm btn-outline-secondary" %>
         </div>
       </div>
-      <div class="card-body">
+      <div class="card-body pt-3 pb-1">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= date_field_tag :data_inicial, params[:data_inicial], class: "form-control", placeholder: " " %>
+              <%= label_tag :data_inicial, "Data Inicial" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= date_field_tag :data_final, params[:data_final], class: "form-control", placeholder: " " %>
+              <%= label_tag :data_final, "Data Final" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= select_tag :situacao, options_for_select(
+                SaleOrder.situacao_ids.map { |k, v| [k.to_s.titleize, v] },
+                params[:situacao]
+              ), include_blank: "Todas", class: "form-select", id: "situacaoSelect" %>
+              <%= label_tag :situacao, "Situação", for: "situacaoSelect" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= text_field_tag :numero, params[:numero], class: "form-control", placeholder: " " %>
+              <%= label_tag :numero, "Número do Pedido" %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card bg-light border-0 shadow-sm">
+          <div class="card-body py-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+              <div class="d-flex align-items-center me-3 mb-1 mb-md-0">
+                <span class="badge bg-primary rounded-pill me-2">
+                  <i class="fas fa-box-open me-1"></i>
+                  <%= @orders.size %> pedido(s)
+                </span>
+                <span class="badge bg-success rounded-pill me-2">
+                  <i class="fas fa-check-circle me-1"></i>
+                  <%= @exported_attempts&.count || 0 %> exportado(s)
+                </span>
+                <span class="badge bg-warning text-dark rounded-pill">
+                  <i class="fas fa-clock me-1"></i>
+                  <%= @orders.size - (@exported_attempts&.count || 0) %> pendente(s)
+                </span>
+              </div>
+              <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>
+                Última atualização: <%= Time.now.strftime("%d/%m/%Y %H:%M") %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Pedidos -->
+    <div class="card shadow mb-4 border-0">
+      <div class="card-header py-3 d-flex flex-column flex-md-row justify-content-between align-items-center bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-list-ol me-2"></i>Pedidos por Fornecedor
+        </h6>
+        <div class="mt-2 mt-md-0">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+            <input type="text" id="orderSearch" class="form-control" placeholder="Pesquisar pedidos...">
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-body p-0">
         <% if @orders.empty? %>
-          <div class="alert alert-info">
-            Nenhum pedido encontrado.
+          <div class="text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+            <h5 class="text-gray-800">Nenhum pedido encontrado</h5>
+            <p class="text-muted">Tente ajustar seus filtros de busca</p>
+            <%= link_to "Limpar filtros", sales_orders_path, class: "btn btn-sm btn-outline-primary" %>
           </div>
         <% else %>
-          <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="orders-table">
-              <thead class="table-light">
-                <tr>
-                  <th width="40px"></th>
-                  <th>Número</th>
-                  <th>Data</th>
-                  <th>Cliente</th>
-                  <th>Documento</th>
-                  <th class="text-end">Total</th>
-                  <th>Situação</th>
-                  <th>Exportado</th>
-                  <th class="text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @orders.each do |order| %>
-                  <% 
-                    order_id = order['id'].to_s
-                    exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
-                  %>
-                  <tr class="<%= 'table-success' if exported_attempt %>">
-                    <td>
-                      <%= check_box_tag 'selected_orders[]', order['id'], false, 
-                          class: "order-checkbox form-check-input",
-                          disabled: exported_attempt.present?,
-                          data: { order_id: order_id } %>
-                    </td>
-                    <td><%= order['numero'] %></td>
-                    <td><%= format_date(order['data']) %></td>
-                    <td><%= order.dig('contato', 'nome') %></td>
-                    <td><%= format_document(order.dig('contato', 'numeroDocumento'), order.dig('contato', 'tipoPessoa')) %></td>
-                    <td class="text-end"><%= number_to_currency(order['total'], unit: "R$ ", separator: ",", delimiter: ".") %></td>
-                    <td>
-                      <span class="badge <%= status_badge_class(order['situacao']) %>">
-                        <%= status_text(order['situacao']) %>
-                      </span>
-                    </td>
-                    <td>
-                      <% if exported_attempt %>
-                        <%= link_to "https://www.bling.com.br/pedidos.compra.php#edit/#{exported_attempt.bling_order_id}", 
-                            target: "_blank",
-                            class: "badge bg-success",
-                            title: "Ver pedido de compra no Bling (ID: #{exported_attempt.bling_order_id})",
-                            data: { toggle: "tooltip" } do %>
-                          <i class="fas fa-external-link-alt me-1"></i> <%= exported_attempt.bling_numero %>
-                        <% end %>
-                      <% else %>
-                        <span class="badge bg-secondary" data-toggle="tooltip" title="Aguardando exportação">
-                          <i class="fas fa-clock me-1"></i> Pendente
-                        </span>
-                      <% end %>
-                    </td>
-                    <td class="text-center">
-                      <div class="btn-group btn-group-sm" role="group">
-                        <%= link_to sales_order_path(order['id']), class: "btn btn-info", title: "Visualizar", data: { toggle: "tooltip" } do %>
-                          <i class="fas fa-eye"></i>
-                        <% end %>
+          <div class="accordion" id="suppliersAccordion">
+            <% @orders_by_supplier.each_with_index do |(supplier, supplier_orders), index| %>
+              <div class="accordion-item border-bottom">
+                <h2 class="accordion-header" id="supplierHeading<%= index %>">
+                  <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="flex-grow-1">
+                        <div class="d-flex align-items-center">
+                          <div class="me-3">
+                            <span class="badge bg-primary-soft text-primary rounded-pill"><%= supplier_orders.size %></span>
+                          </div>
+                          <h5 class="mb-0"><%= supplier.presence || "Fornecedor não identificado" %></h5>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination -->
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <nav aria-label="Page navigation">
-              <ul class="pagination pagination-sm">
-                <% if @page.to_i > 1 %>
-                  <li class="page-item">
-                    <%= link_to 'Anterior', sales_orders_path(page: @page.to_i - 1, **@filters), class: 'page-link' %>
-                  </li>
-                <% else %>
-                  <li class="page-item disabled">
-                    <span class="page-link">Anterior</span>
-                  </li>
-                <% end %>
-
-                <li class="page-item active">
-                  <span class="page-link"><%= @page %></span>
-                </li>
-
-                <% if @orders.size >= 20 %>
-                  <li class="page-item">
-                    <%= link_to 'Próxima', sales_orders_path(page: @page.to_i + 1, **@filters), class: 'page-link' %>
-                  </li>
-                <% else %>
-                  <li class="page-item disabled">
-                    <span class="page-link">Próxima</span>
-                  </li>
-                <% end %>
-              </ul>
-            </nav>
+                      <div class="text-muted small">
+                        Total: <%= number_to_currency(supplier_orders.sum(&:total), unit: "R$ ") %>
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+                <div id="supplierCollapse<%= index %>" class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" aria-labelledby="supplierHeading<%= index %>" data-bs-parent="#suppliersAccordion">
+                  <div class="accordion-body p-0">
+                    <% supplier_orders.each do |order| %>
+                      <% 
+                        order_id = order.bling_id.to_s
+                        exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
+                      %>
+                      <div class="card mb-3 border-0 shadow-sm <%= exported_attempt ? 'border-start-success border-start-3' : 'border-start-warning border-start-3' %>">
+                        <div class="card-header <%= exported_attempt ? 'bg-success-soft' : 'bg-light' %> py-2">
+                          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                            <div class="mb-2 mb-md-0">
+                              <div class="d-flex align-items-center">
+                                <h5 class="mb-0 me-3">
+                                  Pedido #<%= order.numero %>
+                                  <% if exported_attempt %>
+                                    <span class="badge bg-success rounded-pill ms-2">
+                                      <i class="fas fa-check-circle me-1"></i> Exportado
+                                    </span>
+                                  <% else %>
+                                    <span class="badge bg-warning text-dark rounded-pill ms-2">
+                                      <i class="fas fa-clock me-1"></i> Pendente
+                                    </span>
+                                  <% end %>
+                                </h5>
+                              </div>
+                              <div class="small text-muted">
+                                <span class="me-2"><i class="fas fa-calendar-alt me-1"></i> <%= format_date(order.data) %></span>
+                                <span class="me-2"><i class="fas fa-user me-1"></i> <%= order.contato_nome %></span>
+                                <span><i class="fas fa-dollar-sign me-1"></i> <%= number_to_currency(order.total, unit: "R$ ") %></span>
+                              </div>
+                            </div>
+                            <div class="d-flex">
+                              <% if exported_attempt %>
+                                <%= link_to "https://www.bling.com.br/pedidos.compra.php#edit/#{exported_attempt.bling_order_id}", 
+                                    target: "_blank",
+                                    class: "btn btn-sm btn-success me-2",
+                                    title: "Ver pedido de compra no Bling (ID: #{exported_attempt.bling_order_id})",
+                                    data: { toggle: "tooltip" } do %>
+                                  <i class="fas fa-external-link-alt me-1"></i> <%= exported_attempt.bling_numero %>
+                                <% end %>
+                              <% end %>
+                              <%= link_to sales_order_path(order), class: "btn btn-sm btn-outline-primary me-2", title: "Visualizar detalhes" do %>
+                                <i class="fas fa-eye me-1"></i> Detalhes
+                              <% end %>
+                              <%= link_to "https://www.bling.com.br/pedidos.venda.php#edit/#{order.bling_id}", 
+                                  target: "_blank", 
+                                  class: "btn btn-sm btn-outline-secondary", 
+                                  title: "Ver no Bling" do %>
+                                <i class="fas fa-external-link-alt me-1"></i> Bling
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="card-body py-2">
+                          <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                              <thead class="table-light">
+                                <tr>
+                                  <th width="15%">Código</th>
+                                  <th width="30%">Descrição</th>
+                                  <th width="10%" class="text-end">Qtd.</th>
+                                  <th width="10%" class="text-end">Estoque</th>
+                                  <th width="15%" class="text-end">Diferença</th>
+                                  <th width="20%">Atualizado em</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% order.sale_order_items.each do |item| %>
+                                  <tr class="<%= 'table-warning' if item.produto_estoque.to_i < item.quantidade.to_i %>">
+                                    <td><code><%= item.produto_codigo %></code></td>
+                                    <td><%= truncate(item.produto_descricao, length: 50) %></td>
+                                    <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
+                                    <td class="text-end"><%= item.produto_estoque.to_i %></td>
+                                    <td class="text-end">
+                                      <span class="<%= item.produto_estoque.to_i < item.quantidade.to_i ? 'text-danger' : 'text-success' %>">
+                                        <%= item.produto_estoque.to_i - item.quantidade.to_i %>
+                                      </span>
+                                      <% if item.produto_estoque.to_i < item.quantidade.to_i %>
+                                        <span class="badge bg-danger-soft text-danger ms-1">Falta</span>
+                                      <% elsif item.produto_estoque.to_i == item.quantidade.to_i %>
+                                        <span class="badge bg-warning-soft text-dark ms-1">Exato</span>
+                                      <% else %>
+                                        <span class="badge bg-success-soft text-success ms-1">Sobra</span>
+                                      <% end %>
+                                    </td>
+                                    <td><%= item.updated_at.strftime('%d/%m/%Y %H:%M') %></td>
+                                  </tr>
+                                <% end %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>
@@ -135,11 +243,108 @@
   <% end %>
 </div>
 
+<style>
+  /* Custom Styles */
+  :root {
+    --primary-soft: rgba(13, 110, 253, 0.1);
+    --success-soft: rgba(25, 135, 84, 0.1);
+    --danger-soft: rgba(220, 53, 69, 0.1);
+    --warning-soft: rgba(255, 193, 7, 0.1);
+  }
+  
+  .bg-primary-soft {
+    background-color: var(--primary-soft);
+  }
+  
+  .bg-success-soft {
+    background-color: var(--success-soft);
+  }
+  
+  .bg-danger-soft {
+    background-color: var(--danger-soft);
+  }
+  
+  .bg-warning-soft {
+    background-color: var(--warning-soft);
+  }
+  
+  .accordion-button:not(.collapsed) {
+    background-color: white;
+    box-shadow: none;
+    color: inherit;
+  }
+  
+  .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+  }
+  
+  .accordion-item {
+    border-radius: 0.35rem !important;
+    margin-bottom: 0.5rem;
+  }
+  
+  .table-sm td, .table-sm th {
+    padding: 0.5rem;
+  }
+  
+  .border-top-primary {
+    border-top: 3px solid #0d6efd !important;
+  }
+  
+  .card-header h5 {
+    font-size: 1rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .card-header .btn {
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+    
+    .accordion-button {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
+    // Search functionality
+    $('#orderSearch').on('keyup', function() {
+      const searchText = $(this).val().toLowerCase();
+      
+      $('.accordion-item').each(function() {
+        const supplierText = $(this).find('.accordion-button h5').text().toLowerCase();
+        let hasVisibleOrders = false;
+        
+        $(this).find('.card').each(function() {
+          const orderText = $(this).text().toLowerCase();
+          if (orderText.includes(searchText) || supplierText.includes(searchText)) {
+            $(this).show();
+            hasVisibleOrders = true;
+          } else {
+            $(this).hide();
+          }
+        });
+        
+        if (hasVisibleOrders || searchText === '') {
+          $(this).show();
+          // Open the accordion if it contains matches
+          if (searchText !== '' && $(this).find('.accordion-collapse').hasClass('collapse')) {
+            $(this).find('.accordion-button').removeClass('collapsed');
+            $(this).find('.accordion-collapse').addClass('show');
+          }
+        } else {
+          $(this).hide();
+        }
+      });
+    });
+
     // Selection control logic
     let allSelected = false;
     const selectAllBtn = document.getElementById('select-all-btn');
@@ -150,49 +355,43 @@
       allSelected = !allSelected;
       checkboxes.forEach(checkbox => checkbox.checked = allSelected);
       updateButtons();
+      
+      // Update row highlighting
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const checkbox = row.querySelector('.order-checkbox');
+        if (checkbox && !checkbox.disabled) {
+          if (allSelected) {
+            row.classList.add('table-primary');
+          } else {
+            row.classList.remove('table-primary');
+          }
+        }
+      });
     });
 
     checkboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', updateButtons);
+      checkbox.addEventListener('change', function() {
+        updateButtons();
+        const row = this.closest('tr');
+        if (this.checked) {
+          row.classList.add('table-primary');
+        } else {
+          row.classList.remove('table-primary');
+        }
+      });
     });
 
     function updateButtons() {
       const checkedCount = document.querySelectorAll('.order-checkbox:checked:not(:disabled)').length;
       
       // Update select all button
-      allSelected = checkedCount === checkboxes.length && checkboxes.length > 0;
-      selectAllBtn.innerHTML = `<i class="fas ${allSelected ? 'fa-times' : 'fa-check-double'}"></i> ${allSelected ? 'Desmarcar Todos' : 'Selecionar Todos'}`;
+      const enabledCheckboxes = document.querySelectorAll('.order-checkbox:not(:disabled)');
+      allSelected = checkedCount === enabledCheckboxes.length && enabledCheckboxes.length > 0;
+      selectAllBtn.innerHTML = `<i class="fas ${allSelected ? 'fa-times' : 'fa-check-double'} me-1"></i> ${allSelected ? 'Desmarcar Todos' : 'Selecionar Todos'}`;
       
       // Update generate button
       generateBtn.disabled = checkedCount === 0;
+      generateBtn.textContent = checkedCount > 0 ? `Gerar Pedido (${checkedCount})` : 'Gerar Pedido de Compra';
     }
-
-    // Adiciona classe para linhas com checkbox marcado
-    document.getElementById('orders-table').addEventListener('change', function(e) {
-      if (e.target.classList.contains('order-checkbox')) {
-        const row = e.target.closest('tr');
-        if (e.target.checked) {
-          row.classList.add('table-primary');
-        } else {
-          row.classList.remove('table-primary');
-        }
-      }
-    });
   });
 </script>
-
-<style>
-  .table-success {
-    background-color: rgba(25, 135, 84, 0.1);
-  }
-  .table-primary {
-    background-color: rgba(13, 110, 253, 0.1);
-  }
-  .badge i {
-    margin-right: 3px;
-  }
-  a.badge:hover {
-    opacity: 0.9;
-    text-decoration: none;
-  }
-</style>

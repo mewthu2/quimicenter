@@ -65,7 +65,6 @@ module Bling
       parse_response(response)
     end
 
-
     def get(id)
       response = make_request(:get, "/pedidos/vendas/#{id}")
       parse_response(response)

@@ -155,7 +155,7 @@ class PurchaseOrdersController < ApplicationController
     return [] unless product_id.present?
 
     begin
-      response = Bling::ProductSuppliers.list(product_id: product_id)
+      response = Bling::ProductSuppliers.list(product_id:)
       supplier_data = response['data'] || []
 
       supplier_data.map do |supplier|

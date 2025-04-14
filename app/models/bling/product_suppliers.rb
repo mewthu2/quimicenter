@@ -2,19 +2,19 @@
 module Bling
   class ProductSuppliers < Base
     # Como Usar:
-    
+
     # 1. Listar fornecedores de um produto
     # Bling::ProductSuppliers.list(product_id: 12345)
-    
+
     # 2. Listar com paginação e limite
     # Bling::ProductSuppliers.list(product_id: 12345, page: 2, limit: 50)
-    
+
     # 3. Buscar fornecedor específico de um produto
     # Bling::ProductSuppliers.find(product_id: 12345, supplier_id: 67890)
-    
+
     # 4. Associar fornecedor a um produto
     # Bling::ProductSuppliers.create(product_id: 12345, supplier_id: 67890, cost_price: 50.0)
-    
+
     # 5. Remover fornecedor de um produto
     # Bling::ProductSuppliers.remove(product_id: 12345, supplier_id: 67890)
 
