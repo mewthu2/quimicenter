@@ -68,7 +68,7 @@ module Bling
 
       Rails.logger.info "[Bling] Enviando pedido: #{payload.to_json}"
 
-      response = make_request(:post, "/pedidos/compras", payload)
+      response = make_request(:post, '/pedidos/compras', payload)
       parsed_response = parse_response(response)
 
       if successful_response?(response, parsed_response)
@@ -112,22 +112,21 @@ module Bling
 
     def successful_response?(response, parsed_response)
       (response.code == 201 || response.code == 200) &&
-      (parsed_response['id'].present? || 
-       (parsed_response['data'].is_a?(Hash) && parsed_response['data']['id'].present?))
+      (parsed_response['id'].present? || (parsed_response['data'].is_a?(Hash) && parsed_response['data']['id'].present?))
     end
 
     def build_success_response(parsed_response)
       success_data = if parsed_response['data'].is_a?(Hash)
-        {
-          id: parsed_response['data']['id'],
-          numero: parsed_response['data']['numero'] || parsed_response['data']['number']
-        }
-      else
-        {
-          id: parsed_response['id'],
-          numero: parsed_response['numero'] || parsed_response['number']
-        }
-      end
+                        {
+                          id: parsed_response['data']['id'],
+                          numero: parsed_response['data']['numero'] || parsed_response['data']['number']
+                        }
+                     else
+                        {
+                          id: parsed_response['id'],
+                          numero: parsed_response['numero'] || parsed_response['number']
+                        }
+                     end
 
       {
         status: 'success',

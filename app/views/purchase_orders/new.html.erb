@@ -78,7 +78,6 @@
                               <% end %>
                               <small class="text-muted d-block">ID: <%= product['id'] %></small>
                               
-                              <%# Campos ocultos com os dados necessários %>
                               <%= hidden_field_tag "items[#{item['id']}][descricao]", item['descricao'] %>
                               <%= hidden_field_tag "items[#{item['id']}][codigo]", item['codigo'] %>
                               <%= hidden_field_tag "items[#{item['id']}][unidade]", 'UN' %>
@@ -180,7 +179,6 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Auto-selecionar fornecedor preferencial
     document.querySelectorAll('.supplier-select').forEach(select => {
       const preferredSupplierNote = select.nextElementSibling?.textContent;
       if (preferredSupplierNote && preferredSupplierNote.includes('Fornecedor')) {
@@ -194,7 +192,6 @@
       }
     });
 
-    // Alternar entre select e input de fornecedor
     document.querySelectorAll('.toggle-supplier-input').forEach(button => {
       button.addEventListener('click', function() {
         const container = this.closest('.supplier-selection');
@@ -204,24 +201,22 @@
         if (selectContainer.style.display === 'none') {
           selectContainer.style.display = 'block';
           inputContainer.style.display = 'none';
-          // Limpa o input quando volta para o select
+
           container.querySelector('.supplier-input').value = '';
         } else {
           selectContainer.style.display = 'none';
           inputContainer.style.display = 'block';
-          // Limpa o select quando vai para o input
+
           container.querySelector('.supplier-select').value = '';
         }
       });
     });
 
-    // Validação antes de enviar o formulário
     document.getElementById('new-purchase-order').addEventListener('submit', function(e) {
       let isValid = true;
       const errorMessages = [];
       const invalidItems = new Set();
 
-      // Verificar quantidades
       document.querySelectorAll('.item-quantity').forEach(input => {
         const quantity = parseInt(input.value);
         const row = input.closest('tr');
@@ -237,7 +232,6 @@
         }
       });
 
-      // Verificar fornecedores
       document.querySelectorAll('.supplier-selection').forEach(container => {
         const row = container.closest('tr');
         const select = container.querySelector('.supplier-select');
@@ -246,7 +240,6 @@
         const selectVisible = select && getComputedStyle(select.closest('.supplier-select-container')).display !== 'none';
         const inputVisible = input && getComputedStyle(input.closest('.supplier-input-container')).display !== 'none';
         
-        // Verifica se pelo menos um dos campos (select ou input) está preenchido
         const hasSupplier = (selectVisible && select?.value) || (inputVisible && input?.value);
         
         if (!hasSupplier) {
@@ -265,7 +258,6 @@
         }
       });
 
-      // Destacar linhas com problemas
       document.querySelectorAll('tbody tr').forEach(row => {
         if (invalidItems.has(row)) {
           row.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';

@@ -1,10 +1,18 @@
+<!-- Mobile header with toggle button -->
+<header class="mobile-header d-md-none">
+  <button class="btn-toggle-sidebar" id="toggleSidebar" aria-label="Abrir menu">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h1 class="mobile-brand">Quimicenter</h1>
+</header>
+
 <aside class="app-sidebar" id="sidebar">
   <div class="sidebar-container">
-    <!-- Logo container - Only visible on mobile -->
-    <div class="sidebar-logo d-md-none">
-      <div class="logo-container text-center py-3">
+    <!-- Logo container - Visible on all screens -->
+    <div class="sidebar-logo">
+      <div class="logo-container d-flex align-items-center justify-content-between py-3 px-3">
         <h1 class="brand-name text-white mb-0">Quimicenter</h1>
-        <button class="btn-close-sidebar d-md-none" id="closeSidebar">
+        <button class="btn-close-sidebar d-md-none" id="closeSidebar" aria-label="Fechar menu">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -134,13 +142,21 @@
             </ul>
           </div>
         </li>
+        
+        <!-- Logout -->
+        <li class="nav-item mt-auto">
+          <%= link_to destroy_user_session_path, method: :delete, class: 'nav-link sidebar-link' do %>
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="menu-text">Logout</span>
+          <% end %>
+        </li>
       </ul>
     </div>
     
     <!-- Footer -->
-    <div class="sidebar-footer">
+    <div class="sidebar-footer mt-auto">
       <div class="divider"></div>
-      <div class="footer-content">
+      <div class="footer-content p-3">
         <small class="text-light">
           Quimicenter <i class="fas fa-registered"></i> <%= Date.today.year %>
         </small>
@@ -149,10 +165,251 @@
   </div>
 </aside>
 
+<!-- Overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <style>
-  .divider-menu {
+  /* Base sidebar styles */
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    background-color: #1e3a5f;
+    color: #fff;
+    z-index: 1030;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  /* Sidebar container */
+  .sidebar-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Sidebar logo */
+  .sidebar-logo {
+    padding: 0;
+  }
+
+  .brand-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  /* Sidebar menu */
+  .sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  /* Nav links */
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-link:hover,
+  .sidebar-link:focus {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .sidebar-link i {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
+  }
+
+  .menu-arrow {
+    transition: transform 0.2s;
+  }
+
+  .sidebar-link[aria-expanded="true"] .menu-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* Submenu */
+  .submenu {
+    padding-left: 1rem;
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .submenu-link {
+    padding: 0.5rem 1.25rem 0.5rem 2rem !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  .submenu-link:hover {
+    color: #fff !important;
+  }
+
+  /* Divider */
+  .divider {
     height: 1px;
     margin: 0.5rem 1rem;
     background-color: rgba(255, 255, 255, 0.1);
   }
+
+  /* Footer */
+  .sidebar-footer {
+    padding: 0;
+    font-size: 0.8rem;
+  }
+
+  /* Mobile header */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #1e3a5f; /* Mesmo tom da sidebar */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    color: white;
+  }
+
+  .btn-toggle-sidebar {
+    background: none;
+    border: none;
+    color: white; /* Texto branco para contraste */
+    font-size: 1.25rem;
+    margin-right: 1rem;
+    cursor: pointer;
+  }
+
+  .mobile-brand {
+    margin: 0;
+    font-size: 1.25rem;
+    color: white; /* Texto branco para contraste */
+  }
+
+  /* Close button */
+  .btn-close-sidebar {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1025;
+    display: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 767.98px) {
+    .app-sidebar {
+      transform: translateX(-100%);
+      width: 280px;
+    }
+
+    .app-sidebar.show {
+      transform: translateX(0);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-overlay.show {
+      display: block;
+    }
+    
+    /* Adjust main content when sidebar is hidden */
+    .app-main {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+
+  /* Desktop */
+  @media (min-width: 768px) {
+    .app-main {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+    }
+  }
 </style>
+
+<!-- Adicione este script diretamente no final do arquivo -->
+<script>
+  // Função para inicializar os eventos da sidebar
+  function initSidebar() {
+    console.log("Inicializando sidebar...");
+    
+    // Elementos
+    var toggleBtn = document.getElementById('toggleSidebar');
+    var closeBtn = document.getElementById('closeSidebar');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    
+    console.log("Toggle button:", toggleBtn);
+    console.log("Close button:", closeBtn);
+    console.log("Sidebar:", sidebar);
+    console.log("Overlay:", overlay);
+    
+    // Abrir sidebar no mobile
+    if (toggleBtn) {
+      toggleBtn.onclick = function() {
+        console.log("Toggle button clicked");
+        if (sidebar) {
+          sidebar.classList.add('show');
+          if (overlay) overlay.classList.add('show');
+          document.body.style.overflow = 'hidden';
+        }
+      };
+    }
+    
+    // Fechar sidebar no mobile
+    if (closeBtn) {
+      closeBtn.onclick = function() {
+        console.log("Close button clicked");
+        if (sidebar) {
+          sidebar.classList.remove('show');
+          if (overlay) overlay.classList.remove('show');
+          document.body.style.overflow = '';
+        }
+      };
+    }
+    
+    // Fechar sidebar ao clicar no overlay
+    if (overlay) {
+      overlay.onclick = function() {
+        console.log("Overlay clicked");
+        if (sidebar) {
+          sidebar.classList.remove('show');
+          overlay.classList.remove('show');
+          document.body.style.overflow = '';
+        }
+      };
+    }
+  }
+
+  // Inicializar quando o DOM estiver pronto
+  document.addEventListener('DOMContentLoaded', initSidebar);
+  
+  // Inicializar também quando o Turbolinks carregar uma página
+  if (typeof Turbolinks !== 'undefined') {
+    document.addEventListener('turbolinks:load', initSidebar);
+  }
+  
+  // Inicializar imediatamente se o documento já estiver carregado
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initSidebar();
+  }
+</script>

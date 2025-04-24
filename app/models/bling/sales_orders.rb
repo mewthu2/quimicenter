@@ -144,21 +144,21 @@ module Bling
 
     def create(order_data)
       payload = { pedido: prepare_order_data(order_data) }
-      response = make_request(:post, "/pedidos/vendas", payload)
+      response = make_request(:post, '/pedidos/vendas', payload)
       parse_response(response)
     end
 
     def update(id, order_data)
       payload = { pedido: prepare_order_data(order_data) }
-      response = make_request(:put, "/pedidos/vendas/#{id}", payload)
+      response = make_request(:put, '/pedidos/vendas/#{id}', payload)
       parse_response(response)
     end
 
     def cancel(id)
       response = make_request(:delete, "/pedidos/vendas/#{id}")
-      { success: response.code == 200, id: id }
+      { success: response.code == 200, id: }
     rescue RestClient::ExceptionWithResponse => e
-      { success: false, error: e.message, id: id }
+      { success: false, error: e.message, id: }
     end
 
     private
@@ -168,7 +168,6 @@ module Bling
     end
 
     def prepare_order_data(data)
-      # Garante que os números estejam no formato correto
       data.transform_values do |value|
         if value.is_a?(Hash)
           prepare_order_data(value)
@@ -183,7 +182,7 @@ module Bling
     def parse_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: "Invalid JSON response", raw_response: response.body }
+      { error: 'Invalid JSON response', raw_response: response.body }
     end
   end
 end

@@ -49,7 +49,6 @@ class SaleOrder < ApplicationRecord
     ActiveRecord::Base.transaction do
       order.save!
 
-      # Sincroniza os itens apenas se existirem no payload
       if order_data['itens'].present?
         sync_order_items(order, order_data['itens'])
       else

@@ -62,7 +62,7 @@ module Bling
 
     def create(product_data)
       payload = { produto: product_data }
-      response = make_request(:post, "/produtos", payload)
+      response = make_request(:post, '/produtos', payload)
       parse_response(response)
     end
 
@@ -74,14 +74,14 @@ module Bling
 
     def delete(id)
       response = make_request(:delete, "/produtos/#{id}")
-      { success: response.code == 204, id: id }
+      { success: response.code == 204, id: }
     rescue RestClient::ExceptionWithResponse => e
-      { success: false, error: e.message, id: id }
+      { success: false, error: e.message, id: }
     end
 
     # Métodos adicionais
     def categories
-      response = make_request(:get, "/categorias/produtos")
+      response = make_request(:get, '/categorias/produtos')
       parse_response(response)
     end
 
@@ -99,7 +99,7 @@ module Bling
     def parse_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: "Invalid JSON response", raw_response: response.body }
+      { error: 'Invalid JSON response', raw_response: response.body }
     end
   end
 end

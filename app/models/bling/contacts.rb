@@ -25,21 +25,17 @@ module Bling
       end
 
       def find_type_id(type_name)
-        response = make_request(:get, "/contatos/tipos")
+        response = make_request(:get, '/contatos/tipos')
         type = JSON.parse(response.body)['data'].find { |t| t['descricao'] == type_name }
         type['id'] if type
-      rescue
+      rescue StandardError => e
         nil
       end
     end
 
     def get_all(filters = {})
-      # Converte array de IDs para formato esperado pela API
-      if filters[:idsContatos].is_a?(Array)
-        filters[:idsContatos] = filters[:idsContatos].join(',')
-      end
+      filters[:idsContatos] = filters[:idsContatos].join(',') if filters[:idsContatos].is_a?(Array)
 
-      # Remove parâmetros vazios ou nulos
       filters = filters.compact
 
       query = filters.to_query

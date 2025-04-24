@@ -81,7 +81,7 @@ module Bling
     def parse_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: "Invalid JSON response", raw_response: response.body }
+      { error: 'Invalid JSON response', raw_response: response.body }
     end
   end
 end

@@ -12,14 +12,14 @@ class SaleOrderItemSupply < ApplicationRecord
       contact_data = Bling::Contacts.find(supplier_data['fornecedor']['id'])['data'] || {}
 
       create_or_update(
-        sale_order_item: sale_order_item,
+        sale_order_item:,
         supplier_id: contact_data['id'],
         supplier_name: contact_data['nome'],
         supplier_type: contact_data['tipo'],
         default: supplier_data['padrao'] || false
       )
     end
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Error syncing suppliers for product #{product_id}: #{e.message}"
   end
 
@@ -35,7 +35,7 @@ class SaleOrderItemSupply < ApplicationRecord
       default: attributes[:default],
       last_sync_at: Time.current
     )
-    
+
     supply.save!
   end
 end

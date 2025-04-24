@@ -72,7 +72,7 @@ module Bling
 
     def create(order_data)
       payload = { pedido: order_data }
-      response = make_request(:post, "/pedidos/vendas", payload)
+      response = make_request(:post, '/pedidos/vendas', payload)
       parse_response(response)
     end
 
@@ -91,7 +91,7 @@ module Bling
     def parse_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: "Invalid JSON response", raw_response: response.body }
+      { error: 'Invalid JSON response', raw_response: response.body }
     end
   end
 end

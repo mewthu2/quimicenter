@@ -113,7 +113,6 @@
 
 <script>
   $(document).ready(function() {
-    // Inicializa tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
     const table = $('#purchase-orders-datatable').DataTable({
@@ -127,7 +126,6 @@
             columns: [0, 1, 2, 3, 4, 5, 6],
             format: {
               body: function(data, row, column, node) {
-                // Remove ícones e formatação para exportação
                 return $(node).text().trim() || data;
               }
             }
@@ -162,7 +160,6 @@
       ],
       order: [[1, 'desc']],
       initComplete: function() {
-        // Vincula eventos aos botões externos
         $('#export-excel').on('click', function() {
           table.button('.buttons-excel').trigger();
         });
@@ -175,7 +172,6 @@
           table.ajax.reload();
         });
         
-        // Pesquisa personalizada
         $('#search-input').keyup(function() {
           table.search(this.value).draw();
         });
@@ -187,7 +183,6 @@
       }
     });
     
-    // Ajusta a largura das colunas ao redimensionar a janela
     $(window).on('resize', function() {
       table.columns.adjust().responsive.recalc();
     });
