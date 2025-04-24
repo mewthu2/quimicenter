@@ -8,14 +8,11 @@ class SalesOrdersController < ApplicationController
     @filters = permitted_params.to_h.symbolize_keys
 
     begin
-      # Sincroniza os pedidos antes de exibir
       SaleOrder.sync_from_bling(filters: @filters)
 
-      # Busca todos os pedidos sem paginação
       @orders = SaleOrder.includes(sale_order_items: :sale_order_item_supply)
-                        .order(data: :desc)
+                         .order(data: :desc)
 
-      # Aplica filtros locais
       @orders = @orders.where(data: @filters[:data_inicial]..@filters[:data_final]) if @filters[:data_inicial].present? && @filters[:data_final].present?
       @orders = @orders.where(situacao_id: @filters[:situacao]) if @filters[:situacao].present?
       @orders = @orders.where(contato_id: @filters[:id_contato]) if @filters[:id_contato].present?
@@ -27,15 +24,51 @@ class SalesOrdersController < ApplicationController
         kinds: :create_purchase_order,
         status: :success
       ).where(
-        'external_reference ~ ?', 
+        'external_reference ~ ?',
         "\\m(#{order_ids.join('|')})\\M"
       ).each_with_object({}) do |attempt, hash|
         matching_ids = attempt.external_reference.split(/\s*,\s*/) & order_ids
         matching_ids.each { |id| hash[id] = attempt }
       end
 
-      # Agrupa pedidos por fornecedor
-      @orders_by_supplier = @orders.each_with_object({}) do |order, hash|
+      # Inicializa contadores
+      @checked_items_count = 0
+      @ignored_items_count = 0
+      @total_items_count = 0
+
+      # Filtra os itens e conta as categorias
+      filtered_orders = @orders.map do |order|
+        checked_items = []
+        ignored_items = []
+
+        filtered_items = order.sale_order_items.reject do |item|
+          if item.quantity_order.to_i > 0
+            if item.checked_order
+              @checked_items_count += 1
+              checked_items << item
+              true
+            elsif item.ignore_order
+              @ignored_items_count += 1
+              ignored_items << item
+              true
+            else
+              false
+            end
+          else
+            false
+          end
+        end
+
+        @total_items_count += order.sale_order_items.size
+
+        # Cria uma cópia superficial do pedido para não afetar o original
+        filtered_order = order.dup
+        filtered_order.sale_order_items = filtered_items
+        filtered_order
+      end
+
+      # Agrupa pedidos por fornecedor considerando apenas os itens filtrados
+      @orders_by_supplier = filtered_orders.each_with_object({}) do |order, hash|
         suppliers = order.sale_order_items.map do |item|
           item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
         end.uniq
@@ -46,13 +79,21 @@ class SalesOrdersController < ApplicationController
         end
       end
 
-    rescue => e
+      # Remove pedidos que não têm mais itens após a filtragem
+      @orders_by_supplier.each do |supplier, orders|
+        @orders_by_supplier[supplier] = orders.reject { |order| order.sale_order_items.empty? }
+      end
+      @orders_by_supplier.reject! { |supplier, orders| orders.empty? }
+
+    rescue StandardError => e
       @orders = []
       @orders_by_supplier = {}
+      @checked_items_count = 0
+      @ignored_items_count = 0
+      @total_items_count = 0
       flash.now[:alert] = "Erro ao carregar pedidos: #{e.message}"
     end
   end
-
 
   def show
     @order_items = @order.sale_order_items

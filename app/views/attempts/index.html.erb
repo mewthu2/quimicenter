@@ -1,66 +1,540 @@
-<div class="container-fluid mt-4">
-  <div class="row mb-4">
-    <div class="col-md-6">
-      <h1 class="h3 mb-0 text-gray-800">Attempts</h1>
-    </div>
-    <div class="col-md-6 text-right">
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fas fa-filter"></i> Filtrar Status
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
-          <li><a href="?filter=all" class="dropdown-item">Todos</a></li>
-          <li><a href="?filter=success" class="dropdown-item">Success</a></li>
-          <li><a href="?filter=fail" class="dropdown-item">Fail</a></li>
-          <li><a href="?filter=error" class="dropdown-item">Error</a></li>
-        </ul>
+<div class="container-fluid mt-4 text-white">
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-history fa-2x text-info me-3"></i>
+        <div>
+          <h1 class="h3 mb-1 text-white">Attempts</h1>
+          <p class="text-light mb-0">Histórico de tentativas de processamento</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">Lista de Attempts</h6>
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-info shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-info mb-1">Total</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white"><%= Attempt.count %></h2>
+              <p class="text-light mb-0 small">Tentativas registradas</p>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+              <i class="fas fa-clipboard-list fa-2x text-info"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-info" role="progressbar" style="width: 100%" 
+                 aria-valuenow="<%= Attempt.count %>" aria-valuemin="0" aria-valuemax="<%= Attempt.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-success shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-success mb-1">Success</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <%= Attempt.where(status: 'success').count %>
+              </h2>
+              <p class="text-light mb-0 small">Tentativas bem-sucedidas</p>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+              <i class="fas fa-check-circle fa-2x text-success"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-success" role="progressbar" 
+                 style="width: <%= Attempt.count > 0 ? (Attempt.where(status: 'success').count.to_f / Attempt.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= Attempt.where(status: 'success').count %>" aria-valuemin="0" aria-valuemax="<%= Attempt.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-danger shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-danger mb-1">Fail</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <%= Attempt.where(status: 'fail').count %>
+              </h2>
+              <p class="text-light mb-0 small">Tentativas falhas</p>
+            </div>
+            <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+              <i class="fas fa-times-circle fa-2x text-danger"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-danger" role="progressbar" 
+                 style="width: <%= Attempt.count > 0 ? (Attempt.where(status: 'fail').count.to_f / Attempt.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= Attempt.where(status: 'fail').count %>" aria-valuemin="0" aria-valuemax="<%= Attempt.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card bg-dark border-warning shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-warning mb-1">Error</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <%= Attempt.where(status: 'error').count %>
+              </h2>
+              <p class="text-light mb-0 small">Tentativas com erro</p>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+              <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-warning" role="progressbar" 
+                 style="width: <%= Attempt.count > 0 ? (Attempt.where(status: 'error').count.to_f / Attempt.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= Attempt.where(status: 'error').count %>" aria-valuemin="0" aria-valuemax="<%= Attempt.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-dark border-secondary shadow-sm mb-4">
+    <div class="card-header py-3 bg-dark border-secondary">
+      <h6 class="m-0 font-weight-bold text-info">
+        <i class="fas fa-filter me-2"></i>Filtros
+      </h6>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table id="attempts-datatable" class="table table-striped table-hover" style="width:100%">
-          <thead class="thead-light">
-            <tr>
-              <th>ID</th>
-              <th>Data</th>
-              <th>Status</th>
-              <th>Mensagem</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @attempts.each do |attempt| %>
-              <tr>
-                <td><%= attempt.id %></td>
-                <td><%= attempt.created_at.strftime("%d/%m/%Y %H:%M") %></td>
-                <td>
-                  <span class="badge <%= attempt.status == 'success' ? 'bg-success' : attempt.status == 'fail' ? 'bg-danger' : 'bg-warning' %>">
-                    <%= attempt.status.capitalize %>
-                  </span>
-                </td>
-                <td><%= attempt.message %></td>
-              
-              </tr>
+      <%= form_with url: attempts_path, method: :get, local: true do |f| %>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-search"></i>
+              </span>
+              <%= f.text_field :search, class: "form-control bg-dark border-secondary text-white", placeholder: "Buscar...", value: params[:search] %>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-filter"></i>
+              </span>
+              <%= f.select :status, 
+                  options_for_select([
+                    ['Todos os Status', ''],
+                    ['Success', 'success'],
+                    ['Fail', 'fail'],
+                    ['Error', 'error']
+                  ], params[:status]), 
+                  {}, 
+                  class: "form-select bg-dark border-secondary text-white" 
+              %>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-tags"></i>
+              </span>
+              <%= f.select :kinds, 
+                  options_for_select([
+                    ['Todos os Tipos', ''],
+                    ['Tipo 1', 'tipo1'],
+                    ['Tipo 2', 'tipo2'],
+                    ['Tipo 3', 'tipo3']
+                  ], params[:kinds]), 
+                  {}, 
+                  class: "form-select bg-dark border-secondary text-white" 
+              %>
+            </div>
+          </div>
+          
+          <div class="col-md-2 mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-list-ol"></i>
+              </span>
+              <%= f.select :per_page, 
+                  options_for_select([
+                    ['10 por página', '10'],
+                    ['25 por página', '25'],
+                    ['50 por página', '50'],
+                    ['100 por página', '100']
+                  ], params[:per_page] || '10'), 
+                  {}, 
+                  class: "form-select bg-dark border-secondary text-white" 
+              %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-12 d-flex justify-content-end">
+            <%= link_to attempts_path, class: "btn btn-outline-secondary me-2" do %>
+              <i class="fas fa-undo me-1"></i> Limpar
             <% end %>
-          </tbody>
-        </table>
+            <%= f.button type: :submit, class: "btn btn-info", name: nil do %>
+              <i class="fas fa-search me-1"></i> Filtrar
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-dark border-secondary">
+      <h6 class="m-0 font-weight-bold text-info">
+        <i class="fas fa-list-ol me-2"></i>Lista de Attempts
+      </h6>
+      <span class="badge bg-info">
+        <%= @attempts.total_entries %> registros encontrados
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <% if @attempts.empty? %>
+        <div class="alert alert-dark border-secondary m-3">
+          <i class="fas fa-info-circle me-2"></i>
+          Nenhuma tentativa encontrada com os filtros atuais.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table table-hover table-dark mb-0 border-secondary">
+            <thead class="table-dark border-secondary">
+              <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Tipo</th>
+                <th>Mensagem</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="border-secondary">
+              <% @attempts.each do |attempt| %>
+                <tr>
+                  <td><code class="bg-secondary text-white"><%= attempt.id %></code></td>
+                  <td><%= attempt.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+                  <td>
+                    <span class="badge <%= attempt.status == 'success' ? 'bg-success' : attempt.status == 'fail' ? 'bg-danger' : 'bg-warning' %>">
+                      <%= attempt.status.capitalize %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if attempt.kinds.present? %>
+                      <span class="badge bg-info"><%= attempt.kinds %></span>
+                    <% else %>
+                      <span class="badge bg-secondary">Não especificado</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="text-truncate" style="max-width: 400px;" data-bs-toggle="tooltip" title="<%= attempt.message %>">
+                      <%= attempt.message %>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-outline-info view-details-btn" data-id="<%= attempt.id %>" data-bs-toggle="modal" data-bs-target="#detailsModal">
+                      <i class="fas fa-eye me-1"></i> Detalhes
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary">
+          <div class="text-light">
+            Mostrando <%= @attempts.offset + 1 %> a 
+            <%= [@attempts.offset + @attempts.length, @attempts.total_entries].min %> de 
+            <%= @attempts.total_entries %> tentativas
+          </div>
+          <div>
+            <%= will_paginate @attempts, 
+                renderer: WillPaginate::ActionView::BootstrapLinkRenderer,
+                class: 'pagination pagination-sm mb-0',
+                previous_label: '<i class="fas fa-chevron-left"></i> Anterior',
+                next_label: 'Próximo <i class="fas fa-chevron-right"></i>',
+                inner_window: 1,
+                outer_window: 0,
+                link_options: { class: 'page-link bg-dark border-secondary text-light' },
+                list_classes: ['pagination', 'pagination-sm', 'mb-0'] %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-info" id="detailsModalLabel">
+          <i class="fas fa-info-circle me-2"></i>Detalhes da Tentativa
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">ID</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-id"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Data</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-date"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Status</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-status"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Tipo</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-kind"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-light">Mensagem</label>
+          <div class="form-control bg-dark border-secondary text-white" style="min-height: 100px;" id="detail-message"></div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i> Fechar
+        </button>
       </div>
     </div>
   </div>
 </div>
 
+<div class="floating-nav-panel">
+  <div class="floating-nav-container">
+    <div class="floating-nav-section bg-info text-dark">
+      <div class="floating-nav-header">
+        <i class="fas fa-filter me-1"></i>
+        Filtro Rápido
+      </div>
+      <div class="floating-nav-controls">
+        <a href="<%= attempts_path(status: 'success', search: params[:search], kinds: params[:kinds], per_page: params[:per_page]) %>" class="btn btn-sm <%= params[:status] == 'success' ? 'btn-success' : 'btn-outline-success' %> me-1">
+          <i class="fas fa-check-circle"></i>
+        </a>
+        <a href="<%= attempts_path(status: 'fail', search: params[:search], kinds: params[:kinds], per_page: params[:per_page]) %>" class="btn btn-sm <%= params[:status] == 'fail' ? 'btn-danger' : 'btn-outline-danger' %> me-1">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <a href="<%= attempts_path(status: 'error', search: params[:search], kinds: params[:kinds], per_page: params[:per_page]) %>" class="btn btn-sm <%= params[:status] == 'error' ? 'btn-warning' : 'btn-outline-warning' %> me-1">
+          <i class="fas fa-exclamation-triangle"></i>
+        </a>
+        <a href="<%= attempts_path(search: params[:search], kinds: params[:kinds], per_page: params[:per_page]) %>" class="btn btn-sm <%= params[:status].blank? ? 'btn-light' : 'btn-outline-light' %>">
+          <i class="fas fa-list"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --primary-soft: rgba(13, 110, 253, 0.1);
+    --success-soft: rgba(25, 135, 84, 0.1);
+    --danger-soft: rgba(220, 53, 69, 0.1);
+    --warning-soft: rgba(255, 193, 7, 0.1);
+    --success-dark: rgba(25, 135, 84, 0.3);
+    --info-dark: rgba(13, 202, 240, 0.2);
+  }
+  
+  body {
+    background-color: #212529;
+    color: #fff;
+  }
+  
+  .bg-opacity-10 {
+    opacity: 0.1;
+  }
+  
+  /* Estilos para o painel de navegação flutuante */
+  .floating-nav-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: auto;
+  }
+  
+  .floating-nav-container {
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .floating-nav-section {
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+  }
+  
+  .floating-nav-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  .floating-nav-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .card {
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  .display-5 {
+    font-size: 2.5rem;
+  }
+  
+  .progress {
+    height: 8px;
+    border-radius: 4px;
+  }
+  
+  .rounded-circle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .table-dark {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: #fff;
+    border-color: #495057;
+  }
+  
+  .border-secondary {
+    border-color: #495057 !important;
+  }
+  
+  /* Estilos para paginação */
+  .pagination .page-link {
+    background-color: #212529;
+    border-color: #495057;
+    color: #fff;
+  }
+  
+  .pagination .page-item.active .page-link {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+  }
+  
+  .pagination .page-item.disabled .page-link {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #6c757d;
+  }
+  
+  @media (max-width: 768px) {
+    .card-header .btn {
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+    
+    .floating-nav-container {
+      flex-direction: column;
+    }
+    
+    .floating-nav-section {
+      min-width: 100%;
+    }
+    
+    .display-5 {
+      font-size: 2rem;
+    }
+    
+    .rounded-circle {
+      width: 50px;
+      height: 50px;
+    }
+  }
+</style>
+
 <script>
-  $(document).ready(function() {
-    $('#attempts-datatable').DataTable({
-      responsive: true,
-      language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-      order: [[1, 'desc']]
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    $('.view-details-btn').click(function() {
+      var id = $(this).data('id');
+      var row = $(this).closest('tr');
+      
+      $('#detail-id').text(row.find('td:eq(0)').text());
+      $('#detail-date').text(row.find('td:eq(1)').text());
+      
+      var status = row.find('td:eq(2) .badge').text().trim();
+      $('#detail-status').text(status);
+      $('#detail-status').removeClass().addClass('form-control bg-dark border-secondary text-white');
+      
+      if (status.toLowerCase() === 'success') {
+        $('#detail-status').addClass('text-success');
+      } else if (status.toLowerCase() === 'fail') {
+        $('#detail-status').addClass('text-danger');
+      } else {
+        $('#detail-status').addClass('text-warning');
+      }
+      
+      $('#detail-kind').text(row.find('td:eq(3) .badge').text().trim());
+      $('#detail-message').text(row.find('td:eq(4)').text().trim());
+    });
+    
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+      row.addEventListener('mouseenter', function() {
+        this.classList.add('table-active');
+      });
+      
+      row.addEventListener('mouseleave', function() {
+        this.classList.remove('table-active');
+      });
     });
   });
 </script>

@@ -59,6 +59,9 @@ Rails.application.routes.draw do
   end
 
   resources :sale_order_items do
+    collection do
+      get :index
+    end
     member do
       post :assign_supplier
       patch :update_item

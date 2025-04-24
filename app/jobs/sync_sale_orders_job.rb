@@ -53,7 +53,7 @@ class SyncSaleOrdersJob < ApplicationJob
   def sync_suppliers_for_order_items(sale_order)
     sale_order.sale_order_items.each do |item|
       next unless item.produto_id.present?
-  
+
       begin
         SaleOrderItemSupply.sync_from_bling(item, item.produto_id)
       rescue => e

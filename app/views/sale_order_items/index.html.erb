@@ -1,0 +1,868 @@
+<div class="container-fluid mt-4 text-white">
+  <!-- Header Section -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-exchange-alt fa-2x text-info me-3"></i>
+        <div>
+          <h1 class="h3 mb-1 text-white">Fila de Integração</h1>
+          <p class="text-light mb-0">Gerenciamento de itens para integração com pedidos de compra</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-info shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-info mb-1">Total de Itens</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <%= SaleOrderItem.count %>
+              </h2>
+              <p class="text-light mb-0 small">Itens de pedidos</p>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+              <i class="fas fa-shopping-cart fa-2x text-info"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-info" role="progressbar" style="width: 100%" 
+                 aria-valuenow="<%= SaleOrderItem.count %>" aria-valuemin="0" aria-valuemax="<%= SaleOrderItem.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-warning shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-warning mb-1">Pendentes</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <% pending_count = @status == 'pending' ? @items.count : 
+                   SaleOrderItem.includes(:sale_order, :sale_order_item_supply)
+                                .where(checked_order: true, ignore_order: false)
+                                .where("CAST(quantity_order AS numeric) > 0")
+                                .where.not(sale_order: { bling_id: nil })
+                                .where(sale_order_item_supply: { id: nil })
+                                .count
+                %>
+                <%= pending_count %>
+              </h2>
+              <p class="text-light mb-0 small">Itens aguardando integração</p>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+              <i class="fas fa-clock fa-2x text-warning"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-warning" role="progressbar" 
+                 style="width: <%= SaleOrderItem.count > 0 ? (pending_count.to_f / SaleOrderItem.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= pending_count %>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="<%= SaleOrderItem.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3 mb-md-0">
+      <div class="card bg-dark border-success shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-success mb-1">Concluídos</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <% completed_count = @status == 'completed' ? @items.count : 
+                   SaleOrderItem.where.not(purchase_order_created_at: nil)
+                                .count %>
+                <%= completed_count %>
+              </h2>
+              <p class="text-light mb-0 small">Itens já integrados</p>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+              <i class="fas fa-check-circle fa-2x text-success"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-success" role="progressbar" 
+                 style="width: <%= SaleOrderItem.count > 0 ? (completed_count.to_f / SaleOrderItem.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= completed_count %>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="<%= SaleOrderItem.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card bg-dark border-danger shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-danger mb-1">Ignorados</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white">
+                <%= SaleOrderItem.where(ignore_order: true).count %>
+              </h2>
+              <p class="text-light mb-0 small">Itens marcados para ignorar</p>
+            </div>
+            <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+              <i class="fas fa-ban fa-2x text-danger"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-danger" role="progressbar" 
+                 style="width: <%= SaleOrderItem.count > 0 ? (SaleOrderItem.where(ignore_order: true).count.to_f / SaleOrderItem.count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= SaleOrderItem.where(ignore_order: true).count %>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="<%= SaleOrderItem.count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Abas de Status -->
+  <div class="card bg-dark border-secondary shadow-sm mb-4">
+    <div class="card-header bg-dark border-secondary p-0">
+      <ul class="nav nav-tabs border-bottom-0" id="statusTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link <%= @status == 'pending' ? 'active bg-warning text-dark' : 'text-light' %>" 
+             href="<%= sale_order_items_path(status: 'pending') %>" 
+             role="tab">
+            <i class="fas fa-clock me-1"></i> Pendentes
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link <%= @status == 'completed' ? 'active bg-success text-dark' : 'text-light' %>" 
+             href="<%= sale_order_items_path(status: 'completed') %>" 
+             role="tab">
+            <i class="fas fa-check-circle me-1"></i> Concluídos
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Filtros Rápidos -->
+  <div class="card bg-dark border-secondary shadow-sm mb-4">
+    <div class="card-header py-3 bg-dark border-secondary">
+      <h6 class="m-0 font-weight-bold text-info">
+        <i class="fas fa-filter me-2"></i>Filtros Rápidos
+      </h6>
+    </div>
+    <div class="card-body">
+      <%= form_with url: sale_order_items_path, method: :get, local: true, class: "form-inline" do |f| %>
+        <%= f.hidden_field :status, value: @status %>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-search"></i>
+              </span>
+              <%= f.text_field :search, class: "form-control bg-dark border-secondary text-white", placeholder: "Buscar por produto, pedido...", value: params[:search] %>
+            </div>
+          </div>
+          <div class="col-md-3 mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-user"></i>
+              </span>
+              <%= f.select :supplier, 
+                  options_for_select([['Todos os Fornecedores', '']] + SaleOrderItemSupply.all.map { |s| [s.supplier_name, s.id] }, params[:supplier]), 
+                  {}, 
+                  class: "form-select bg-dark border-secondary text-white" %>
+            </div>
+          </div>
+          <div class="col-md-3 mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="fas fa-sort-amount-down"></i>
+              </span>
+              <%= f.select :sort_by, 
+                  options_for_select([
+                    ['Data do Pedido (Recente)', 'date_desc'],
+                    ['Data do Pedido (Antigo)', 'date_asc'],
+                    ['Quantidade (Maior)', 'quantity_desc'],
+                    ['Quantidade (Menor)', 'quantity_asc']
+                  ], params[:sort_by] || 'date_desc'), 
+                  {}, 
+                  class: "form-select bg-dark border-secondary text-white" %>
+            </div>
+          </div>
+          <div class="col-md-2 mb-2 d-flex">
+            <%= f.button type: :submit, class: "btn btn-info me-2", name: nil do %>
+              <i class="fas fa-search me-1"></i> Filtrar
+            <% end %>
+            <%= link_to sale_order_items_path(status: @status), class: "btn btn-outline-secondary" do %>
+              <i class="fas fa-undo me-1"></i> Limpar
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Tabela de Itens -->
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-dark border-secondary">
+      <h6 class="m-0 font-weight-bold <%= @status == 'pending' ? 'text-warning' : 'text-success' %>">
+        <i class="fas <%= @status == 'pending' ? 'fa-clock' : 'fa-check-circle' %> me-2"></i>
+        Itens <%= @status == 'pending' ? 'Pendentes' : 'Concluídos' %>
+      </h6>
+      <div>
+        <% if @status == 'pending' %>
+          <button id="process-selected-btn" class="btn btn-sm btn-success me-2" disabled>
+            <i class="fas fa-cogs me-1"></i> Processar Selecionados
+          </button>
+          <button id="ignore-selected-btn" class="btn btn-sm btn-danger me-2" disabled>
+            <i class="fas fa-ban me-1"></i> Ignorar Selecionados
+          </button>
+        <% end %>
+        <span class="badge <%= @status == 'pending' ? 'bg-warning text-dark' : 'bg-success' %>">
+          <%= @items.count %> itens
+        </span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <% if @items.empty? %>
+        <div class="alert alert-dark border-secondary m-3">
+          <i class="fas fa-info-circle me-2"></i>
+          Nenhum item <%= @status == 'pending' ? 'pendente' : 'concluído' %> encontrado com os filtros atuais.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table table-hover table-dark mb-0 border-secondary">
+            <thead class="table-dark border-secondary">
+              <tr>
+                <% if @status == 'pending' %>
+                  <th class="text-center">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="select-all">
+                    </div>
+                  </th>
+                <% end %>
+                <th>Pedido</th>
+                <th>Data</th>
+                <th>Produto</th>
+                <th>Fornecedor</th>
+                <th class="text-center">Quantidade</th>
+                <% if @status == 'completed' %>
+                  <th>Data Integração</th>
+                  <th>Pedido Compra</th>
+                <% end %>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="border-secondary">
+              <% @items.each do |item| %>
+                <tr>
+                  <% if @status == 'pending' %>
+                    <td class="text-center">
+                      <div class="form-check">
+                        <input class="form-check-input item-checkbox" type="checkbox" value="<%= item.id %>">
+                      </div>
+                    </td>
+                  <% end %>
+                  <td>
+                    <code class="bg-secondary text-white"><%= item.sale_order.numero %></code>
+                  </td>
+                  <td><%= item.sale_order.data.strftime("%d/%m/%Y") %></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="product-info">
+                        <div class="fw-bold"><%= item.produto_descricao %></div>
+                        <small class="text-muted"><%= item.produto_codigo %></small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <% if item.sale_order_item_supply&.supplier_name.present? %>
+                      <span class="badge bg-info">
+                        <%= item.sale_order_item_supply.supplier_name %>
+                      </span>
+                    <% else %>
+                      <span class="badge bg-secondary">Não definido</span>
+                    <% end %>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary"><%= item.quantity_order %></span>
+                  </td>
+                  <% if @status == 'completed' %>
+                    <td><%= item.purchase_order_created_at&.strftime("%d/%m/%Y %H:%M") %></td>
+                    <td>
+                      <% if item.sale_order_item_supply.present? %>
+                        <code class="bg-success text-white"><%= item.id %></code>
+                      <% else %>
+                        <span class="badge bg-secondary">N/A</span>
+                      <% end %>
+                    </td>
+                  <% end %>
+                  <td class="text-center">
+                    <% if @status == 'pending' %>
+                      <button class="btn btn-sm btn-outline-success process-btn me-1" data-id="<%= item.id %>" title="Processar Item">
+                        <i class="fas fa-cogs"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger ignore-btn me-1" data-id="<%= item.id %>" title="Ignorar Item">
+                        <i class="fas fa-ban"></i>
+                      </button>
+                    <% end %>
+                    <button class="btn btn-sm btn-outline-info view-details-btn" data-id="<%= item.id %>" data-bs-toggle="modal" data-bs-target="#detailsModal" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginação Simplificada -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary">
+          <div class="text-light">
+            <% if @items.respond_to?(:total_count) %>
+              Mostrando <%= @items.offset_value + 1 %> a 
+              <%= [@items.offset_value + @items.length, @items.total_count].min %> de 
+              <%= @items.total_count %> itens
+            <% else %>
+              Mostrando <%= @items.count %> itens
+            <% end %>
+          </div>
+          <div>
+            <% if @items.respond_to?(:total_pages) %>
+              <%= paginate @items, theme: 'bootstrap-5', pagination_class: "pagination-sm mb-0" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-info" id="detailsModalLabel">
+          <i class="fas fa-info-circle me-2"></i>Detalhes do Item
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Pedido</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-order-number"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Data do Pedido</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-order-date"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Cliente</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-customer"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label text-light">Fornecedor</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-supplier"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-8">
+            <div class="mb-3">
+              <label class="form-label text-light">Produto</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-product"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label text-light">SKU</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-sku"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label text-light">Quantidade</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-quantity"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label text-light">Valor Unitário</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-unit-value"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label text-light">Valor Total</label>
+              <div class="form-control bg-dark border-secondary text-white" id="detail-total-value"></div>
+            </div>
+          </div>
+        </div>
+        <div id="integration-details" class="d-none">
+          <hr class="border-secondary">
+          <h6 class="text-success mb-3">Detalhes da Integração</h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-light">Data da Integração</label>
+                <div class="form-control bg-dark border-secondary text-white" id="detail-integration-date"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-light">Pedido de Compra</label>
+                <div class="form-control bg-dark border-secondary text-white" id="detail-purchase-order"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i> Fechar
+        </button>
+        <div id="modal-action-buttons">
+          <button type="button" id="modal-process-btn" class="btn btn-success me-2 d-none">
+            <i class="fas fa-cogs me-1"></i> Processar Item
+          </button>
+          <button type="button" id="modal-ignore-btn" class="btn btn-danger d-none">
+            <i class="fas fa-ban me-1"></i> Ignorar Item
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Painel de navegação flutuante -->
+<div class="floating-nav-panel">
+  <div class="floating-nav-container">
+    <div class="floating-nav-section <%= @status == 'pending' ? 'bg-warning text-dark' : 'bg-success text-white' %>">
+      <div class="floating-nav-header">
+        <i class="fas <%= @status == 'pending' ? 'fa-clock' : 'fa-check-circle' %> me-1"></i>
+        <%= @status == 'pending' ? 'Itens Pendentes' : 'Itens Concluídos' %>
+      </div>
+      <div class="floating-nav-controls">
+        <a href="<%= sale_order_items_path(status: 'pending') %>" class="btn btn-sm <%= @status == 'pending' ? 'btn-dark' : 'btn-outline-light' %> me-2">
+          <i class="fas fa-clock"></i>
+        </a>
+        <a href="<%= sale_order_items_path(status: 'completed') %>" class="btn btn-sm <%= @status == 'completed' ? 'btn-dark' : 'btn-outline-light' %>">
+          <i class="fas fa-check-circle"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Custom Styles */
+  :root {
+    --primary-soft: rgba(13, 110, 253, 0.1);
+    --success-soft: rgba(25, 135, 84, 0.1);
+    --danger-soft: rgba(220, 53, 69, 0.1);
+    --warning-soft: rgba(255, 193, 7, 0.1);
+    --success-dark: rgba(25, 135, 84, 0.3);
+    --info-dark: rgba(13, 202, 240, 0.2);
+  }
+  
+  body {
+    background-color: #212529;
+    color: #fff;
+  }
+  
+  .bg-opacity-10 {
+    opacity: 0.1;
+  }
+  
+  /* Estilos para o painel de navegação flutuante */
+  .floating-nav-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: auto;
+  }
+  
+  .floating-nav-container {
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .floating-nav-section {
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+  }
+  
+  .floating-nav-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  .floating-nav-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Estilos adicionais para os cards de estatísticas */
+  .card {
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  .display-5 {
+    font-size: 2.5rem;
+  }
+  
+  .progress {
+    height: 8px;
+    border-radius: 4px;
+  }
+  
+  .rounded-circle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Estilos para a tabela */
+  .table-dark {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: #fff;
+    border-color: #495057;
+  }
+  
+  .border-secondary {
+    border-color: #495057 !important;
+  }
+  
+  /* Estilos para as abas */
+  .nav-tabs {
+    border-bottom: 1px solid #495057;
+  }
+  
+  .nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .nav-tabs .nav-link:hover {
+    border-color: #495057 #495057 #495057;
+    background-color: #2c3034;
+  }
+  
+  .nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: transparent;
+    border-color: #495057 #495057 #212529;
+  }
+  
+  /* Estilos para inputs e selects */
+  .form-control, .form-select {
+    color: #fff;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    background-color: #2c3034;
+    color: #fff;
+    border-color: #0dcaf0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+  }
+  
+  /* Estilos para paginação */
+  .pagination .page-link {
+    background-color: #212529;
+    border-color: #495057;
+    color: #fff;
+  }
+  
+  .pagination .page-item.active .page-link {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+  }
+  
+  .pagination .page-item.disabled .page-link {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #6c757d;
+  }
+  
+  /* Estilos para o produto na tabela */
+  .product-info {
+    max-width: 250px;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .card-header .btn {
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+    
+    .floating-nav-container {
+      flex-direction: column;
+    }
+    
+    .floating-nav-section {
+      min-width: 100%;
+    }
+    
+    .display-5 {
+      font-size: 2rem;
+    }
+    
+    .rounded-circle {
+      width: 50px;
+      height: 50px;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Seleção de itens
+    const selectAllCheckbox = document.getElementById('select-all');
+    const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+    const processSelectedBtn = document.getElementById('process-selected-btn');
+    const ignoreSelectedBtn = document.getElementById('ignore-selected-btn');
+    
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        
+        itemCheckboxes.forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        
+        updateActionButtonsState();
+      });
+    }
+    
+    if (itemCheckboxes.length > 0) {
+      itemCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          updateActionButtonsState();
+          
+          // Verificar se todos estão selecionados
+          const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+          if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
+          }
+        });
+      });
+    }
+    
+    function updateActionButtonsState() {
+      const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+      
+      if (processSelectedBtn) {
+        processSelectedBtn.disabled = checkedCount === 0;
+      }
+      
+      if (ignoreSelectedBtn) {
+        ignoreSelectedBtn.disabled = checkedCount === 0;
+      }
+    }
+    
+    // Botões de ação individual
+    const processBtns = document.querySelectorAll('.process-btn');
+    const ignoreBtns = document.querySelectorAll('.ignore-btn');
+    
+    processBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = this.getAttribute('data-id');
+        processItem(itemId);
+      });
+    });
+    
+    ignoreBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = this.getAttribute('data-id');
+        ignoreItem(itemId);
+      });
+    });
+    
+    // Botões de ação em lote
+    if (processSelectedBtn) {
+      processSelectedBtn.addEventListener('click', function() {
+        const selectedIds = getSelectedItemIds();
+        processItems(selectedIds);
+      });
+    }
+    
+    if (ignoreSelectedBtn) {
+      ignoreSelectedBtn.addEventListener('click', function() {
+        const selectedIds = getSelectedItemIds();
+        ignoreItems(selectedIds);
+      });
+    }
+    
+    function getSelectedItemIds() {
+      const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+      return Array.from(selectedCheckboxes).map(cb => cb.value);
+    }
+    
+    function processItem(id) {
+      // Implementar lógica para processar um item
+      console.log('Processando item:', id);
+      // Fazer requisição AJAX para processar o item
+      // Após sucesso, recarregar a página ou atualizar a tabela
+    }
+    
+    function ignoreItem(id) {
+      // Implementar lógica para ignorar um item
+      console.log('Ignorando item:', id);
+      // Fazer requisição AJAX para ignorar o item
+      // Após sucesso, recarregar a página ou atualizar a tabela
+    }
+    
+    function processItems(ids) {
+      // Implementar lógica para processar múltiplos itens
+      console.log('Processando itens:', ids);
+      // Fazer requisição AJAX para processar os itens
+      // Após sucesso, recarregar a página ou atualizar a tabela
+    }
+    
+    function ignoreItems(ids) {
+      // Implementar lógica para ignorar múltiplos itens
+      console.log('Ignorando itens:', ids);
+      // Fazer requisição AJAX para ignorar os itens
+      // Após sucesso, recarregar a página ou atualizar a tabela
+    }
+    
+    // Modal de detalhes
+    const detailsModal = document.getElementById('detailsModal');
+    const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+    
+    viewDetailsBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = this.getAttribute('data-id');
+        loadItemDetails(itemId);
+      });
+    });
+    
+    function loadItemDetails(id) {
+      // Em um cenário real, você faria uma requisição AJAX para obter os detalhes do item
+      // Aqui vamos simular com dados da tabela
+       const row = document.querySelector(`.item-checkbox[value="${id}"]`)?.closest('tr') || 
+                   document.querySelector(`.view-details-btn[data-id="${id}"]`).closest('tr');
+      
+      if (row) {
+        const status = '<%= @status %>';
+        const orderNumber = row.querySelector('td:nth-child(' + (status === 'pending' ? '2' : '1') + ')').textContent.trim();
+        const orderDate = row.querySelector('td:nth-child(' + (status === 'pending' ? '3' : '2') + ')').textContent.trim();
+        const productName = row.querySelector('td:nth-child(' + (status === 'pending' ? '4' : '3') + ') .fw-bold').textContent.trim();
+        const productSku = row.querySelector('td:nth-child(' + (status === 'pending' ? '4' : '3') + ') .text-muted').textContent.trim();
+        const supplier = row.querySelector('td:nth-child(' + (status === 'pending' ? '5' : '4') + ') .badge').textContent.trim();
+        const quantity = row.querySelector('td:nth-child(' + (status === 'pending' ? '6' : '5') + ') .badge').textContent.trim();
+        
+        document.getElementById('detail-order-number').textContent = orderNumber;
+        document.getElementById('detail-order-date').textContent = orderDate;
+        document.getElementById('detail-customer').textContent = 'Cliente do Pedido'; // Simulado
+        document.getElementById('detail-supplier').textContent = supplier;
+        document.getElementById('detail-product').textContent = productName;
+        document.getElementById('detail-sku').textContent = productSku;
+        document.getElementById('detail-quantity').textContent = quantity;
+        document.getElementById('detail-unit-value').textContent = 'R$ 100,00'; // Simulado
+        document.getElementById('detail-total-value').textContent = 'R$ ' + (parseFloat(quantity) * 100).toFixed(2).replace('.', ','); // Simulado
+            
+        // Mostrar ou ocultar detalhes de integração
+        const integrationDetails = document.getElementById('integration-details');
+        if (status === 'completed') {
+          integrationDetails.classList.remove('d-none');
+          const integrationDate = row.querySelector('td:nth-child(6)').textContent.trim();
+          const purchaseOrder = row.querySelector('td:nth-child(7) code')?.textContent.trim() || 
+                              row.querySelector('td:nth-child(7) .badge')?.textContent.trim() || 'N/A';
+          
+          document.getElementById('detail-integration-date').textContent = integrationDate;
+          document.getElementById('detail-purchase-order').textContent = purchaseOrder;
+        } else {
+          integrationDetails.classList.add('d-none');
+        }
+        
+        // Mostrar ou ocultar botões de ação no modal
+        const modalActionButtons = document.getElementById('modal-action-buttons');
+        const modalProcessBtn = document.getElementById('modal-process-btn');
+        const modalIgnoreBtn = document.getElementById('modal-ignore-btn');
+        
+        if (status === 'pending') {
+          modalProcessBtn.classList.remove('d-none');
+          modalIgnoreBtn.classList.remove('d-none');
+          
+          modalProcessBtn.setAttribute('data-id', id);
+          modalIgnoreBtn.setAttribute('data-id', id);
+          
+          modalProcessBtn.addEventListener('click', function() {
+            processItem(this.getAttribute('data-id'));
+          });
+          
+          modalIgnoreBtn.addEventListener('click', function() {
+            ignoreItem(this.getAttribute('data-id'));
+          });
+        } else {
+          modalProcessBtn.classList.add('d-none');
+          modalIgnoreBtn.classList.add('d-none');
+        }
+      }
+    }
+    
+    // Destacar linhas ao passar o mouse
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+      row.addEventListener('mouseenter', function() {
+        this.classList.add('table-active');
+      });
+      
+      row.addEventListener('mouseleave', function() {
+        this.classList.remove('table-active');
+      });
+    });
+  });
+</script>

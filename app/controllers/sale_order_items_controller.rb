@@ -1,4 +1,27 @@
 class SaleOrderItemsController < ApplicationController
+  def index
+    @status = params[:status] || 'pending' # 'pending' ou 'completed'
+  
+    case @status
+    when 'pending'
+      @items = SaleOrderItem.joins(:sale_order)
+                           .left_joins(:sale_order_item_supply)
+                           .where(checked_order: true, ignore_order: false)
+                           .where('CAST(quantity_order AS INTEGER) > 0')
+                           .where.not(bling_order_id: nil) # Campo está em SaleOrderItem
+                           .where(sale_order_item_supplies: { id: nil })
+                           .order('sale_orders.data DESC') # Campo data está em SaleOrder
+  
+    when 'completed'
+      @items = SaleOrderItem.joins(:sale_order)
+                            .left_joins(:sale_order_item_supply)
+                            .where.not(purchase_order_created_at: nil) # Campo está em SaleOrderItem
+                            .order('sale_order_items.purchase_order_created_at DESC') # Ordenando pelo campo em SaleOrderItem
+    else
+      @items = SaleOrderItem.none
+    end
+  end
+
   def assign_supplier
     item = SaleOrderItem.find(params[:id])
 
