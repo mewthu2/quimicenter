@@ -2,7 +2,9 @@ class CreatePurchaseOrderJob < ApplicationJob
   def perform
     items = SaleOrderItem.where(checked_order: true)
                          .where.not(quantity_order: [nil, 0])
+                         .where(bling_order_id: nil)
                          .includes(:sale_order_item_supply, :sale_order)
+
 
     items_by_supplier = items.group_by do |item|
       item.sale_order_item_supply&.supplier_id

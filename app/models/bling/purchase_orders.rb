@@ -153,7 +153,7 @@ module Bling
 
       {
         status: 'error',
-        error: error_response['error'] || error_response['description'] || "Erro na API Bling",
+        error: error_response['error'] || error_response['description'] || 'Erro na API Bling',
         status_code: response.code,
         full_response: error_response
       }
@@ -162,7 +162,7 @@ module Bling
     def parse_error_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: response.body.presence || "Resposta vazia da API" }
+      { error: response.body.presence || 'Resposta vazia da API' }
     end
 
     def base_query(page, filters = {})
@@ -172,7 +172,7 @@ module Bling
     def parse_response(response)
       JSON.parse(response.body)
     rescue JSON::ParserError
-      { error: "Invalid JSON response", raw_response: response.body }
+      { error: 'Invalid JSON response', raw_response: response.body }
     end
   end
 end
