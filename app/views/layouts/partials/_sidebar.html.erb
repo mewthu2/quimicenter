@@ -4,12 +4,8 @@
     <i class="fas fa-bars"></i>
   </button>
   <div class="mobile-actions d-flex align-items-center">
-    <i class="fas fa-bell me-3 position-relative">
-      <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-        <span class="visually-hidden">Novas notificações</span>
-      </span>
-    </i>
-    <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center">
+    <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 30px !important;
+    height: 30px !important;">
       <i class="fas fa-user text-primary"></i>
     </div>
   </div>
@@ -17,6 +13,22 @@
 
 <aside class="app-sidebar" id="sidebar">
   <div class="sidebar-container">
+    <!-- Mobile header inside sidebar -->
+    <div class="mobile-sidebar-header d-md-none">
+      <div class="d-flex align-items-center justify-content-between p-3">
+        <div class="d-flex align-items-center">
+          <div class="logo-icon me-2 text-primary">
+            <i class="fas fa-flask"></i>
+          </div>
+          <h5 class="mb-0 text-white">Quimicenter</h5>
+        </div>
+        <button class="btn-close-sidebar" id="closeSidebar" aria-label="Fechar menu">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="divider"></div>
+    </div>
+    
     <!-- Search bar at top -->
     <div class="search-container p-3">
       <div class="input-group">
@@ -33,7 +45,7 @@
       <div class="menu-section">
         <p class="menu-label px-3 mb-2 text-uppercase"><small>Principal</small></p>
         <ul class="nav flex-column">
-          <!-- Home button with badge -->
+          <!-- Home button -->
           <li class="nav-item">
             <a class="nav-link sidebar-link" href="/">
               <div class="sidebar-icon-container">
@@ -84,7 +96,7 @@
                   </div>
                   <span class="menu-text">Pedidos</span>
                 </div>
-                <i class="fas fa-chevron-down menu-arrow ms-2"></i>
+                <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
             </a>
             
@@ -200,20 +212,28 @@
     <!-- Footer with branding -->
     <div class="sidebar-footer">
       <div class="divider"></div>
-      <div class="footer-content p-3 d-flex align-items-center justify-content-between">
-        <div class="branding">
-          <div class="d-flex align-items-center">
-            <div class="logo-icon me-2">
-              <i class="fas fa-flask"></i>
-            </div>
-            <div>
-              <h6 class="mb-0 text-white">Quimicenter</h6>
-              <small class="text-light opacity-75"><i class="fas fa-registered"></i> <%= Date.today.year %></small>
+      <div class="footer-content p-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="branding">
+            <div class="d-flex align-items-center">
+              <div class="logo-icon me-2">
+                <i class="fas fa-flask"></i>
+              </div>
+              <div>
+                <h6 class="mb-0 text-white">Quimicenter</h6>
+                <small class="text-light opacity-75"><i class="fas fa-registered"></i> <%= Date.today.year %></small>
+              </div>
             </div>
           </div>
+          <div class="version">
+            <span class="badge bg-primary">v1.0</span>
+          </div>
         </div>
-        <div class="version">
-          <span class="badge bg-primary">v2.0</span>
+        <div class="mewtda-signature text-center">
+          <div class="d-flex align-items-center justify-content-center">
+            <i class="fas fa-code me-1 text-primary"></i>
+            <small class="text-light opacity-75">made by <span class="fw-bold text-primary">mewtda</span></small>
+          </div>
         </div>
       </div>
     </div>
@@ -232,6 +252,7 @@
     --sidebar-border: rgba(255, 255, 255, 0.1);
     --sidebar-icon-bg: rgba(255, 255, 255, 0.1);
     --sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    --mewtda-color: #4e92f8;
   }
 
   .app-sidebar {
@@ -254,6 +275,31 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-border) transparent;
+  }
+  
+  .sidebar-container::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .sidebar-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-container::-webkit-scrollbar-thumb {
+    background-color: var(--sidebar-border);
+    border-radius: 10px;
+  }
+
+  /* Mobile sidebar header */
+  .mobile-sidebar-header {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-sidebar-header .logo-icon {
+    font-size: 1.2rem;
   }
 
   /* Search styling */
@@ -296,12 +342,12 @@
   .sidebar-link:focus {
     color: #fff !important;
     background-color: var(--sidebar-hover);
-    border-left-color: #4e92f8;
+    border-left-color: var(--mewtda-color);
   }
   
   .sidebar-link[aria-expanded="true"] {
     background-color: var(--sidebar-active);
-    border-left-color: #4e92f8;
+    border-left-color: var(--mewtda-color);
   }
 
   /* Icon container styling */
@@ -353,7 +399,7 @@
 
   .submenu-link:hover {
     color: #fff !important;
-    border-left-color: #4e92f8;
+    border-left-color: var(--mewtda-color);
   }
   
   .submenu-link i {
@@ -394,6 +440,21 @@
   .logo-icon {
     font-size: 1.2rem;
   }
+  
+  /* Mewtda signature styling */
+  .mewtda-signature {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--sidebar-border);
+  }
+  
+  .mewtda-signature .text-primary {
+    color: var(--mewtda-color) !important;
+  }
+  
+  .mewtda-signature i {
+    font-size: 0.9rem;
+  }
 
   /* Mobile header styling */
   .mobile-header {
@@ -430,8 +491,8 @@
     color: #fff;
     font-size: 1rem;
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
     transition: background-color 0.2s;
   }
   
@@ -457,12 +518,22 @@
   @media (max-width: 767.98px) {
     .app-sidebar {
       transform: translateX(-100%);
-      width: 280px;
+      width: 100%;
+      max-width: 300px;
     }
 
     .app-sidebar.show {
       transform: translateX(0);
       box-shadow: var(--sidebar-shadow);
+    }
+    
+    .sidebar-link, .submenu-link {
+      padding: 0.8rem 1.25rem !important;
+    }
+    
+    .sidebar-icon-container {
+      width: 36px;
+      height: 36px;
     }
 
     .sidebar-overlay.show {
@@ -473,6 +544,13 @@
       margin-left: 0;
       width: 100%;
     }
+    
+    /* Improved touch targets for mobile */
+    .menu-arrow {
+      font-size: 0.8rem;
+      padding: 8px;
+      margin: -8px;
+    }
   }
 
   @media (min-width: 768px) {
@@ -480,6 +558,25 @@
       margin-left: 260px;
       width: calc(100% - 260px);
     }
+  }
+  
+  /* Animation for mobile sidebar */
+  @keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .app-sidebar.show {
+    animation: slideIn 0.3s ease forwards;
+  }
+  
+  .sidebar-overlay.show {
+    animation: fadeIn 0.3s ease forwards;
   }
 </style>
 
@@ -520,22 +617,33 @@
       };
     }
     
-    // Add close button to sidebar if it doesn't exist
-    if (sidebar && !document.getElementById('closeSidebar')) {
-      var closeButton = document.createElement('button');
-      closeButton.id = 'closeSidebar';
-      closeButton.className = 'btn-close-sidebar position-absolute top-0 end-0 m-3 d-md-none';
-      closeButton.setAttribute('aria-label', 'Fechar menu');
-      closeButton.innerHTML = '<i class="fas fa-times"></i>';
+    // Handle touch swipe to close sidebar on mobile
+    var touchStartX = 0;
+    var touchEndX = 0;
+    
+    if (sidebar) {
+      sidebar.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+      }, false);
       
-      sidebar.querySelector('.sidebar-container').prepend(closeButton);
-      
-      closeButton.onclick = function() {
-        sidebar.classList.remove('show');
-        if (overlay) overlay.classList.remove('show');
-        document.body.style.overflow = '';
-      };
+      sidebar.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, false);
     }
+    
+    function handleSwipe() {
+      if (touchStartX - touchEndX > 70) { // Swipe left to close
+        if (sidebar) {
+          sidebar.classList.remove('show');
+          if (overlay) overlay.classList.remove('show');
+          document.body.style.overflow = '';
+        }
+      }
+    }
+    
+    // Add version number to console
+    console.log('Sidebar v1.0 - Made by mewtda');
   }
 
   document.addEventListener('DOMContentLoaded', initSidebar);
