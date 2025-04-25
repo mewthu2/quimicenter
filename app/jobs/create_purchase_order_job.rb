@@ -1,5 +1,7 @@
 class CreatePurchaseOrderJob < ApplicationJob
   def perform
+    return unless Date.current.monday?
+
     items = SaleOrderItem.where(checked_order: true)
                          .where.not(quantity_order: [nil, 0])
                          .where(bling_order_id: nil)
