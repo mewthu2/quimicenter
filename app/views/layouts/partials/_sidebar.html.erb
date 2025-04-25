@@ -3,163 +3,218 @@
   <button class="btn-toggle-sidebar" id="toggleSidebar" aria-label="Abrir menu">
     <i class="fas fa-bars"></i>
   </button>
-  <h1 class="mobile-brand">Quimicenter</h1>
+  <div class="mobile-actions d-flex align-items-center">
+    <i class="fas fa-bell me-3 position-relative">
+      <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+        <span class="visually-hidden">Novas notificações</span>
+      </span>
+    </i>
+    <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center">
+      <i class="fas fa-user text-primary"></i>
+    </div>
+  </div>
 </header>
 
 <aside class="app-sidebar" id="sidebar">
   <div class="sidebar-container">
-    <!-- Logo container - Visible on all screens -->
-    <div class="sidebar-logo">
-      <div class="logo-container d-flex align-items-center justify-content-between py-3 px-3">
-        <h1 class="brand-name text-white mb-0">Quimicenter</h1>
-        <button class="btn-close-sidebar d-md-none" id="closeSidebar" aria-label="Fechar menu">
-          <i class="fas fa-times"></i>
-        </button>
+    <!-- Search bar at top -->
+    <div class="search-container p-3">
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-light">
+          <i class="fas fa-search"></i>
+        </span>
+        <input type="text" class="form-control bg-transparent border-start-0 text-light" placeholder="Pesquisar..." aria-label="Pesquisar">
       </div>
-      <div class="divider"></div>
     </div>
+    <div class="divider"></div>
     
-    <!-- Navigation menu -->
+    <!-- Navigation menu with improved visual hierarchy -->
     <div class="sidebar-menu">
-      <ul class="nav flex-column">
-        <!-- Home button -->
-        <li class="nav-item">
-          <a class="nav-link sidebar-link" href="/">
-            <i class="fas fa-home"></i>
-            <span class="menu-text">Home</span>
-          </a>
-        </li>
+      <div class="menu-section">
+        <p class="menu-label px-3 mb-2 text-uppercase"><small>Principal</small></p>
+        <ul class="nav flex-column">
+          <!-- Home button with badge -->
+          <li class="nav-item">
+            <a class="nav-link sidebar-link" href="/">
+              <div class="sidebar-icon-container">
+                <i class="fas fa-home"></i>
+              </div>
+              <span class="menu-text">Home</span>
+            </a>
+          </li>
 
-        <!-- Dashboard dropdown -->
-        <li class="nav-item">
-          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-dashboard" role="button" aria-expanded="false" aria-controls="collase-dashboard">
-            <div class="d-flex align-items-center justify-content-between w-100">
-              <div>
-                <i class="fas fa-tachometer-alt"></i>
-                <span class="menu-text">Dashboard</span>
+          <!-- Dashboard dropdown -->
+          <li class="nav-item">
+            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-dashboard" role="button" aria-expanded="false" aria-controls="collase-dashboard">
+              <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center">
+                  <div class="sidebar-icon-container">
+                    <i class="fas fa-tachometer-alt"></i>
+                  </div>
+                  <span class="menu-text">Dashboard</span>
+                </div>
+                <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
-              <i class="fas fa-chevron-down menu-arrow"></i>
+            </a>
+            
+            <div class="collapse submenu" id="collase-dashboard">
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <%= link_to dashboard_index_path, class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-binoculars"></i>
+                    <span class="menu-text">Resumo dos pedidos</span>
+                  <% end %>
+                </li>
+              </ul>
             </div>
-          </a>
-          
-          <div class="collapse submenu" id="collase-dashboard">
-            <ul class="nav flex-column">
-              <li class="nav-item">
-                <%= link_to dashboard_index_path, class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-binoculars"></i>
-                  <span class="menu-text">Resumo dos pedidos</span>
-                <% end %>
-              </li>
-            </ul>
-          </div>
-        </li>
-        
-        <!-- Seção de Pedidos -->
-        <li class="nav-item">
-          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-orders" role="button" aria-expanded="false" aria-controls="collase-orders">
-            <div class="d-flex align-items-center justify-content-between w-100">
-              <div>
-                <i class="fas fa-shopping-cart"></i>
-                <span class="menu-text">Pedidos</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="menu-section mt-2">
+        <p class="menu-label px-3 mb-2 text-uppercase"><small>Gerenciamento</small></p>
+        <ul class="nav flex-column">
+          <!-- Seção de Pedidos -->
+          <li class="nav-item">
+            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-orders" role="button" aria-expanded="false" aria-controls="collase-orders">
+              <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center">
+                  <div class="sidebar-icon-container">
+                    <i class="fas fa-shopping-cart"></i>
+                  </div>
+                  <span class="menu-text">Pedidos</span>
+                </div>
+                <i class="fas fa-chevron-down menu-arrow ms-2"></i>
               </div>
-              <i class="fas fa-chevron-down menu-arrow"></i>
+            </a>
+            
+            <div class="collapse submenu" id="collase-orders">
+              <ul class="nav flex-column">
+                <!-- Pedidos de Venda -->
+                <li class="nav-item">
+                  <%= link_to sales_orders_path, class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-list-ul"></i>
+                    <span class="menu-text">Pedidos de Venda</span>
+                  <% end %>
+                </li>
+                
+                <!-- Fila de criação no Bling -->
+                <li class="nav-item">
+                  <%= link_to sale_order_items_path(status: 'pending'), class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-tasks"></i>
+                    <span class="menu-text">Fila de criação no Bling</span>
+                  <% end %>
+                </li>
+                
+                <!-- Pedidos integrados -->
+                <li class="nav-item">
+                  <%= link_to sale_order_items_path(status: 'completed'), class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-check-circle"></i>
+                    <span class="menu-text">Pedidos integrados</span>
+                  <% end %>
+                </li>
+              </ul>
             </div>
-          </a>
-          
-          <div class="collapse submenu" id="collase-orders">
-            <ul class="nav flex-column">
-              <!-- Pedidos de Venda -->
-              <li class="nav-item">
-                <%= link_to sales_orders_path, class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-list-ul"></i>
-                  <span class="menu-text">Pedidos de Venda</span>
-                <% end %>
-              </li>
-              
-              <!-- Fila de criação no Bling -->
-              <li class="nav-item">
-                <%= link_to sale_order_items_path(status: 'pending'), class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-tasks"></i>
-                  <span class="menu-text">Fila de criação no Bling</span>
-                <% end %>
-              </li>
-              
-              <!-- Pedidos integrados -->
-              <li class="nav-item">
-                <%= link_to sale_order_items_path(status: 'completed'), class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-check-circle"></i>
-                  <span class="menu-text">Pedidos integrados</span>
-                <% end %>
-              </li>
-            </ul>
-          </div>
-        </li>
+          </li>
 
-        <!-- Nova Seção de Contatos -->
-        <li class="nav-item">
-          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-contacts" role="button" aria-expanded="false" aria-controls="collase-contacts">
-            <div class="d-flex align-items-center justify-content-between w-100">
-              <div>
-                <i class="fas fa-address-book"></i>
-                <span class="menu-text">Contatos</span>
+          <!-- Nova Seção de Contatos -->
+          <li class="nav-item">
+            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-contacts" role="button" aria-expanded="false" aria-controls="collase-contacts">
+              <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center">
+                  <div class="sidebar-icon-container">
+                    <i class="fas fa-address-book"></i>
+                  </div>
+                  <span class="menu-text">Contatos</span>
+                </div>
+                <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
-              <i class="fas fa-chevron-down menu-arrow"></i>
+            </a>
+            
+            <div class="collapse submenu" id="collase-contacts">
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <%= link_to contacts_path, class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-users"></i>
+                    <span class="menu-text">Todos os Contatos</span>
+                  <% end %>
+                </li>
+              </ul>
             </div>
-          </a>
-          
-          <div class="collapse submenu" id="collase-contacts">
-            <ul class="nav flex-column">
-              <li class="nav-item">
-                <%= link_to contacts_path, class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-users"></i>
-                  <span class="menu-text">Todos os Contatos</span>
-                <% end %>
-              </li>
-            </ul>
-          </div>
-        </li>
-        
-        <!-- Histórico de Tentativas dropdown -->
-        <li class="nav-item">
-          <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-attempts" role="button" aria-expanded="false" aria-controls="collase-attempts">
-            <div class="d-flex align-items-center justify-content-between w-100">
-              <div>
-                <i class="fas fa-hourglass-half"></i>
-                <span class="menu-text">Histórico de Tentativas</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="menu-section mt-2">
+        <p class="menu-label px-3 mb-2 text-uppercase"><small>Sistema</small></p>
+        <ul class="nav flex-column">
+          <!-- Histórico de Tentativas dropdown -->
+          <li class="nav-item">
+            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-attempts" role="button" aria-expanded="false" aria-controls="collase-attempts">
+              <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center">
+                  <div class="sidebar-icon-container">
+                    <i class="fas fa-hourglass-half"></i>
+                  </div>
+                  <span class="menu-text">Histórico</span>
+                </div>
+                <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
-              <i class="fas fa-chevron-down menu-arrow"></i>
+            </a>
+            
+            <div class="collapse submenu" id="collase-attempts">
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <%= link_to attempts_path, class: 'nav-link submenu-link' do %>
+                    <i class="fas fa-file-invoice"></i>
+                    <span class="menu-text">Integração pedidos</span>
+                  <% end %>
+                </li>
+              </ul>
             </div>
-          </a>
-          
-          <div class="collapse submenu" id="collase-attempts">
-            <ul class="nav flex-column">
-              <li class="nav-item">
-                <%= link_to attempts_path, class: 'nav-link submenu-link' do %>
-                  <i class="fas fa-file-invoice"></i>
-                  <span class="menu-text">Integração pedidos fornecedor</span>
-                <% end %>
-              </li>
-            </ul>
-          </div>
-        </li>
-        
-        <!-- Logout -->
-        <li class="nav-item mt-auto">
-          <%= link_to destroy_user_session_path, method: :delete, class: 'nav-link sidebar-link' do %>
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="menu-text">Logout</span>
-          <% end %>
-        </li>
-      </ul>
+          </li>
+        </ul>
+      </div>
     </div>
     
-    <!-- Footer -->
-    <div class="sidebar-footer mt-auto">
+    <!-- User profile section above footer -->
+    <div class="user-profile mt-auto p-3">
+      <div class="d-flex align-items-center">
+        <div class="avatar-container me-3">
+          <div class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center">
+            <i class="fas fa-user text-primary"></i>
+          </div>
+        </div>
+        <div class="user-info">
+          <h6 class="mb-0 text-white">Usuário</h6>
+          <small class="text-light opacity-75">Administrador</small>
+        </div>
+        <div class="ms-auto">
+          <%= link_to destroy_user_session_path, method: :delete, class: 'btn btn-sm btn-outline-light rounded-circle' do %>
+            <i class="fas fa-sign-out-alt"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer with branding -->
+    <div class="sidebar-footer">
       <div class="divider"></div>
-      <div class="footer-content p-3">
-        <small class="text-light">
-          Quimicenter <i class="fas fa-registered"></i> <%= Date.today.year %>
-        </small>
+      <div class="footer-content p-3 d-flex align-items-center justify-content-between">
+        <div class="branding">
+          <div class="d-flex align-items-center">
+            <div class="logo-icon me-2">
+              <i class="fas fa-flask"></i>
+            </div>
+            <div>
+              <h6 class="mb-0 text-white">Quimicenter</h6>
+              <small class="text-light opacity-75"><i class="fas fa-registered"></i> <%= Date.today.year %></small>
+            </div>
+          </div>
+        </div>
+        <div class="version">
+          <span class="badge bg-primary">v2.0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -168,18 +223,31 @@
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <style>
+  :root {
+    --sidebar-bg: #1e3a5f;
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active: rgba(255, 255, 255, 0.15);
+    --sidebar-text: rgba(255, 255, 255, 0.85);
+    --sidebar-muted: rgba(255, 255, 255, 0.6);
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-icon-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  }
+
   .app-sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 250px;
-    background-color: #1e3a5f;
+    width: 260px;
+    background-color: var(--sidebar-bg);
+    background-image: linear-gradient(to bottom, #1e3a5f, #1a325a);
     color: #fff;
     z-index: 1030;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: var(--sidebar-shadow);
   }
 
   .sidebar-container {
@@ -188,80 +256,153 @@
     height: 100%;
   }
 
-  .sidebar-logo {
-    padding: 0;
+  /* Search styling */
+  .search-container .form-control {
+    border-color: var(--sidebar-border);
+  }
+  
+  .search-container .form-control::placeholder {
+    color: var(--sidebar-muted);
+  }
+  
+  .search-container .input-group-text {
+    border-color: var(--sidebar-border);
   }
 
-  .brand-name {
-    font-size: 1.5rem;
+  /* Menu section styling */
+  .menu-section {
+    margin-bottom: 0.5rem;
+  }
+  
+  .menu-label {
+    color: var(--sidebar-muted);
+    font-size: 0.7rem;
     font-weight: 600;
+    letter-spacing: 1px;
   }
 
-  .sidebar-menu {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 0;
-  }
-
+  /* Sidebar link styling */
   .sidebar-link {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.25rem;
-    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.65rem 1.25rem;
+    color: var(--sidebar-text) !important;
     transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    margin: 2px 0;
   }
 
   .sidebar-link:hover,
   .sidebar-link:focus {
     color: #fff !important;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--sidebar-hover);
+    border-left-color: #4e92f8;
+  }
+  
+  .sidebar-link[aria-expanded="true"] {
+    background-color: var(--sidebar-active);
+    border-left-color: #4e92f8;
   }
 
-  .sidebar-link i {
-    width: 20px;
-    margin-right: 10px;
-    text-align: center;
+  /* Icon container styling */
+  .sidebar-icon-container {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--sidebar-icon-bg);
+    border-radius: 8px;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .sidebar-link:hover .sidebar-icon-container {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .menu-text {
+    font-weight: 500;
   }
 
   .menu-arrow {
     transition: transform 0.2s;
+    font-size: 0.7rem;
   }
 
   .sidebar-link[aria-expanded="true"] .menu-arrow {
     transform: rotate(180deg);
   }
 
+  /* Submenu styling */
   .submenu {
     padding-left: 1rem;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 8px 8px;
+    margin: 0 0.5rem 0.5rem 0.5rem;
   }
 
   .submenu-link {
-    padding: 0.5rem 1.25rem 0.5rem 2rem !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 0.5rem 1rem !important;
+    color: var(--sidebar-muted) !important;
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
   }
 
   .submenu-link:hover {
     color: #fff !important;
+    border-left-color: #4e92f8;
+  }
+  
+  .submenu-link i {
+    width: 20px;
+    margin-right: 8px;
+    font-size: 0.85rem;
   }
 
+  /* Divider styling */
   .divider {
     height: 1px;
-    margin: 0.5rem 1rem;
-    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0.25rem 1rem;
+    background-color: var(--sidebar-border);
   }
 
+  /* User profile styling */
+  .user-profile {
+    border-top: 1px solid var(--sidebar-border);
+  }
+  
+  .avatar {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .avatar-sm {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Footer styling */
   .sidebar-footer {
     padding: 0;
     font-size: 0.8rem;
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+  
+  .logo-icon {
+    font-size: 1.2rem;
   }
 
+  /* Mobile header styling */
   .mobile-header {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    background-color: #1e3a5f;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--sidebar-bg);
+    border-bottom: 1px solid var(--sidebar-border);
     position: sticky;
     top: 0;
     z-index: 1020;
@@ -273,24 +414,32 @@
     border: none;
     color: white;
     font-size: 1.25rem;
-    margin-right: 1rem;
     cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
   }
-
-  .mobile-brand {
-    margin: 0;
-    font-size: 1.25rem;
-    color: white;
+  
+  .btn-toggle-sidebar:hover {
+    background-color: var(--sidebar-hover);
   }
 
   .btn-close-sidebar {
     background: none;
     border: none;
     color: #fff;
-    font-size: 1.25rem;
+    font-size: 1rem;
     cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-close-sidebar:hover {
+    background-color: var(--sidebar-hover);
   }
 
+  /* Overlay styling */
   .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -300,8 +449,11 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1025;
     display: none;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s;
   }
 
+  /* Responsive styling */
   @media (max-width: 767.98px) {
     .app-sidebar {
       transform: translateX(-100%);
@@ -310,7 +462,7 @@
 
     .app-sidebar.show {
       transform: translateX(0);
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--sidebar-shadow);
     }
 
     .sidebar-overlay.show {
@@ -325,29 +477,21 @@
 
   @media (min-width: 768px) {
     .app-main {
-      margin-left: 250px;
-      width: calc(100% - 250px);
+      margin-left: 260px;
+      width: calc(100% - 260px);
     }
   }
 </style>
 
 <script>
   function initSidebar() {
-    console.log("Inicializando sidebar...");
-    
     var toggleBtn = document.getElementById('toggleSidebar');
     var closeBtn = document.getElementById('closeSidebar');
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('sidebarOverlay');
     
-    console.log("Toggle button:", toggleBtn);
-    console.log("Close button:", closeBtn);
-    console.log("Sidebar:", sidebar);
-    console.log("Overlay:", overlay);
-    
     if (toggleBtn) {
       toggleBtn.onclick = function() {
-        console.log("Toggle button clicked");
         if (sidebar) {
           sidebar.classList.add('show');
           if (overlay) overlay.classList.add('show');
@@ -358,7 +502,6 @@
     
     if (closeBtn) {
       closeBtn.onclick = function() {
-        console.log("Close button clicked");
         if (sidebar) {
           sidebar.classList.remove('show');
           if (overlay) overlay.classList.remove('show');
@@ -369,12 +512,28 @@
 
     if (overlay) {
       overlay.onclick = function() {
-        console.log("Overlay clicked");
         if (sidebar) {
           sidebar.classList.remove('show');
           overlay.classList.remove('show');
           document.body.style.overflow = '';
         }
+      };
+    }
+    
+    // Add close button to sidebar if it doesn't exist
+    if (sidebar && !document.getElementById('closeSidebar')) {
+      var closeButton = document.createElement('button');
+      closeButton.id = 'closeSidebar';
+      closeButton.className = 'btn-close-sidebar position-absolute top-0 end-0 m-3 d-md-none';
+      closeButton.setAttribute('aria-label', 'Fechar menu');
+      closeButton.innerHTML = '<i class="fas fa-times"></i>';
+      
+      sidebar.querySelector('.sidebar-container').prepend(closeButton);
+      
+      closeButton.onclick = function() {
+        sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
       };
     }
   }
