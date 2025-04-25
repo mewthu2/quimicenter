@@ -2,13 +2,13 @@
 class SyncSaleOrdersJob < ApplicationJob
   queue_as :default
 
-  SYNC_PERIOD = 1.days
+  SYNC_START_DATE = Date.parse('2025-04-25')
   MAX_RETRIES = 3
   RETRY_DELAY = 2.seconds
 
   def perform
-    since_date = SYNC_PERIOD.ago.to_date
-    filters = { dataEmissaoInicial: since_date.strftime('%Y-%m-%d') }
+    since_date = SYNC_START_DATE.to_date
+    filters = { dataInicial: since_date.strftime('%Y-%m-%d') }
 
     page = 1
     loop do
@@ -39,7 +39,7 @@ class SyncSaleOrdersJob < ApplicationJob
       else
         Rails.logger.warn "Pedido #{order_id} retornou sem dados"
       end
-    rescue => e
+    rescue StandardError => e
       retries += 1
       if retries <= MAX_RETRIES
         sleep RETRY_DELAY
@@ -56,23 +56,31 @@ class SyncSaleOrdersJob < ApplicationJob
 
       begin
         SaleOrderItemSupply.sync_from_bling(item, item.produto_id)
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error "Error syncing suppliers for item #{item.id}: #{e.message}"
       end
     end
   end
 
- def fetch_orders_page(page, filters)
+  def fetch_orders_page(page, filters)
     retries = 0
     begin
-      Bling::Orders.all(page, filters)
-    rescue => e
+      loja_ids = [203746821, 0]
+
+      combined_data = loja_ids.flat_map do |loja_id|
+        local_filters = filters.merge(idLoja: loja_id)
+        response = Bling::Orders.all(1, local_filters)
+        response['data'] || []
+      end
+
+      { 'data' => combined_data }
+    rescue StandardError => e
       retries += 1
       if retries <= MAX_RETRIES
         sleep RETRY_DELAY
-        retry 
+        retry
       else
-        raise "Falha ao buscar página #{page} de pedidos: #{e.message}"
+        raise "Erro ao buscar pedidos da página #{page}: #{e.message}"
       end
     end
   end

@@ -38,12 +38,13 @@ module Bling
         pagina: page
       }
 
-      # Mapeamento de filtros permitidos pela API
       allowed_filters = %i[
         idContato
         numero
         dataEmissaoInicial
         dataEmissaoFinal
+        dataInicial
+        dataFinal
         situacao
         idVendedor
         idLoja

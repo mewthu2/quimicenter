@@ -5,7 +5,6 @@ class CreatePurchaseOrderJob < ApplicationJob
                          .where(bling_order_id: nil)
                          .includes(:sale_order_item_supply, :sale_order)
 
-
     items_by_supplier = items.group_by do |item|
       item.sale_order_item_supply&.supplier_id
     end
