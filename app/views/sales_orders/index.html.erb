@@ -182,7 +182,7 @@
                               </div>
                               <div class="small text-light">
                                 <span class="me-2"><i class="fas fa-calendar-alt me-1"></i> <%= format_date(order.data) %></span>
-                                <span class="me-2"><i class="fas fa-user me-1"></i> <%= order.contato_nome %></span>
+                                <span class="me-2" style="white-space: nowrap;"><i class="fas fa-user me-1"></i> <%= order.contato_nome %></span>
                                 <span><i class="fas fa-dollar-sign me-1"></i> <%= number_to_currency(order.total, unit: "R$ ") %></span>
                               </div>
                             </div>
@@ -224,7 +224,7 @@
                                 <% order.sale_order_items.each do |item| %>
                                   <tr class="<%= 'table-warning text-dark' if item.produto_estoque.to_i < item.quantidade.to_i %>">
                                     <td><code class="bg-secondary text-white"><%= item.produto_codigo %></code></td>
-                                    <td><%= truncate(item.produto_descricao, length: 30) %></td>
+                                    <td><%= item.produto_descricao %></td>
                                     <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
                                     <td class="text-end"><%= item.produto_estoque.to_i %></td>
                                     <td class="text-end">
