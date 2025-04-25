@@ -7,21 +7,22 @@ class SyncSaleOrdersJob < ApplicationJob
   RETRY_DELAY = 2.seconds
 
   def perform
-    since_date = SYNC_START_DATE.to_date
-    filters = { dataInicial: since_date.strftime('%Y-%m-%d') }
+    (SYNC_START_DATE..Date.current).each do |current_date|
+      filters = { dataInicial: current_date.strftime('%Y-%m-%d'), dataFinal: current_date.strftime('%Y-%m-%d') }
 
-    page = 1
-    loop do
-      response = fetch_orders_page(page, filters)
-      orders_data = response['data'] || []
-      break if orders_data.empty?
+      page = 1
+      loop do
+        response = fetch_orders_page(page, filters)
+        orders_data = response['data'] || []
+        break if orders_data.empty?
 
-      orders_data.each do |order_data|
-        sync_single_order_with_items(order_data['id'])
+        orders_data.each do |order_data|
+          sync_single_order_with_items(order_data['id'])
+        end
+
+        break if last_page?(response, page)
+        page += 1
       end
-
-      break if last_page?(response, page)
-      page += 1
     end
   end
 
