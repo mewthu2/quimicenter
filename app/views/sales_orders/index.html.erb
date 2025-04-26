@@ -1,350 +1,350 @@
 <div class="container-fluid mt-4 text-white">
-  <%= form_tag new_purchase_order_path, method: :get, id: 'generate-purchase-form' do %>
-    <!-- Header Section -->
-    <div class="row mb-4 align-items-center">
-      <div class="col-md-12">
-        <div class="d-flex align-items-center">
-          <i class="fas fa-shopping-cart fa-2x text-info me-3"></i>
-          <div>
-            <h1 class="h3 mb-1 text-white">Pedidos de Venda</h1>
-            <p class="text-light mb-0">Gerencie e exporte pedidos de venda para pedidos de compra</p>
+<%= form_tag new_purchase_order_path, method: :get, id: 'generate-purchase-form' do %>
+  <!-- Header Section -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-shopping-cart fa-2x text-info me-3"></i>
+        <div>
+          <h1 class="h3 mb-1 text-white">Pedidos de Venda</h1>
+          <p class="text-light mb-0">Gerencie e exporte pedidos de venda para pedidos de compra</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card bg-dark border-info shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-info mb-1">Itens Selecionados</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white"><%= @checked_items_count %></h2>
+              <p class="text-light mb-0 small">Itens marcados para compra</p>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+              <i class="fas fa-check-circle fa-2x text-info"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-info" role="progressbar" 
+                 style="width: <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= @checked_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
           </div>
         </div>
       </div>
     </div>
+    
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card bg-dark border-warning shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-warning mb-1">Itens Ignorados</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white"><%= @ignored_items_count %></h2>
+              <p class="text-light mb-0 small">Itens marcados para ignorar</p>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+              <i class="fas fa-ban fa-2x text-warning"></i>
+            </div>
+          </div>
+          <div class="progress mt-3 bg-dark border border-secondary">
+            <div class="progress-bar bg-warning" role="progressbar" 
+                 style="width: <%= @total_items_count > 0 ? (@ignored_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" 
+                 aria-valuenow="<%= @ignored_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card bg-dark border-success shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-success mb-1">Total de Itens</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count %></h2>
+              <p class="text-light mb-0 small">Itens disponíveis para compra</p>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+              <i class="fas fa-boxes fa-2x text-success"></i>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mt-3 text-light small">
+            <span>
+              <i class="fas fa-check-circle text-info me-1"></i> <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>% selecionados
+            </span>
+            <span>
+              <i class="fas fa-ban text-warning me-1"></i> <%= @total_items_count > 0 ? (@ignored_items_count.to_f / @total_items_count * 100).to_i : 0 %>% ignorados
+            </span>
+            <span>
+              <i class="fas fa-question-circle text-muted me-1"></i> <%= @total_items_count > 0 ? (100 - (@checked_items_count.to_f + @ignored_items_count.to_f) / @total_items_count * 100).to_i : 0 %>% pendentes
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Cards de Estatísticas -->
-    <div class="row mb-4">
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="card bg-dark border-info shadow-sm h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between">
-              <div>
-                <h6 class="text-info mb-1">Itens Selecionados</h6>
-                <h2 class="mb-0 display-5 fw-bold text-white"><%= @checked_items_count %></h2>
-                <p class="text-light mb-0 small">Itens marcados para compra</p>
-              </div>
-              <div class="rounded-circle bg-info bg-opacity-10 p-3">
-                <i class="fas fa-check-circle fa-2x text-info"></i>
-              </div>
-            </div>
-            <div class="progress mt-3 bg-dark border border-secondary">
-              <div class="progress-bar bg-info" role="progressbar" 
-                   style="width: <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" 
-                   aria-valuenow="<%= @checked_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="card bg-dark border-warning shadow-sm h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between">
-              <div>
-                <h6 class="text-warning mb-1">Itens Ignorados</h6>
-                <h2 class="mb-0 display-5 fw-bold text-white"><%= @ignored_items_count %></h2>
-                <p class="text-light mb-0 small">Itens marcados para ignorar</p>
-              </div>
-              <div class="rounded-circle bg-warning bg-opacity-10 p-3">
-                <i class="fas fa-ban fa-2x text-warning"></i>
-              </div>
-            </div>
-            <div class="progress mt-3 bg-dark border border-secondary">
-              <div class="progress-bar bg-warning" role="progressbar" 
-                   style="width: <%= @total_items_count > 0 ? (@ignored_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" 
-                   aria-valuenow="<%= @ignored_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card bg-dark border-success shadow-sm h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between">
-              <div>
-                <h6 class="text-success mb-1">Total de Itens</h6>
-                <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count %></h2>
-                <p class="text-light mb-0 small">Itens disponíveis para compra</p>
-              </div>
-              <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                <i class="fas fa-boxes fa-2x text-success"></i>
-              </div>
-            </div>
-            <div class="d-flex justify-content-between mt-3 text-light small">
-              <span>
-                <i class="fas fa-check-circle text-info me-1"></i> <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>% selecionados
+  <!-- Status Summary -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-body py-2">
+          <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex align-items-center me-3 mb-1 mb-md-0">
+              <span class="badge bg-info rounded-pill me-2">
+                <i class="fas fa-box-open me-1"></i>
+                <%= @orders.size %> pedido(s)
               </span>
-              <span>
-                <i class="fas fa-ban text-warning me-1"></i> <%= @total_items_count > 0 ? (@ignored_items_count.to_f / @total_items_count * 100).to_i : 0 %>% ignorados
+              <span class="badge bg-success rounded-pill me-2">
+                <i class="fas fa-check-circle me-1"></i>
+                <%= @exported_attempts&.count || 0 %> exportado(s)
               </span>
-              <span>
-                <i class="fas fa-question-circle text-muted me-1"></i> <%= @total_items_count > 0 ? (100 - (@checked_items_count.to_f + @ignored_items_count.to_f) / @total_items_count * 100).to_i : 0 %>% pendentes
+              <span class="badge bg-warning text-dark rounded-pill">
+                <i class="fas fa-clock me-1"></i>
+                <%= @orders.size - (@exported_attempts&.count || 0) %> pendente(s)
               </span>
+            </div>
+            <div class="text-light small">
+              <i class="fas fa-info-circle me-1"></i>
+              Última atualização: <%= Time.now.strftime("%d/%m/%Y %H:%M") %>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Status Summary -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card bg-dark border-secondary shadow-sm">
-          <div class="card-body py-2">
-            <div class="d-flex flex-wrap justify-content-between align-items-center">
-              <div class="d-flex align-items-center me-3 mb-1 mb-md-0">
-                <span class="badge bg-info rounded-pill me-2">
-                  <i class="fas fa-box-open me-1"></i>
-                  <%= @orders.size %> pedido(s)
-                </span>
-                <span class="badge bg-success rounded-pill me-2">
-                  <i class="fas fa-check-circle me-1"></i>
-                  <%= @exported_attempts&.count || 0 %> exportado(s)
-                </span>
-                <span class="badge bg-warning text-dark rounded-pill">
-                  <i class="fas fa-clock me-1"></i>
-                  <%= @orders.size - (@exported_attempts&.count || 0) %> pendente(s)
-                </span>
-              </div>
-              <div class="text-light small">
-                <i class="fas fa-info-circle me-1"></i>
-                Última atualização: <%= Time.now.strftime("%d/%m/%Y %H:%M") %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <!-- Lista de Pedidos agrupados por Fornecedor -->
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+    <div class="card-header py-3 d-flex flex-column flex-md-row justify-content-between align-items-center bg-dark border-secondary">
+      <h6 class="m-0 font-weight-bold text-info">
+        <i class="fas fa-list-ol me-2"></i>Itens por Fornecedor
+      </h6>
     </div>
-
-    <!-- Lista de Pedidos agrupados por Fornecedor -->
-    <div class="card shadow mb-4 border-0 bg-dark border-secondary">
-      <div class="card-header py-3 d-flex flex-column flex-md-row justify-content-between align-items-center bg-dark border-secondary">
-        <h6 class="m-0 font-weight-bold text-info">
-          <i class="fas fa-list-ol me-2"></i>Itens por Fornecedor
-        </h6>
-      </div>
-      
-      <div class="card-body p-0">
-        <% if @orders_by_supplier.empty? %>
-          <div class="text-center py-5">
-            <i class="fas fa-inbox fa-4x text-light mb-3"></i>
-            <h5 class="text-white">Nenhum pedido encontrado</h5>
-            <p class="text-light">Tente ajustar seus filtros de busca</p>
-            <%= link_to "Limpar filtros", sales_orders_path, class: "btn btn-sm btn-outline-info" %>
-          </div>
-        <% else %>
-          <div class="accordion" id="suppliersAccordion">
-            <% @orders_by_supplier.each_with_index do |(supplier, supplier_orders), index| %>
-              <% 
-                # Contar todos os itens deste fornecedor em todos os pedidos
-                supplier_items_count = 0
-                supplier_orders.each do |order|
-                  supplier_items_count += order.sale_order_items.count { |item| 
-                    item_supplier = item.sale_order_item_supply&.supplier_name
-                    item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
-                  }
-                end
-                
-                # Calcular o valor total dos itens deste fornecedor
-                supplier_total_value = 0
-                supplier_orders.each do |order|
-                  order.sale_order_items.each do |item|
-                    item_supplier = item.sale_order_item_supply&.supplier_name
-                    if item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
-                      supplier_total_value += item.valor_unitario * item.quantidade
-                    end
+    
+    <div class="card-body p-0">
+      <% if @orders_by_supplier.empty? %>
+        <div class="text-center py-5">
+          <i class="fas fa-inbox fa-4x text-light mb-3"></i>
+          <h5 class="text-white">Nenhum pedido encontrado</h5>
+          <p class="text-light">Tente ajustar seus filtros de busca</p>
+          <%= link_to "Limpar filtros", sales_orders_path, class: "btn btn-sm btn-outline-info" %>
+        </div>
+      <% else %>
+        <div class="accordion" id="suppliersAccordion">
+          <% @orders_by_supplier.each_with_index do |(supplier, supplier_orders), index| %>
+            <% 
+              supplier_items_count = 0
+              supplier_orders.each do |order|
+                supplier_items_count += order.sale_order_items.count { |item| 
+                  item_supplier = item.sale_order_item_supply&.supplier_name
+                  item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
+                }
+              end
+              
+              supplier_total_value = 0
+              supplier_orders.each do |order|
+                order.sale_order_items.each do |item|
+                  item_supplier = item.sale_order_item_supply&.supplier_name
+                  if item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
+                    supplier_total_value += item.valor_unitario * item.quantidade
                   end
                 end
-              %>
-              <div class="accordion-item border-secondary bg-dark">
-                <h2 class="accordion-header" id="supplierHeading<%= index %>">
-                  <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3 bg-dark text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
-                    <div class="d-flex align-items-center w-100">
-                      <div class="flex-grow-1">
-                        <div class="d-flex align-items-center">
-                          <div class="me-3">
-                            <span class="badge bg-info text-dark rounded-pill">
-                              <%= supplier_items_count %> item(ns)
-                            </span>
-                          </div>
-                          <h5 class="mb-0 text-white"><%= supplier.presence || "Fornecedor não identificado" %></h5>
+              end
+            %>
+            <div class="accordion-item border-secondary bg-dark">
+              <h2 class="accordion-header" id="supplierHeading<%= index %>">
+                <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3 bg-dark text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
+                  <div class="d-flex align-items-center w-100">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center">
+                        <div class="me-3">
+                          <span class="badge bg-info text-dark rounded-pill">
+                            <%= supplier_items_count %> item(ns)
+                          </span>
                         </div>
-                      </div>
-                      <div class="text-light small">
-                        <%= supplier_orders.size %> pedido(s) | 
-                        Total: <%= number_to_currency(supplier_total_value, unit: "R$ ") %>
+                        <h5 class="mb-0 text-white"><%= supplier.presence || "Fornecedor não identificado" %></h5>
                       </div>
                     </div>
-                  </button>
-                </h2>
-                <div id="supplierCollapse<%= index %>" class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" aria-labelledby="supplierHeading<%= index %>" data-bs-parent="#suppliersAccordion">
-                  <div class="accordion-body p-0 bg-dark">
-                    <% supplier_orders.each do |order| %>
-                      <% 
-                        order_id = order.bling_id.to_s
-                        exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
-                        
-                        # Filtrar apenas os itens deste fornecedor
-                        supplier_items = order.sale_order_items.select do |item|
-                          supplier_name = item.sale_order_item_supply&.supplier_name
-                          supplier_name == supplier || (supplier_name.nil? && supplier == 'Fornecedor não apontado')
-                        end
-                        
-                        # Pular este pedido se não tiver itens para este fornecedor
-                        next if supplier_items.empty?
-                      %>
-                      <div class="card mb-3 border-0 shadow-sm bg-dark <%= exported_attempt ? 'border-start-success border-start-3' : 'border-start-warning border-start-3' %>">
-                        <div class="card-header <%= exported_attempt ? 'bg-success-dark' : 'bg-dark' %> py-2 border-secondary">
-                          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                            <div class="mb-2 mb-md-0">
-                              <div class="d-flex align-items-center">
-                                <h5 class="mb-0 me-3 text-white">
-                                  Pedido #<%= order.numero %>
-                                  <% if exported_attempt %>
-                                    <span class="badge bg-success rounded-pill ms-2">
-                                      <i class="fas fa-check-circle me-1"></i> Exportado
-                                    </span>
-                                  <% else %>
-                                    <span class="badge bg-warning text-dark rounded-pill ms-2">
-                                      <i class="fas fa-clock me-1"></i> Pendente
-                                    </span>
-                                  <% end %>
-                                </h5>
-                              </div>
-                              <div class="small text-light">
-                                <span class="me-2"><i class="fas fa-calendar-alt me-1"></i> <%= format_date(order.data) %></span>
-                                <span class="me-2" style="white-space: nowrap;"><i class="fas fa-user me-1"></i> <%= order.contato_nome %></span>
-                                <span><i class="fas fa-dollar-sign me-1"></i> <%= number_to_currency(order.total, unit: "R$ ") %></span>
-                              </div>
-                            </div>
-                            <div class="d-flex">
-                              <% if exported_attempt %>
-                                <%= link_to "https://www.bling.com.br/pedidos.compra.php#edit/#{exported_attempt.bling_order_id}", 
-                                    target: "_blank",
-                                    class: "btn btn-sm btn-success me-2",
-                                    title: "Ver pedido de compra no Bling (ID: #{exported_attempt.bling_order_id})",
-                                    data: { toggle: "tooltip" } do %>
-                                  <i class="fas fa-external-link-alt me-1"></i> <%= exported_attempt.bling_numero %>
+                    <div class="text-light small">
+                      <%= supplier_orders.size %> pedido(s) | 
+                      Total: <%= number_to_currency(supplier_total_value, unit: "R$ ") %>
+                    </div>
+                  </div>
+                </button>
+              </h2>
+              <div id="supplierCollapse<%= index %>" class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" aria-labelledby="supplierHeading<%= index %>" data-bs-parent="#suppliersAccordion">
+                <div class="accordion-body p-0 bg-dark">
+                  <% supplier_orders.each do |order| %>
+                    <% 
+                      order_id = order.bling_id.to_s
+                      exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
+                      
+                      supplier_items = order.sale_order_items.select do |item|
+                        supplier_name = item.sale_order_item_supply&.supplier_name
+                        supplier_name == supplier || (supplier_name.nil? && supplier == 'Fornecedor não apontado')
+                      end
+                      
+                      next if supplier_items.empty?
+                    %>
+                    <div class="card mb-3 border-0 shadow-sm bg-dark <%= exported_attempt ? 'border-start-success border-start-3' : 'border-start-warning border-start-3' %>">
+                      <div class="card-header <%= exported_attempt ? 'bg-success-dark' : 'bg-dark' %> py-2 border-secondary">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                          <div class="mb-2 mb-md-0">
+                            <div class="d-flex align-items-center">
+                              <h5 class="mb-0 me-3 text-white">
+                                Pedido #<%= order.numero %>
+                                <% if exported_attempt %>
+                                  <span class="badge bg-success rounded-pill ms-2">
+                                    <i class="fas fa-check-circle me-1"></i> Exportado
+                                  </span>
+                                <% else %>
+                                  <span class="badge bg-warning text-dark rounded-pill ms-2">
+                                    <i class="fas fa-clock me-1"></i> Pendente
+                                  </span>
                                 <% end %>
-                              <% end %>
-                              <%= link_to "https://www.bling.com.br/pedidos.venda.php#edit/#{order.bling_id}", 
-                                  target: "_blank", 
-                                  class: "btn btn-sm btn-outline-secondary", 
-                                  title: "Ver no Bling" do %>
-                                <i class="fas fa-external-link-alt me-1"></i> Bling
-                              <% end %>
+                              </h5>
+                            </div>
+                            <div class="small text-light">
+                              <span class="me-2"><i class="fas fa-calendar-alt me-1"></i> <%= format_date(order.data) %></span>
+                              <span class="me-2" style="white-space: nowrap;"><i class="fas fa-user me-1"></i> <%= order.contato_nome %></span>
+                              <span><i class="fas fa-dollar-sign me-1"></i> <%= number_to_currency(order.total, unit: "R$ ") %></span>
                             </div>
                           </div>
-                        </div>
-                        <div class="card-body py-2 bg-dark">
-                          <div class="table-responsive">
-                            <table class="table table-sm table-hover table-dark mb-0 border-secondary">
-                              <thead class="table-dark border-secondary">
-                                <tr>
-                                  <th width="10%">Código</th>
-                                  <th width="25%">Descrição</th>
-                                  <th width="8%" class="text-end">Qtd.</th>
-                                  <th width="8%" class="text-end">Estoque</th>
-                                  <th width="15%">Fornecedor</th>
-                                  <th width="12%">Qtd. Compra</th>
-                                  <th width="10%">Ações</th>
-                                </tr>
-                              </thead>
-                              <tbody class="border-secondary">
-                                <% supplier_items.each do |item| %>
-                                  <% 
-                                    estoque = item.produto_estoque.to_i
-                                    
-                                    # Definir a classe da linha baseada apenas no valor do estoque
-                                    if estoque == 0
-                                      row_class = 'bg-warning text-dark'
-                                    elsif estoque < 0
-                                      row_class = 'bg-danger text-white'
-                                    else
-                                      row_class = 'bg-success text-white'
-                                    end
-                                  %>
-                                  <tr class="<%= row_class %>">
-                                    <td><code class="bg-secondary text-white"><%= item.produto_codigo %></code></td>
-                                    <td><%= item.produto_descricao %></td>
-                                    <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
-                                    <td class="text-end"><%= item.produto_estoque.to_i %></td>
-                                    <td>
-                                      <% if item.sale_order_item_supply.present? %>
-                                        <span class="badge bg-info text-dark">
-                                          <%= item.sale_order_item_supply.supplier_name %>
-                                        </span>
-                                      <% else %>
-                                        <div class="input-group input-group-sm">
-                                          <%= text_field_tag "supplier_id[#{item.id}]", nil, class: "form-control form-control-sm bg-dark text-white border-secondary", placeholder: "ID Fornecedor" %>
-                                          <button type="button" class="btn btn-outline-info btn-sm save-supplier-btn" data-item-id="<%= item.id %>" data-product-id="<%= item.produto_id %>">
-                                            <i class="fas fa-save"></i>
-                                          </button>
-                                        </div>
-                                      <% end %>
-                                    </td>
-                                    <td>
-                                      <% if item.sale_order_item_supply.present? %>
-                                        <div class="input-group input-group-sm">
-                                          <%= text_field_tag "quantity_order[#{item.id}]", item.quantity_order, 
-                                              class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
-                                              placeholder: "Qtd.", 
-                                              data: { item_id: item.id },
-                                              disabled: !item.checked_order %>
-                                        </div>
-                                      <% end %>
-                                    </td>
-                                    <td>
-                                      <% if item.sale_order_item_supply.present? %>
-                                        <div class="d-flex">
-                                          <div class="form-check form-switch me-2">
-                                            <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
-                                                class: "form-check-input checked-order-toggle", 
-                                                data: { item_id: item.id } %>
-                                            <label class="form-check-label ms-1 text-white" for="checked_order[<%= item.id %>]">Incluir</label>
-                                          </div>
-                                          <div class="form-check form-switch">
-                                            <%= check_box_tag "ignore_order[#{item.id}]", '1', item.ignore_order, 
-                                                class: "form-check-input ignore-order-toggle", 
-                                                data: { item_id: item.id } %>
-                                            <label class="form-check-label ms-1 text-white" for="ignore_order[<%= item.id %>]">Ignorar</label>
-                                          </div>
-                                          <button type="button" class="btn btn-sm btn-outline-success ms-2 save-item-btn d-none" 
-                                                  data-item-id="<%= item.id %>">
-                                            <i class="fas fa-save"></i>
-                                          </button>
-                                        </div>
-                                      <% end %>
-                                    </td>
-                                  </tr>
-                                <% end %>
-                              </tbody>
-                            </table>
+                          <div class="d-flex">
+                            <% if exported_attempt %>
+                              <%= link_to "https://www.bling.com.br/pedidos.compra.php#edit/#{exported_attempt.bling_order_id}", 
+                                  target: "_blank",
+                                  class: "btn btn-sm btn-success me-2",
+                                  title: "Ver pedido de compra no Bling (ID: #{exported_attempt.bling_order_id})",
+                                  data: { toggle: "tooltip" } do %>
+                                <i class="fas fa-external-link-alt me-1"></i> <%= exported_attempt.bling_numero %>
+                              <% end %>
+                            <% end %>
+                            <%= link_to "https://www.bling.com.br/pedidos.venda.php#edit/#{order.bling_id}", 
+                                target: "_blank", 
+                                class: "btn btn-sm btn-outline-secondary", 
+                                title: "Ver no Bling" do %>
+                              <i class="fas fa-external-link-alt me-1"></i> Bling
+                            <% end %>
                           </div>
                         </div>
                       </div>
-                    <% end %>
-                  </div>
+                      <div class="card-body py-2 bg-dark">
+                        <div class="table-responsive">
+                          <table class="table table-sm table-hover table-dark mb-0 border-secondary">
+                            <thead class="table-dark border-secondary">
+                              <tr>
+                                <th width="10%">Código</th>
+                                <th width="25%">Descrição</th>
+                                <th width="8%" class="text-end">Qtd.</th>
+                                <th width="8%" class="text-end">Estoque</th>
+                                <th width="15%">Fornecedor</th>
+                                <th width="12%">Qtd. Compra</th>
+                                <th width="10%">Ações</th>
+                              </tr>
+                            </thead>
+                            <tbody class="border-secondary">
+                              <% supplier_items.each do |item| %>
+                                <% 
+                                  estoque = item.produto_estoque.to_i
+                                  
+                                  if estoque == 0
+                                    row_class = 'bg-warning text-dark'
+                                  elsif estoque < 0
+                                    row_class = 'bg-danger text-white'
+                                  else
+                                    row_class = 'bg-success text-white'
+                                  end
+                                %>
+                                <tr class="<%= row_class %>">
+                                  <td><code class="bg-secondary text-white"><%= item.produto_codigo %></code></td>
+                                  <td><%= item.produto_descricao %></td>
+                                  <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
+                                  <td class="text-end"><%= item.produto_estoque.to_i %></td>
+                                  <td>
+                                    <% if item.sale_order_item_supply.present? %>
+                                      <span class="badge bg-info text-dark">
+                                        <%= item.sale_order_item_supply.supplier_name %>
+                                      </span>
+                                    <% else %>
+                                      <div class="input-group input-group-sm">
+                                        <%= text_field_tag "supplier_id[#{item.id}]", nil, class: "form-control form-control-sm bg-dark text-white border-secondary", placeholder: "ID Fornecedor" %>
+                                        <button type="button" class="btn btn-outline-info btn-sm save-supplier-btn" data-item-id="<%= item.id %>" data-product-id="<%= item.produto_id %>">
+                                          <i class="fas fa-save"></i>
+                                        </button>
+                                      </div>
+                                    <% end %>
+                                  </td>
+                                  <td>
+                                    <% if item.sale_order_item_supply.present? %>
+                                      <div class="input-group input-group-sm">
+                                        <%= text_field_tag "quantity_order[#{item.id}]", item.quantity_order, 
+                                            class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
+                                            placeholder: "Qtd.", 
+                                            data: { item_id: item.id },
+                                            disabled: !item.checked_order %>
+                                      </div>
+                                    <% end %>
+                                  </td>
+                                  <td>
+                                    <% if item.sale_order_item_supply.present? %>
+                                      <div class="d-flex">
+                                        <div class="form-check form-switch me-2">
+                                          <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
+                                              class: "form-check-input checked-order-toggle", 
+                                              data: { item_id: item.id } %>
+                                          <label class="form-check-label ms-1 text-white" for="checked_order[<%= item.id %>]">Incluir</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                          <%= check_box_tag "ignore_order[#{item.id}]", '1', item.ignore_order, 
+                                              class: "form-check-input ignore-order-toggle", 
+                                              data: { item_id: item.id } %>
+                                          <label class="form-check-label ms-1 text-white" for="ignore_order[<%= item.id %>]">Ignorar</label>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-success ms-2 save-item-btn d-none" 
+                                                data-item-id="<%= item.id %>">
+                                          <i class="fas fa-save"></i>
+                                        </button>
+                                      </div>
+                                    <% end %>
+                                  </td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
                 </div>
               </div>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
-  <% end %>
+  </div>
+<% end %>
 </div>
 
 <!-- Painel de navegação flutuante -->
 <div class="floating-nav-panel">
+  <!-- Botão de toggle para mobile -->
+  <button type="button" id="toggle-nav-panel" class="btn btn-dark d-md-none">
+    <i class="fas fa-filter"></i> Filtrar por estoque <i class="fas fa-chevron-down ms-1"></i>
+  </button>
+  
   <div class="floating-nav-container">
     <!-- Navegação para itens com estoque zerado -->
     <div class="floating-nav-section bg-warning text-dark">
       <div class="floating-nav-header">
         <i class="fas fa-exclamation-triangle me-1"></i>
-        <span id="zero-stock-count">0</span> item(ns) com estoque zerado
+        <span id="zero-stock-count">0</span> <span class="d-none d-md-inline">item(ns) com estoque zerado</span>
       </div>
       <div class="floating-nav-controls">
         <button type="button" id="prev-zero-stock" class="btn btn-sm btn-dark me-1" disabled>
@@ -363,7 +363,7 @@
     <div class="floating-nav-section bg-danger text-white">
       <div class="floating-nav-header">
         <i class="fas fa-exclamation-circle me-1"></i>
-        <span id="negative-stock-count">0</span> item(ns) com estoque negativo
+        <span id="negative-stock-count">0</span> <span class="d-none d-md-inline">item(ns) com estoque negativo</span>
       </div>
       <div class="floating-nav-controls">
         <button type="button" id="prev-negative-stock" class="btn btn-sm btn-dark me-1" disabled>
@@ -382,7 +382,7 @@
     <div class="floating-nav-section bg-success text-white">
       <div class="floating-nav-header">
         <i class="fas fa-check-circle me-1"></i>
-        <span id="positive-stock-count">0</span> item(ns) com estoque positivo
+        <span id="positive-stock-count">0</span> <span class="d-none d-md-inline">item(ns) com estoque positivo</span>
       </div>
       <div class="floating-nav-controls">
         <button type="button" id="prev-positive-stock" class="btn btn-sm btn-dark me-1" disabled>
@@ -400,685 +400,740 @@
 </div>
 
 <%= javascript_tag do %>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize tooltips
+  $('[data-toggle="tooltip"]').tooltip();
+  
+  // Toggle quantity order input when checked_order changes
+  $(document).on('change', '.checked-order-toggle', function() {
+    const itemId = $(this).data('item-id');
+    const isChecked = $(this).is(':checked');
     
-    // Toggle quantity order input when checked_order changes
-    $(document).on('change', '.checked-order-toggle', function() {
-      const itemId = $(this).data('item-id');
-      const isChecked = $(this).is(':checked');
-      
-      const quantityInput = $(`#quantity_order_${itemId}`);
-      quantityInput.prop('disabled', !isChecked);
-      
-      // Uncheck ignore_order if checking checked_order
-      if (isChecked) {
-        $(`#ignore_order_${itemId}`).prop('checked', false);
-      }
-      
-      // Show/hide save button
-      toggleSaveButton(itemId);
-    });
+    const quantityInput = $(`#quantity_order_${itemId}`);
+    quantityInput.prop('disabled', !isChecked);
     
-    // Toggle save button when ignore_order changes
-    $(document).on('change', '.ignore-order-toggle', function() {
-      const itemId = $(this).data('item-id');
-      const isChecked = $(this).is(':checked');
-      
-      // Uncheck checked_order if checking ignore_order
-      if (isChecked) {
-        $(`#checked_order_${itemId}`).prop('checked', false);
-        $(`#quantity_order_${itemId}`).prop('disabled', true);
-      }
-      
-      // Show/hide save button
-      toggleSaveButton(itemId);
-    });
-    
-    // Monitor quantity_order input changes
-    $(document).on('input', '.quantity-order-input', function() {
-      const itemId = $(this).data('item-id');
-      toggleSaveButton(itemId);
-    });
-    
-    // Function to toggle save button visibility
-    function toggleSaveButton(itemId) {
-      const quantityInput = $(`#quantity_order_${itemId}`);
-      const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
-      const checkedOrder = $(`#checked_order_${itemId}`).is(':checked');
-      const ignoreOrder = $(`#ignore_order_${itemId}`).is(':checked');
-      
-      // Verificar se a quantidade é maior que 0
-      const quantityValue = parseFloat(quantityInput.val());
-      const isQuantityValid = !isNaN(quantityValue) && quantityValue > 0;
-      
-      // Only show save button if checked_order is true AND quantity is greater than 0
-      // OR if ignore_order is true (quantity not needed in this case)
-      if ((checkedOrder && isQuantityValid) || ignoreOrder) {
-        saveButton.removeClass('d-none');
-      } else {
-        saveButton.addClass('d-none');
-      }
-      
-      // Adicionar feedback visual para o campo de quantidade
-      if (checkedOrder && !isQuantityValid) {
-        quantityInput.addClass('border-danger');
-      } else {
-        quantityInput.removeClass('border-danger');
-      }
+    // Uncheck ignore_order if checking checked_order
+    if (isChecked) {
+      $(`#ignore_order_${itemId}`).prop('checked', false);
     }
     
-    // Save item changes
-    $(document).on('click', '.save-item-btn', function() {
-      const itemId = $(this).data('item-id');
-      const btn = $(this);
-      
-      const data = {
-        checked_order: $(`#checked_order_${itemId}`).is(':checked'),
-        ignore_order: $(`#ignore_order_${itemId}`).is(':checked'),
-        quantity_order: $(`#quantity_order_${itemId}`).val()
-      };
-      
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-      
-      $.ajax({
-        url: `/sale_order_items/${itemId}/update_item`,
-        method: 'PATCH',
-        data: { sale_order_item: data },
-        success: function(response) {
-          if (response.success) {
-            btn.html('<i class="fas fa-check text-success"></i>');
-            setTimeout(() => {
-              btn.html('<i class="fas fa-save"></i>').prop('disabled', false);
-            }, 1500);
-          } else {
-            alert(response.message || 'Erro ao salvar alterações');
+    // Show/hide save button
+    toggleSaveButton(itemId);
+  });
+  
+  // Toggle save button when ignore_order changes
+  $(document).on('change', '.ignore-order-toggle', function() {
+    const itemId = $(this).data('item-id');
+    const isChecked = $(this).is(':checked');
+    
+    // Uncheck checked_order if checking ignore_order
+    if (isChecked) {
+      $(`#checked_order_${itemId}`).prop('checked', false);
+      $(`#quantity_order_${itemId}`).prop('disabled', true);
+    }
+    
+    // Show/hide save button
+    toggleSaveButton(itemId);
+  });
+  
+  // Monitor quantity_order input changes
+  $(document).on('input', '.quantity-order-input', function() {
+    const itemId = $(this).data('item-id');
+    toggleSaveButton(itemId);
+  });
+  
+  // Function to toggle save button visibility
+  function toggleSaveButton(itemId) {
+    const quantityInput = $(`#quantity_order_${itemId}`);
+    const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
+    const checkedOrder = $(`#checked_order_${itemId}`).is(':checked');
+    const ignoreOrder = $(`#ignore_order_${itemId}`).is(':checked');
+    
+    // Verificar se a quantidade é maior que 0
+    const quantityValue = parseFloat(quantityInput.val());
+    const isQuantityValid = !isNaN(quantityValue) && quantityValue > 0;
+    
+    // Only show save button if checked_order is true AND quantity is greater than 0
+    // OR if ignore_order is true (quantity not needed in this case)
+    if ((checkedOrder && isQuantityValid) || ignoreOrder) {
+      saveButton.removeClass('d-none');
+    } else {
+      saveButton.addClass('d-none');
+    }
+    
+    // Adicionar feedback visual para o campo de quantidade
+    if (checkedOrder && !isQuantityValid) {
+      quantityInput.addClass('border-danger');
+    } else {
+      quantityInput.removeClass('border-danger');
+    }
+  }
+  
+  // Save item changes
+  $(document).on('click', '.save-item-btn', function() {
+    const itemId = $(this).data('item-id');
+    const btn = $(this);
+    
+    const data = {
+      checked_order: $(`#checked_order_${itemId}`).is(':checked'),
+      ignore_order: $(`#ignore_order_${itemId}`).is(':checked'),
+      quantity_order: $(`#quantity_order_${itemId}`).val()
+    };
+    
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+      url: `/sale_order_items/${itemId}/update_item`,
+      method: 'PATCH',
+      data: { sale_order_item: data },
+      success: function(response) {
+        if (response.success) {
+          btn.html('<i class="fas fa-check text-success"></i>');
+          setTimeout(() => {
             btn.html('<i class="fas fa-save"></i>').prop('disabled', false);
-          }
-        },
-        error: function() {
-          alert('Erro na comunicação com o servidor');
+          }, 1500);
+        } else {
+          alert(response.message || 'Erro ao salvar alterações');
           btn.html('<i class="fas fa-save"></i>').prop('disabled', false);
         }
-      });
-    });
-    
-    // Save supplier for items without supplier
-    $('.save-supplier-btn').on('click', function() {
-      const itemId = $(this).data('item-id');
-      const productId = $(this).data('product-id');
-      const supplierId = $(`#supplier_id_${itemId}`).val() || $(`input[name="supplier_id[${itemId}]"]`).val();
-      
-      if (!supplierId) {
-        alert('Por favor, informe o ID do fornecedor');
-        return;
+      },
+      error: function() {
+        alert('Erro na comunicação com o servidor');
+        btn.html('<i class="fas fa-save"></i>').prop('disabled', false);
       }
-      
-      const btn = $(this);
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-      
-      $.ajax({
-        url: '/sale_order_items/' + itemId + '/assign_supplier',
-        method: 'POST',
-        data: {
-          supplier_id: supplierId,
-          product_id: productId
-        },
-        success: function(response) {
-          if (response.success) {
-            // Replace the input with the supplier badge
-            const td = btn.closest('td');
-            td.html(`<span class="badge bg-info text-dark">${response.supplier_name}</span>`);
-            
-            // Reload the page to show the new action columns
-            location.reload();
-          } else {
-            alert(response.message || 'Erro ao salvar fornecedor');
-            btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
-          }
-        },
-        error: function() {
-          alert('Erro na comunicação com o servidor');
+    });
+  });
+  
+  // Save supplier for items without supplier
+  $('.save-supplier-btn').on('click', function() {
+    const itemId = $(this).data('item-id');
+    const productId = $(this).data('product-id');
+    const supplierId = $(`#supplier_id_${itemId}`).val() || $(`input[name="supplier_id[${itemId}]"]`).val();
+    
+    if (!supplierId) {
+      alert('Por favor, informe o ID do fornecedor');
+      return;
+    }
+    
+    const btn = $(this);
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+      url: '/sale_order_items/' + itemId + '/assign_supplier',
+      method: 'POST',
+      data: {
+        supplier_id: supplierId,
+        product_id: productId
+      },
+      success: function(response) {
+        if (response.success) {
+          // Replace the input with the supplier badge
+          const td = btn.closest('td');
+          td.html(`<span class="badge bg-info text-dark">${response.supplier_name}</span>`);
+          
+          // Reload the page to show the new action columns
+          location.reload();
+        } else {
+          alert(response.message || 'Erro ao salvar fornecedor');
           btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
         }
-      });
+      },
+      error: function() {
+        alert('Erro na comunicação com o servidor');
+        btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
+      }
+    });
+  });
+  
+  // Initialize all save buttons on page load
+  document.querySelectorAll('.quantity-order-input').forEach(function(input) {
+    const itemId = $(input).data('item-id');
+    toggleSaveButton(itemId);
+  });
+
+  // ===== Navegação entre itens com diferentes estados de estoque =====
+  let zeroStockRows = [];
+  let negativeStockRows = [];
+  let positiveStockRows = [];
+  let currentZeroStockIndex = -1;
+  let currentNegativeStockIndex = -1;
+  let currentPositiveStockIndex = -1;
+
+  // Função para inicializar a navegação de itens
+  function initStockNavigation() {
+    // Encontrar todas as linhas com base no valor do estoque
+    zeroStockRows = Array.from(document.querySelectorAll('tr.bg-warning'));
+    negativeStockRows = Array.from(document.querySelectorAll('tr.bg-danger'));
+    positiveStockRows = Array.from(document.querySelectorAll('tr.bg-success'));
+    
+    // Atualizar contadores para estoque zerado
+    const zeroStockCount = zeroStockRows.length;
+    document.getElementById('zero-stock-count').textContent = zeroStockCount;
+    document.getElementById('total-zero-stock').textContent = zeroStockCount;
+    
+    // Atualizar contadores para estoque negativo
+    const negativeStockCount = negativeStockRows.length;
+    document.getElementById('negative-stock-count').textContent = negativeStockCount;
+    document.getElementById('total-negative-stock').textContent = negativeStockCount;
+    
+    // Atualizar contadores para estoque positivo
+    const positiveStockCount = positiveStockRows.length;
+    document.getElementById('positive-stock-count').textContent = positiveStockCount;
+    document.getElementById('total-positive-stock').textContent = positiveStockCount;
+    
+    // Habilitar/desabilitar botões de navegação para estoque zerado
+    if (zeroStockCount > 0) {
+      document.getElementById('next-zero-stock').removeAttribute('disabled');
+      currentZeroStockIndex = 0;
+      document.getElementById('current-zero-stock').textContent = '1';
+    } else {
+      document.getElementById('prev-zero-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('next-zero-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('current-zero-stock').textContent = '0';
+    }
+    
+    // Habilitar/desabilitar botões de navegação para estoque negativo
+    if (negativeStockCount > 0) {
+      document.getElementById('next-negative-stock').removeAttribute('disabled');
+      currentNegativeStockIndex = 0;
+      document.getElementById('current-negative-stock').textContent = '1';
+    } else {
+      document.getElementById('prev-negative-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('next-negative-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('current-negative-stock').textContent = '0';
+    }
+    
+    // Habilitar/desabilitar botões de navegação para estoque positivo
+    if (positiveStockCount > 0) {
+      document.getElementById('next-positive-stock').removeAttribute('disabled');
+      currentPositiveStockIndex = 0;
+      document.getElementById('current-positive-stock').textContent = '1';
+    } else {
+      document.getElementById('prev-positive-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('next-positive-stock').setAttribute('disabled', 'disabled');
+      document.getElementById('current-positive-stock').textContent = '0';
+    }
+  }
+
+  // Função para expandir o accordion que contém uma linha específica
+  function expandAccordionForRow(row) {
+    // Encontrar o accordion-collapse pai
+    const accordionCollapse = row.closest('.accordion-collapse');
+    if (accordionCollapse && !accordionCollapse.classList.contains('show')) {
+      // Encontrar o botão do accordion
+      const accordionButton = document.querySelector(`[data-bs-target="#${accordionCollapse.id}"]`);
+      if (accordionButton) {
+        // Simular clique para expandir
+        accordionButton.click();
+      }
+    }
+  }
+
+  // Função para destacar e rolar até uma linha
+  function highlightAndScrollToRow(row, highlightClass) {
+    // Remover destaque de todas as linhas
+    document.querySelectorAll('tr.highlighted-row-warning, tr.highlighted-row-success, tr.highlighted-row-danger').forEach(r => {
+      r.classList.remove('highlighted-row-warning', 'highlighted-row-success', 'highlighted-row-danger');
+      r.classList.remove('flash-animation');
     });
     
-    // Initialize all save buttons on page load
-    document.querySelectorAll('.quantity-order-input').forEach(function(input) {
-      const itemId = $(input).data('item-id');
-      toggleSaveButton(itemId);
-    });
-
-    // ===== Navegação entre itens com diferentes estados de estoque =====
-    let zeroStockRows = [];
-    let negativeStockRows = [];
-    let positiveStockRows = [];
-    let currentZeroStockIndex = -1;
-    let currentNegativeStockIndex = -1;
-    let currentPositiveStockIndex = -1;
-
-    // Função para inicializar a navegação de itens
-    function initStockNavigation() {
-      // Encontrar todas as linhas com base no valor do estoque
-      zeroStockRows = Array.from(document.querySelectorAll('tr.bg-warning'));
-      negativeStockRows = Array.from(document.querySelectorAll('tr.bg-danger'));
-      positiveStockRows = Array.from(document.querySelectorAll('tr.bg-success'));
+    // Adicionar destaque à linha atual
+    row.classList.add(highlightClass);
+    
+    // Rolar até a linha com animação suave
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Adicionar indicador visual (seta) na primeira célula
+    const firstCell = row.querySelector('td:first-child');
+    if (firstCell) {
+      // Remover indicadores existentes de todas as células
+      document.querySelectorAll('.row-indicator').forEach(el => el.remove());
       
-      // Atualizar contadores para estoque zerado
-      const zeroStockCount = zeroStockRows.length;
-      document.getElementById('zero-stock-count').textContent = zeroStockCount;
-      document.getElementById('total-zero-stock').textContent = zeroStockCount;
-      
-      // Atualizar contadores para estoque negativo
-      const negativeStockCount = negativeStockRows.length;
-      document.getElementById('negative-stock-count').textContent = negativeStockCount;
-      document.getElementById('total-negative-stock').textContent = negativeStockCount;
-      
-      // Atualizar contadores para estoque positivo
-      const positiveStockCount = positiveStockRows.length;
-      document.getElementById('positive-stock-count').textContent = positiveStockCount;
-      document.getElementById('total-positive-stock').textContent = positiveStockCount;
-      
-      // Habilitar/desabilitar botões de navegação para estoque zerado
-      if (zeroStockCount > 0) {
-        document.getElementById('next-zero-stock').removeAttribute('disabled');
-        currentZeroStockIndex = 0;
-        document.getElementById('current-zero-stock').textContent = '1';
-      } else {
-        document.getElementById('prev-zero-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('next-zero-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('current-zero-stock').textContent = '0';
-      }
-      
-      // Habilitar/desabilitar botões de navegação para estoque negativo
-      if (negativeStockCount > 0) {
-        document.getElementById('next-negative-stock').removeAttribute('disabled');
-        currentNegativeStockIndex = 0;
-        document.getElementById('current-negative-stock').textContent = '1';
-      } else {
-        document.getElementById('prev-negative-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('next-negative-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('current-negative-stock').textContent = '0';
-      }
-      
-      // Habilitar/desabilitar botões de navegação para estoque positivo
-      if (positiveStockCount > 0) {
-        document.getElementById('next-positive-stock').removeAttribute('disabled');
-        currentPositiveStockIndex = 0;
-        document.getElementById('current-positive-stock').textContent = '1';
-      } else {
-        document.getElementById('prev-positive-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('next-positive-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('current-positive-stock').textContent = '0';
-      }
+      // Criar e adicionar o novo indicador
+      const indicator = document.createElement('div');
+      indicator.className = 'row-indicator';
+      indicator.innerHTML = '<i class="fas fa-arrow-right"></i>';
+      firstCell.style.position = 'relative';
+      firstCell.appendChild(indicator);
     }
+    
+    // Adicionar efeito de flash
+    setTimeout(() => {
+      row.classList.add('flash-animation');
+    }, 300); // Pequeno atraso para garantir que a rolagem termine primeiro
+  }
 
-    // Função para expandir o accordion que contém uma linha específica
-    function expandAccordionForRow(row) {
-      // Encontrar o accordion-collapse pai
-      const accordionCollapse = row.closest('.accordion-collapse');
-      if (accordionCollapse && !accordionCollapse.classList.contains('show')) {
-        // Encontrar o botão do accordion
-        const accordionButton = document.querySelector(`[data-bs-target="#${accordionCollapse.id}"]`);
-        if (accordionButton) {
-          // Simular clique para expandir
-          accordionButton.click();
-        }
-      }
-    }
-
-    // Função para destacar e rolar até uma linha
-    function highlightAndScrollToRow(row, highlightClass) {
-      // Remover destaque de todas as linhas
-      document.querySelectorAll('tr.highlighted-row-warning, tr.highlighted-row-success, tr.highlighted-row-danger').forEach(r => {
-        r.classList.remove('highlighted-row-warning', 'highlighted-row-success', 'highlighted-row-danger');
-        r.classList.remove('flash-animation');
-      });
-      
-      // Adicionar destaque à linha atual
-      row.classList.add(highlightClass);
-      
-      // Rolar até a linha com animação suave
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      // Adicionar indicador visual (seta) na primeira célula
-      const firstCell = row.querySelector('td:first-child');
-      if (firstCell) {
-        // Remover indicadores existentes de todas as células
-        document.querySelectorAll('.row-indicator').forEach(el => el.remove());
-        
-        // Criar e adicionar o novo indicador
-        const indicator = document.createElement('div');
-        indicator.className = 'row-indicator';
-        indicator.innerHTML = '<i class="fas fa-arrow-right"></i>';
-        firstCell.style.position = 'relative';
-        firstCell.appendChild(indicator);
-      }
-      
-      // Adicionar efeito de flash
-      setTimeout(() => {
-        row.classList.add('flash-animation');
-      }, 300); // Pequeno atraso para garantir que a rolagem termine primeiro
-    }
-
-    // Evento para o botão "Próximo" de estoque zerado
-    document.getElementById('next-zero-stock').addEventListener('click', function() {
-      if (zeroStockRows.length === 0) return;
-      
-      // Avançar para o próximo item
-      currentZeroStockIndex = (currentZeroStockIndex + 1) % zeroStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
-      
-      // Habilitar botão "Anterior" se necessário
-      document.getElementById('prev-zero-stock').removeAttribute('disabled');
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = zeroStockRows[currentZeroStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
-    });
-
-    // Evento para o botão "Anterior" de estoque zerado
-    document.getElementById('prev-zero-stock').addEventListener('click', function() {
-      if (zeroStockRows.length === 0) return;
-      
-      // Voltar para o item anterior
-      currentZeroStockIndex = (currentZeroStockIndex - 1 + zeroStockRows.length) % zeroStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = zeroStockRows[currentZeroStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
-    });
-
-    // Evento para o botão "Próximo" de estoque negativo
-    document.getElementById('next-negative-stock').addEventListener('click', function() {
-      if (negativeStockRows.length === 0) return;
-      
-      // Avançar para o próximo item
-      currentNegativeStockIndex = (currentNegativeStockIndex + 1) % negativeStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
-      
-      // Habilitar botão "Anterior" se necessário
-      document.getElementById('prev-negative-stock').removeAttribute('disabled');
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = negativeStockRows[currentNegativeStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
-    });
-
-    // Evento para o botão "Anterior" de estoque negativo
-    document.getElementById('prev-negative-stock').addEventListener('click', function() {
-      if (negativeStockRows.length === 0) return;
-      
-      // Voltar para o item anterior
-      currentNegativeStockIndex = (currentNegativeStockIndex - 1 + negativeStockRows.length) % negativeStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = negativeStockRows[currentNegativeStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
-    });
-
-    // Evento para o botão "Próximo" de estoque positivo
-    document.getElementById('next-positive-stock').addEventListener('click', function() {
-      if (positiveStockRows.length === 0) return;
-      
-      // Avançar para o próximo item
-      currentPositiveStockIndex = (currentPositiveStockIndex + 1) % positiveStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
-      
-      // Habilitar botão "Anterior" se necessário
-      document.getElementById('prev-positive-stock').removeAttribute('disabled');
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = positiveStockRows[currentPositiveStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-success');
-    });
-
-    // Evento para o botão "Anterior" de estoque positivo
-    document.getElementById('prev-positive-stock').addEventListener('click', function() {
-      if (positiveStockRows.length === 0) return;
-      
-      // Voltar para o item anterior
-      currentPositiveStockIndex = (currentPositiveStockIndex - 1 + positiveStockRows.length) % positiveStockRows.length;
-      
-      // Atualizar contador
-      document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
-      
-      // Expandir accordion e rolar até a linha
-      const currentRow = positiveStockRows[currentPositiveStockIndex];
-      expandAccordionForRow(currentRow);
-      highlightAndScrollToRow(currentRow, 'highlighted-row-success');
-    });
-
-    // Inicializar a navegação após o carregamento da página
-    initStockNavigation();
+  // Evento para o botão "Próximo" de estoque zerado
+  document.getElementById('next-zero-stock').addEventListener('click', function() {
+    if (zeroStockRows.length === 0) return;
+    
+    // Avançar para o próximo item
+    currentZeroStockIndex = (currentZeroStockIndex + 1) % zeroStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
+    
+    // Habilitar botão "Anterior" se necessário
+    document.getElementById('prev-zero-stock').removeAttribute('disabled');
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = zeroStockRows[currentZeroStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
   });
+
+  // Evento para o botão "Anterior" de estoque zerado
+  document.getElementById('prev-zero-stock').addEventListener('click', function() {
+    if (zeroStockRows.length === 0) return;
+    
+    // Voltar para o item anterior
+    currentZeroStockIndex = (currentZeroStockIndex - 1 + zeroStockRows.length) % zeroStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = zeroStockRows[currentZeroStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
+  });
+
+  // Evento para o botão "Próximo" de estoque negativo
+  document.getElementById('next-negative-stock').addEventListener('click', function() {
+    if (negativeStockRows.length === 0) return;
+    
+    // Avançar para o próximo item
+    currentNegativeStockIndex = (currentNegativeStockIndex + 1) % negativeStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
+    
+    // Habilitar botão "Anterior" se necessário
+    document.getElementById('prev-negative-stock').removeAttribute('disabled');
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = negativeStockRows[currentNegativeStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
+  });
+
+  // Evento para o botão "Anterior" de estoque negativo
+  document.getElementById('prev-negative-stock').addEventListener('click', function() {
+    if (negativeStockRows.length === 0) return;
+    
+    // Voltar para o item anterior
+    currentNegativeStockIndex = (currentNegativeStockIndex - 1 + negativeStockRows.length) % negativeStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = negativeStockRows[currentNegativeStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
+  });
+
+  // Evento para o botão "Próximo" de estoque positivo
+  document.getElementById('next-positive-stock').addEventListener('click', function() {
+    if (positiveStockRows.length === 0) return;
+    
+    // Avançar para o próximo item
+    currentPositiveStockIndex = (currentPositiveStockIndex + 1) % positiveStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
+    
+    // Habilitar botão "Anterior" se necessário
+    document.getElementById('prev-positive-stock').removeAttribute('disabled');
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = positiveStockRows[currentPositiveStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-success');
+  });
+
+  // Evento para o botão "Anterior" de estoque positivo
+  document.getElementById('prev-positive-stock').addEventListener('click', function() {
+    if (positiveStockRows.length === 0) return;
+    
+    // Voltar para o item anterior
+    currentPositiveStockIndex = (currentPositiveStockIndex - 1 + positiveStockRows.length) % positiveStockRows.length;
+    
+    // Atualizar contador
+    document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
+    
+    // Expandir accordion e rolar até a linha
+    const currentRow = positiveStockRows[currentPositiveStockIndex];
+    expandAccordionForRow(currentRow);
+    highlightAndScrollToRow(currentRow, 'highlighted-row-success');
+  });
+
+  // Toggle para o painel de navegação no mobile
+  document.getElementById('toggle-nav-panel').addEventListener('click', function() {
+    const navContainer = document.querySelector('.floating-nav-container');
+    navContainer.classList.toggle('mobile-expanded');
+    
+    const icon = this.querySelector('.fas.fa-chevron-down, .fas.fa-chevron-up');
+    if (icon) {
+      if (icon.classList.contains('fa-chevron-down')) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+      } else {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      }
+    }
+  });
+
+  // Inicializar a navegação após o carregamento da página
+  initStockNavigation();
+});
 <% end %>
 
 <style>
-  /* Custom Styles */
-  :root {
-    --primary-soft: rgba(13, 110, 253, 0.1);
-    --success-soft: rgba(25, 135, 84, 0.1);
-    --danger-soft: rgba(220, 53, 69, 0.1);
-    --warning-soft: rgba(255, 193, 7, 0.1);
-    --success-dark: rgba(25, 135, 84, 0.3);
-    --info-dark: rgba(13, 202, 240, 0.2);
+:root {
+  --primary-soft: rgba(13, 110, 253, 0.1);
+  --success-soft: rgba(25, 135, 84, 0.1);
+  --danger-soft: rgba(220, 53, 69, 0.1);
+  --warning-soft: rgba(255, 193, 7, 0.1);
+  --success-dark: rgba(25, 135, 84, 0.3);
+  --info-dark: rgba(13, 202, 240, 0.2);
+}
+
+body {
+  background-color: #212529;
+  color: #fff;
+}
+
+.bg-primary-soft {
+  background-color: var(--primary-soft);
+}
+
+.bg-success-soft {
+  background-color: var(--success-soft);
+}
+
+.bg-danger-soft {
+  background-color: var(--danger-soft);
+}
+
+.bg-warning-soft {
+  background-color: var(--warning-soft);
+}
+
+.bg-success-dark {
+  background-color: var(--success-dark);
+}
+
+.bg-info-dark {
+  background-color: var(--info-dark);
+}
+
+.accordion-button:not(.collapsed) {
+  box-shadow: none;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: #495057;
+}
+
+.accordion-button::after {
+  filter: invert(1);
+}
+
+.accordion-item {
+  border-radius: 0.35rem !important;
+  margin-bottom: 0.5rem;
+}
+
+.table-sm td, .table-sm th {
+  padding: 0.5rem;
+}
+
+.border-top-primary {
+  border-top: 3px solid #0d6efd !important;
+}
+
+.card-header h5 {
+  font-size: 1rem;
+}
+
+.form-switch .form-check-input {
+  width: 2em;
+  margin-left: 0;
+  background-color: #343a40;
+}
+
+.form-check-input:checked {
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
+}
+
+.table-dark {
+  --bs-table-bg: #212529;
+  --bs-table-striped-bg: #2c3034;
+  --bs-table-striped-color: #fff;
+  --bs-table-active-bg: #373b3e;
+  --bs-table-active-color: #fff;
+  --bs-table-hover-bg: #323539;
+  --bs-table-hover-color: #fff;
+  color: #fff;
+  border-color: #495057;
+}
+
+.border-secondary {
+  border-color: #495057 !important;
+}
+
+.floating-nav-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: auto;
+  max-width: 90%;
+}
+
+#toggle-nav-panel {
+  display: none;
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 8px 15px;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.floating-nav-container {
+  display: flex;
+  flex-direction: row;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.floating-nav-section {
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 200px;
+}
+
+.floating-nav-header {
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.floating-nav-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-counter {
+  margin: 0 8px;
+  font-size: 0.9rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.highlighted-row-warning {
+  background-color: rgba(255, 193, 7, 0.3) !important;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
+  position: relative;
+  border-left: 4px solid #ffc107 !important;
+}
+
+.highlighted-row-danger {
+  background-color: rgba(220, 53, 69, 0.3) !important;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+  position: relative;
+  border-left: 4px solid #dc3545 !important;
+}
+
+.highlighted-row-success {
+  background-color: rgba(25, 135, 84, 0.3) !important;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+  position: relative;
+  border-left: 4px solid #198754 !important;
+}
+
+@keyframes flash-warning {
+  0%, 100% { background-color: rgba(255, 193, 7, 0.3); }
+  50% { background-color: rgba(255, 193, 7, 0.7); }
+}
+
+@keyframes flash-danger {
+  0%, 100% { background-color: rgba(220, 53, 69, 0.3); }
+  50% { background-color: rgba(220, 53, 69, 0.7); }
+}
+
+@keyframes flash-success {
+  0%, 100% { background-color: rgba(25, 135, 84, 0.3); }
+  50% { background-color: rgba(25, 135, 84, 0.7); }
+}
+
+.highlighted-row-warning.flash-animation {
+  animation: flash-warning 0.8s ease-in-out;
+}
+
+.highlighted-row-danger.flash-animation {
+  animation: flash-danger 0.8s ease-in-out;
+}
+
+.highlighted-row-success.flash-animation {
+  animation: flash-success 0.8s ease-in-out;
+}
+
+.row-indicator {
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  background-color: #212529;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  animation: pulse 1.5s infinite;
+  z-index: 10;
+}
+
+@keyframes pulse {
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.2); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+.highlighted-row-warning td, .highlighted-row-danger td, .highlighted-row-success td {
+  position: relative;
+  z-index: 1;
+}
+
+.highlighted-row-warning td:first-child::before,
+.highlighted-row-danger td:first-child::before,
+.highlighted-row-success td:first-child::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  height: 100%;
+  width: 4px;
+}
+
+.highlighted-row-warning td:first-child::before {
+  background-color: #ffc107;
+}
+
+.highlighted-row-danger td:first-child::before {
+  background-color: #dc3545;
+}
+
+.highlighted-row-success td:first-child::before {
+  background-color: #198754;
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.display-5 {
+  font-size: 2.5rem;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.bg-opacity-10 {
+  opacity: 0.1;
+}
+
+.rounded-circle {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .card-header .btn {
+    margin-top: 0.5rem;
+    width: 100%;
   }
   
-  body {
-    background-color: #212529;
-    color: #fff;
+  .accordion-button {
+    font-size: 0.9rem;
   }
   
-  .bg-primary-soft {
-    background-color: var(--primary-soft);
+  .input-group.input-group-sm {
+    width: 100%;
   }
   
-  .bg-success-soft {
-    background-color: var(--success-soft);
+  table td, table th {
+    font-size: 0.8rem;
   }
   
-  .bg-danger-soft {
-    background-color: var(--danger-soft);
-  }
-  
-  .bg-warning-soft {
-    background-color: var(--warning-soft);
-  }
-  
-  .bg-success-dark {
-    background-color: var(--success-dark);
-  }
-  
-  .bg-info-dark {
-    background-color: var(--info-dark);
-  }
-  
-  .accordion-button:not(.collapsed) {
-    box-shadow: none;
-  }
-  
-  .accordion-button:focus {
-    box-shadow: none;
-    border-color: #495057;
-  }
-  
-  .accordion-button::after {
-    filter: invert(1);
-  }
-  
-  .accordion-item {
-    border-radius: 0.35rem !important;
-    margin-bottom: 0.5rem;
-  }
-  
-  .table-sm td, .table-sm th {
-    padding: 0.5rem;
-  }
-  
-  .border-top-primary {
-    border-top: 3px solid #0d6efd !important;
-  }
-  
-  .card-header h5 {
-    font-size: 1rem;
-  }
-  
-  .form-switch .form-check-input {
-    width: 2em;
-    margin-left: 0;
-    background-color: #343a40;
-  }
-  
-  .form-check-input:checked {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
-  }
-  
-  .table-dark {
-    --bs-table-bg: #212529;
-    --bs-table-striped-bg: #2c3034;
-    --bs-table-striped-color: #fff;
-    --bs-table-active-bg: #373b3e;
-    --bs-table-active-color: #fff;
-    --bs-table-hover-bg: #323539;
-    --bs-table-hover-color: #fff;
-    color: #fff;
-    border-color: #495057;
-  }
-  
-  .border-secondary {
-    border-color: #495057 !important;
-  }
-  
-  /* Estilos para o painel de navegação flutuante */
-  .floating-nav-panel {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    width: auto;
-    max-width: 90%;
+  #toggle-nav-panel {
+    display: block;
   }
   
   .floating-nav-container {
-    display: flex;
+    display: none;
     flex-direction: row;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    flex-wrap: wrap;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  
+  .floating-nav-container.mobile-expanded {
+    display: flex;
   }
   
   .floating-nav-section {
-    padding: 10px 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 200px;
+    min-width: 33.33%;
+    padding: 8px;
   }
   
   .floating-nav-header {
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-align: center;
-  }
-  
-  .floating-nav-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 0.8rem;
   }
   
   .nav-counter {
-    margin: 0 8px;
-    font-size: 0.9rem;
-    min-width: 40px;
-    text-align: center;
+    font-size: 0.8rem;
+    min-width: 30px;
   }
   
-  /* Estilos para linhas destacadas */
-  .highlighted-row-warning {
-    background-color: rgba(255, 193, 7, 0.3) !important;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
-    position: relative;
-    border-left: 4px solid #ffc107 !important;
+  .floating-nav-controls .btn {
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .floating-nav-section {
+    min-width: 100%;
   }
   
-  .highlighted-row-danger {
-    background-color: rgba(220, 53, 69, 0.3) !important;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
-    position: relative;
-    border-left: 4px solid #dc3545 !important;
+  .floating-nav-container {
+    max-height: 180px;
   }
-  
-  .highlighted-row-success {
-    background-color: rgba(25, 135, 84, 0.3) !important;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
-    position: relative;
-    border-left: 4px solid #198754 !important;
-  }
-  
-  /* Efeito de flash para a linha atual */
-  @keyframes flash-warning {
-    0%, 100% { background-color: rgba(255, 193, 7, 0.3); }
-    50% { background-color: rgba(255, 193, 7, 0.7); }
-  }
-  
-  @keyframes flash-danger {
-    0%, 100% { background-color: rgba(220, 53, 69, 0.3); }
-    50% { background-color: rgba(220, 53, 69, 0.7); }
-  }
-  
-  @keyframes flash-success {
-    0%, 100% { background-color: rgba(25, 135, 84, 0.3); }
-    50% { background-color: rgba(25, 135, 84, 0.7); }
-  }
-  
-  .highlighted-row-warning.flash-animation {
-    animation: flash-warning 0.8s ease-in-out;
-  }
-  
-  .highlighted-row-danger.flash-animation {
-    animation: flash-danger 0.8s ease-in-out;
-  }
-  
-  .highlighted-row-success.flash-animation {
-    animation: flash-success 0.8s ease-in-out;
-  }
-  
-  /* Indicador visual (seta) */
-  .row-indicator {
-    position: absolute;
-    left: -15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #fff;
-    background-color: #212529;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    animation: pulse 1.5s infinite;
-    z-index: 10;
-  }
-  
-  @keyframes pulse {
-    0% { transform: translateY(-50%) scale(1); }
-    50% { transform: translateY(-50%) scale(1.2); }
-    100% { transform: translateY(-50%) scale(1); }
-  }
-  
-  /* Destaque para a linha inteira */
-  .highlighted-row-warning td, .highlighted-row-danger td, .highlighted-row-success td {
-    position: relative;
-    z-index: 1;
-  }
-  
-  .highlighted-row-warning td:first-child::before,
-  .highlighted-row-danger td:first-child::before,
-  .highlighted-row-success td:first-child::before {
-    content: "";
-    position: absolute;
-    left: -4px;
-    top: 0;
-    height: 100%;
-    width: 4px;
-  }
-  
-  .highlighted-row-warning td:first-child::before {
-    background-color: #ffc107;
-  }
-  
-  .highlighted-row-danger td:first-child::before {
-    background-color: #dc3545;
-  }
-  
-  .highlighted-row-success td:first-child::before {
-    background-color: #198754;
-  }
-  
-  /* Estilos adicionais para os cards de estatísticas */
-  .card {
-    transition: all 0.3s ease;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
-  }
-  
-  .display-5 {
-    font-size: 2.5rem;
-  }
-  
-  .progress {
-    height: 8px;
-    border-radius: 4px;
-  }
-  
-  .bg-opacity-10 {
-    opacity: 0.1;
-  }
-  
-  .rounded-circle {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .card-header .btn {
-      margin-top: 0.5rem;
-      width: 100%;
-    }
-    
-    .accordion-button {
-      font-size: 0.9rem;
-    }
-    
-    .input-group.input-group-sm {
-      width: 100%;
-    }
-    
-    table td, table th {
-      font-size: 0.8rem;
-    }
-    
-    .floating-nav-container {
-      flex-direction: column;
-    }
-    
-    .floating-nav-section {
-      min-width: 100%;
-    }
-  }
+}
 </style>
