@@ -61,13 +61,11 @@ class SalesOrdersController < ApplicationController
 
         @total_items_count += order.sale_order_items.size
 
-        # Cria uma cópia superficial do pedido para não afetar o original
         filtered_order = order.dup
         filtered_order.sale_order_items = filtered_items
         filtered_order
       end
 
-      # Agrupa pedidos por fornecedor considerando apenas os itens filtrados
       @orders_by_supplier = filtered_orders.each_with_object({}) do |order, hash|
         suppliers = order.sale_order_items.map do |item|
           item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
@@ -79,7 +77,6 @@ class SalesOrdersController < ApplicationController
         end
       end
 
-      # Remove pedidos que não têm mais itens após a filtragem
       @orders_by_supplier.each do |supplier, orders|
         @orders_by_supplier[supplier] = orders.reject { |order| order.sale_order_items.empty? }
       end
@@ -97,7 +94,7 @@ class SalesOrdersController < ApplicationController
 
   def show
     @order_items = @order.sale_order_items
-  rescue => e
+  rescue StandardError => e
     flash[:alert] = 'Pedido não encontrado'
     redirect_to sales_orders_path
   end

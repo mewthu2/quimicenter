@@ -118,16 +118,16 @@
       </div>
     </div>
 
-    <!-- Lista de Pedidos -->
+    <!-- Lista de Pedidos agrupados por Fornecedor -->
     <div class="card shadow mb-4 border-0 bg-dark border-secondary">
       <div class="card-header py-3 d-flex flex-column flex-md-row justify-content-between align-items-center bg-dark border-secondary">
         <h6 class="m-0 font-weight-bold text-info">
-          <i class="fas fa-list-ol me-2"></i>Pedidos por Fornecedor
+          <i class="fas fa-list-ol me-2"></i>Itens por Fornecedor
         </h6>
       </div>
       
       <div class="card-body p-0">
-        <% if @orders.empty? %>
+        <% if @orders_by_supplier.empty? %>
           <div class="text-center py-5">
             <i class="fas fa-inbox fa-4x text-light mb-3"></i>
             <h5 class="text-white">Nenhum pedido encontrado</h5>
@@ -137,6 +137,27 @@
         <% else %>
           <div class="accordion" id="suppliersAccordion">
             <% @orders_by_supplier.each_with_index do |(supplier, supplier_orders), index| %>
+              <% 
+                # Contar todos os itens deste fornecedor em todos os pedidos
+                supplier_items_count = 0
+                supplier_orders.each do |order|
+                  supplier_items_count += order.sale_order_items.count { |item| 
+                    item_supplier = item.sale_order_item_supply&.supplier_name
+                    item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
+                  }
+                end
+                
+                # Calcular o valor total dos itens deste fornecedor
+                supplier_total_value = 0
+                supplier_orders.each do |order|
+                  order.sale_order_items.each do |item|
+                    item_supplier = item.sale_order_item_supply&.supplier_name
+                    if item_supplier == supplier || (item_supplier.nil? && supplier == 'Fornecedor não apontado')
+                      supplier_total_value += item.valor_unitario * item.quantidade
+                    end
+                  end
+                end
+              %>
               <div class="accordion-item border-secondary bg-dark">
                 <h2 class="accordion-header" id="supplierHeading<%= index %>">
                   <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3 bg-dark text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
@@ -144,13 +165,16 @@
                       <div class="flex-grow-1">
                         <div class="d-flex align-items-center">
                           <div class="me-3">
-                            <span class="badge bg-info text-dark rounded-pill"><%= supplier_orders.size %></span>
+                            <span class="badge bg-info text-dark rounded-pill">
+                              <%= supplier_items_count %> item(ns)
+                            </span>
                           </div>
                           <h5 class="mb-0 text-white"><%= supplier.presence || "Fornecedor não identificado" %></h5>
                         </div>
                       </div>
                       <div class="text-light small">
-                        Total: <%= number_to_currency(supplier_orders.sum(&:total), unit: "R$ ") %>
+                        <%= supplier_orders.size %> pedido(s) | 
+                        Total: <%= number_to_currency(supplier_total_value, unit: "R$ ") %>
                       </div>
                     </div>
                   </button>
@@ -161,6 +185,15 @@
                       <% 
                         order_id = order.bling_id.to_s
                         exported_attempt = @exported_attempts ? @exported_attempts[order_id] : nil
+                        
+                        # Filtrar apenas os itens deste fornecedor
+                        supplier_items = order.sale_order_items.select do |item|
+                          supplier_name = item.sale_order_item_supply&.supplier_name
+                          supplier_name == supplier || (supplier_name.nil? && supplier == 'Fornecedor não apontado')
+                        end
+                        
+                        # Pular este pedido se não tiver itens para este fornecedor
+                        next if supplier_items.empty?
                       %>
                       <div class="card mb-3 border-0 shadow-sm bg-dark <%= exported_attempt ? 'border-start-success border-start-3' : 'border-start-warning border-start-3' %>">
                         <div class="card-header <%= exported_attempt ? 'bg-success-dark' : 'bg-dark' %> py-2 border-secondary">
@@ -214,31 +247,30 @@
                                   <th width="25%">Descrição</th>
                                   <th width="8%" class="text-end">Qtd.</th>
                                   <th width="8%" class="text-end">Estoque</th>
-                                  <th width="12%" class="text-end">Diferença</th>
                                   <th width="15%">Fornecedor</th>
                                   <th width="12%">Qtd. Compra</th>
                                   <th width="10%">Ações</th>
                                 </tr>
                               </thead>
                               <tbody class="border-secondary">
-                                <% order.sale_order_items.each do |item| %>
-                                  <tr class="<%= 'table-warning text-dark' if item.produto_estoque.to_i < item.quantidade.to_i %>">
+                                <% supplier_items.each do |item| %>
+                                  <% 
+                                    estoque = item.produto_estoque.to_i
+                                    
+                                    # Definir a classe da linha baseada apenas no valor do estoque
+                                    if estoque == 0
+                                      row_class = 'bg-warning text-dark'
+                                    elsif estoque < 0
+                                      row_class = 'bg-danger text-white'
+                                    else
+                                      row_class = 'bg-success text-white'
+                                    end
+                                  %>
+                                  <tr class="<%= row_class %>">
                                     <td><code class="bg-secondary text-white"><%= item.produto_codigo %></code></td>
                                     <td><%= item.produto_descricao %></td>
                                     <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
                                     <td class="text-end"><%= item.produto_estoque.to_i %></td>
-                                    <td class="text-end">
-                                      <span class="<%= item.produto_estoque.to_i < item.quantidade.to_i ? 'text-danger' : 'text-success' %>">
-                                        <%= item.produto_estoque.to_i - item.quantidade.to_i %>
-                                      </span>
-                                      <% if item.produto_estoque.to_i < item.quantidade.to_i %>
-                                        <span class="badge bg-danger-soft text-danger ms-1">Falta</span>
-                                      <% elsif item.produto_estoque.to_i == item.quantidade.to_i %>
-                                        <span class="badge bg-warning-soft text-dark ms-1">Exato</span>
-                                      <% else %>
-                                        <span class="badge bg-success-soft text-success ms-1">Sobra</span>
-                                      <% end %>
-                                    </td>
                                     <td>
                                       <% if item.sale_order_item_supply.present? %>
                                         <span class="badge bg-info text-dark">
@@ -308,39 +340,58 @@
 <!-- Painel de navegação flutuante -->
 <div class="floating-nav-panel">
   <div class="floating-nav-container">
-    <!-- Navegação para itens com estoque faltante -->
+    <!-- Navegação para itens com estoque zerado -->
     <div class="floating-nav-section bg-warning text-dark">
       <div class="floating-nav-header">
         <i class="fas fa-exclamation-triangle me-1"></i>
-        <span id="low-stock-count">0</span> item(ns) com estoque faltante
+        <span id="zero-stock-count">0</span> item(ns) com estoque zerado
       </div>
       <div class="floating-nav-controls">
-        <button type="button" id="prev-low-stock" class="btn btn-sm btn-dark me-1" disabled>
+        <button type="button" id="prev-zero-stock" class="btn btn-sm btn-dark me-1" disabled>
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="nav-counter">
-          <span id="current-low-stock">0</span>/<span id="total-low-stock">0</span>
+          <span id="current-zero-stock">0</span>/<span id="total-zero-stock">0</span>
         </span>
-        <button type="button" id="next-low-stock" class="btn btn-sm btn-dark ms-1" disabled>
+        <button type="button" id="next-zero-stock" class="btn btn-sm btn-dark ms-1" disabled>
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
     </div>
     
-    <!-- Navegação para itens com estoque suficiente -->
-    <div class="floating-nav-section bg-success text-white">
+    <!-- Navegação para itens com estoque negativo -->
+    <div class="floating-nav-section bg-danger text-white">
       <div class="floating-nav-header">
-        <i class="fas fa-check-circle me-1"></i>
-        <span id="ok-stock-count">0</span> item(ns) com estoque suficiente
+        <i class="fas fa-exclamation-circle me-1"></i>
+        <span id="negative-stock-count">0</span> item(ns) com estoque negativo
       </div>
       <div class="floating-nav-controls">
-        <button type="button" id="prev-ok-stock" class="btn btn-sm btn-dark me-1" disabled>
+        <button type="button" id="prev-negative-stock" class="btn btn-sm btn-dark me-1" disabled>
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="nav-counter">
-          <span id="current-ok-stock">0</span>/<span id="total-ok-stock">0</span>
+          <span id="current-negative-stock">0</span>/<span id="total-negative-stock">0</span>
         </span>
-        <button type="button" id="next-ok-stock" class="btn btn-sm btn-dark ms-1" disabled>
+        <button type="button" id="next-negative-stock" class="btn btn-sm btn-dark ms-1" disabled>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Navegação para itens com estoque positivo -->
+    <div class="floating-nav-section bg-success text-white">
+      <div class="floating-nav-header">
+        <i class="fas fa-check-circle me-1"></i>
+        <span id="positive-stock-count">0</span> item(ns) com estoque positivo
+      </div>
+      <div class="floating-nav-controls">
+        <button type="button" id="prev-positive-stock" class="btn btn-sm btn-dark me-1" disabled>
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="nav-counter">
+          <span id="current-positive-stock">0</span>/<span id="total-positive-stock">0</span>
+        </span>
+        <button type="button" id="next-positive-stock" class="btn btn-sm btn-dark ms-1" disabled>
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
@@ -366,8 +417,8 @@
         $(`#ignore_order_${itemId}`).prop('checked', false);
       }
       
-      // Check if quantity has a value to show/hide save button
-      checkQuantityAndToggleSaveButton(itemId);
+      // Show/hide save button
+      toggleSaveButton(itemId);
     });
     
     // Toggle save button when ignore_order changes
@@ -381,18 +432,18 @@
         $(`#quantity_order_${itemId}`).prop('disabled', true);
       }
       
-      // Check if quantity has a value to show/hide save button
-      checkQuantityAndToggleSaveButton(itemId);
+      // Show/hide save button
+      toggleSaveButton(itemId);
     });
     
     // Monitor quantity_order input changes
     $(document).on('input', '.quantity-order-input', function() {
       const itemId = $(this).data('item-id');
-      checkQuantityAndToggleSaveButton(itemId);
+      toggleSaveButton(itemId);
     });
     
-    // Function to check quantity value and toggle save button
-    function checkQuantityAndToggleSaveButton(itemId) {
+    // Function to toggle save button visibility
+    function toggleSaveButton(itemId) {
       const quantityInput = $(`#quantity_order_${itemId}`);
       const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
       const checkedOrder = $(`#checked_order_${itemId}`).is(':checked');
@@ -497,53 +548,70 @@
     // Initialize all save buttons on page load
     document.querySelectorAll('.quantity-order-input').forEach(function(input) {
       const itemId = $(input).data('item-id');
-      checkQuantityAndToggleSaveButton(itemId);
+      toggleSaveButton(itemId);
     });
 
-    // ===== Navegação entre itens com estoque faltante e suficiente =====
-    let lowStockRows = [];
-    let okStockRows = [];
-    let currentLowStockIndex = -1;
-    let currentOkStockIndex = -1;
+    // ===== Navegação entre itens com diferentes estados de estoque =====
+    let zeroStockRows = [];
+    let negativeStockRows = [];
+    let positiveStockRows = [];
+    let currentZeroStockIndex = -1;
+    let currentNegativeStockIndex = -1;
+    let currentPositiveStockIndex = -1;
 
     // Função para inicializar a navegação de itens
     function initStockNavigation() {
-      // Encontrar todas as linhas com estoque faltante (classe table-warning)
-      lowStockRows = Array.from(document.querySelectorAll('tr.table-warning'));
+      // Encontrar todas as linhas com base no valor do estoque
+      zeroStockRows = Array.from(document.querySelectorAll('tr.bg-warning'));
+      negativeStockRows = Array.from(document.querySelectorAll('tr.bg-danger'));
+      positiveStockRows = Array.from(document.querySelectorAll('tr.bg-success'));
       
-      // Encontrar todas as linhas com estoque suficiente (sem a classe table-warning)
-      okStockRows = Array.from(document.querySelectorAll('tbody tr:not(.table-warning)'));
+      // Atualizar contadores para estoque zerado
+      const zeroStockCount = zeroStockRows.length;
+      document.getElementById('zero-stock-count').textContent = zeroStockCount;
+      document.getElementById('total-zero-stock').textContent = zeroStockCount;
       
-      // Atualizar contadores para estoque faltante
-      const lowStockCount = lowStockRows.length;
-      document.getElementById('low-stock-count').textContent = lowStockCount;
-      document.getElementById('total-low-stock').textContent = lowStockCount;
+      // Atualizar contadores para estoque negativo
+      const negativeStockCount = negativeStockRows.length;
+      document.getElementById('negative-stock-count').textContent = negativeStockCount;
+      document.getElementById('total-negative-stock').textContent = negativeStockCount;
       
-      // Atualizar contadores para estoque suficiente
-      const okStockCount = okStockRows.length;
-      document.getElementById('ok-stock-count').textContent = okStockCount;
-      document.getElementById('total-ok-stock').textContent = okStockCount;
+      // Atualizar contadores para estoque positivo
+      const positiveStockCount = positiveStockRows.length;
+      document.getElementById('positive-stock-count').textContent = positiveStockCount;
+      document.getElementById('total-positive-stock').textContent = positiveStockCount;
       
-      // Habilitar/desabilitar botões de navegação para estoque faltante
-      if (lowStockCount > 0) {
-        document.getElementById('next-low-stock').removeAttribute('disabled');
-        currentLowStockIndex = 0;
-        document.getElementById('current-low-stock').textContent = '1';
+      // Habilitar/desabilitar botões de navegação para estoque zerado
+      if (zeroStockCount > 0) {
+        document.getElementById('next-zero-stock').removeAttribute('disabled');
+        currentZeroStockIndex = 0;
+        document.getElementById('current-zero-stock').textContent = '1';
       } else {
-        document.getElementById('prev-low-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('next-low-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('current-low-stock').textContent = '0';
+        document.getElementById('prev-zero-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('next-zero-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('current-zero-stock').textContent = '0';
       }
       
-      // Habilitar/desabilitar botões de navegação para estoque suficiente
-      if (okStockCount > 0) {
-        document.getElementById('next-ok-stock').removeAttribute('disabled');
-        currentOkStockIndex = 0;
-        document.getElementById('current-ok-stock').textContent = '1';
+      // Habilitar/desabilitar botões de navegação para estoque negativo
+      if (negativeStockCount > 0) {
+        document.getElementById('next-negative-stock').removeAttribute('disabled');
+        currentNegativeStockIndex = 0;
+        document.getElementById('current-negative-stock').textContent = '1';
       } else {
-        document.getElementById('prev-ok-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('next-ok-stock').setAttribute('disabled', 'disabled');
-        document.getElementById('current-ok-stock').textContent = '0';
+        document.getElementById('prev-negative-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('next-negative-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('current-negative-stock').textContent = '0';
+      }
+      
+      // Habilitar/desabilitar botões de navegação para estoque positivo
+      if (positiveStockCount > 0) {
+        document.getElementById('next-positive-stock').removeAttribute('disabled');
+        currentPositiveStockIndex = 0;
+        document.getElementById('current-positive-stock').textContent = '1';
+      } else {
+        document.getElementById('prev-positive-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('next-positive-stock').setAttribute('disabled', 'disabled');
+        document.getElementById('current-positive-stock').textContent = '0';
       }
     }
 
@@ -561,11 +629,11 @@
       }
     }
 
-    // Função modificada para destacar e rolar até uma linha
+    // Função para destacar e rolar até uma linha
     function highlightAndScrollToRow(row, highlightClass) {
       // Remover destaque de todas as linhas
-      document.querySelectorAll('tr.highlighted-row-warning, tr.highlighted-row-success').forEach(r => {
-        r.classList.remove('highlighted-row-warning', 'highlighted-row-success');
+      document.querySelectorAll('tr.highlighted-row-warning, tr.highlighted-row-success, tr.highlighted-row-danger').forEach(r => {
+        r.classList.remove('highlighted-row-warning', 'highlighted-row-success', 'highlighted-row-danger');
         r.classList.remove('flash-animation');
       });
       
@@ -595,74 +663,107 @@
       }, 300); // Pequeno atraso para garantir que a rolagem termine primeiro
     }
 
-    // O restante do código permanece o mesmo...
-
-    // Evento para o botão "Próximo" de estoque faltante
-    document.getElementById('next-low-stock').addEventListener('click', function() {
-      if (lowStockRows.length === 0) return;
+    // Evento para o botão "Próximo" de estoque zerado
+    document.getElementById('next-zero-stock').addEventListener('click', function() {
+      if (zeroStockRows.length === 0) return;
       
       // Avançar para o próximo item
-      currentLowStockIndex = (currentLowStockIndex + 1) % lowStockRows.length;
+      currentZeroStockIndex = (currentZeroStockIndex + 1) % zeroStockRows.length;
       
       // Atualizar contador
-      document.getElementById('current-low-stock').textContent = (currentLowStockIndex + 1).toString();
+      document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
       
       // Habilitar botão "Anterior" se necessário
-      document.getElementById('prev-low-stock').removeAttribute('disabled');
+      document.getElementById('prev-zero-stock').removeAttribute('disabled');
       
       // Expandir accordion e rolar até a linha
-      const currentRow = lowStockRows[currentLowStockIndex];
+      const currentRow = zeroStockRows[currentZeroStockIndex];
       expandAccordionForRow(currentRow);
       highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
     });
 
-    // Evento para o botão "Anterior" de estoque faltante
-    document.getElementById('prev-low-stock').addEventListener('click', function() {
-      if (lowStockRows.length === 0) return;
+    // Evento para o botão "Anterior" de estoque zerado
+    document.getElementById('prev-zero-stock').addEventListener('click', function() {
+      if (zeroStockRows.length === 0) return;
       
       // Voltar para o item anterior
-      currentLowStockIndex = (currentLowStockIndex - 1 + lowStockRows.length) % lowStockRows.length;
+      currentZeroStockIndex = (currentZeroStockIndex - 1 + zeroStockRows.length) % zeroStockRows.length;
       
       // Atualizar contador
-      document.getElementById('current-low-stock').textContent = (currentLowStockIndex + 1).toString();
+      document.getElementById('current-zero-stock').textContent = (currentZeroStockIndex + 1).toString();
       
       // Expandir accordion e rolar até a linha
-      const currentRow = lowStockRows[currentLowStockIndex];
+      const currentRow = zeroStockRows[currentZeroStockIndex];
       expandAccordionForRow(currentRow);
       highlightAndScrollToRow(currentRow, 'highlighted-row-warning');
     });
 
-    // Evento para o botão "Próximo" de estoque suficiente
-    document.getElementById('next-ok-stock').addEventListener('click', function() {
-      if (okStockRows.length === 0) return;
+    // Evento para o botão "Próximo" de estoque negativo
+    document.getElementById('next-negative-stock').addEventListener('click', function() {
+      if (negativeStockRows.length === 0) return;
       
       // Avançar para o próximo item
-      currentOkStockIndex = (currentOkStockIndex + 1) % okStockRows.length;
+      currentNegativeStockIndex = (currentNegativeStockIndex + 1) % negativeStockRows.length;
       
       // Atualizar contador
-      document.getElementById('current-ok-stock').textContent = (currentOkStockIndex + 1).toString();
+      document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
       
       // Habilitar botão "Anterior" se necessário
-      document.getElementById('prev-ok-stock').removeAttribute('disabled');
+      document.getElementById('prev-negative-stock').removeAttribute('disabled');
       
       // Expandir accordion e rolar até a linha
-      const currentRow = okStockRows[currentOkStockIndex];
+      const currentRow = negativeStockRows[currentNegativeStockIndex];
+      expandAccordionForRow(currentRow);
+      highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
+    });
+
+    // Evento para o botão "Anterior" de estoque negativo
+    document.getElementById('prev-negative-stock').addEventListener('click', function() {
+      if (negativeStockRows.length === 0) return;
+      
+      // Voltar para o item anterior
+      currentNegativeStockIndex = (currentNegativeStockIndex - 1 + negativeStockRows.length) % negativeStockRows.length;
+      
+      // Atualizar contador
+      document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
+      
+      // Expandir accordion e rolar até a linha
+      const currentRow = negativeStockRows[currentNegativeStockIndex];
+      expandAccordionForRow(currentRow);
+      highlightAndScrollToRow(currentRow, 'highlighted-row-danger');
+    });
+
+    // Evento para o botão "Próximo" de estoque positivo
+    document.getElementById('next-positive-stock').addEventListener('click', function() {
+      if (positiveStockRows.length === 0) return;
+      
+      // Avançar para o próximo item
+      currentPositiveStockIndex = (currentPositiveStockIndex + 1) % positiveStockRows.length;
+      
+      // Atualizar contador
+      document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
+      
+      // Habilitar botão "Anterior" se necessário
+      document.getElementById('prev-positive-stock').removeAttribute('disabled');
+      
+      // Expandir accordion e rolar até a linha
+      const currentRow = positiveStockRows[currentPositiveStockIndex];
       expandAccordionForRow(currentRow);
       highlightAndScrollToRow(currentRow, 'highlighted-row-success');
     });
 
-    // Evento para o botão "Anterior" de estoque suficiente
-    document.getElementById('prev-ok-stock').addEventListener('click', function() {
-      if (okStockRows.length === 0) return;
+    // Evento para o botão "Anterior" de estoque positivo
+    document.getElementById('prev-positive-stock').addEventListener('click', function() {
+      if (positiveStockRows.length === 0) return;
       
       // Voltar para o item anterior
-      currentOkStockIndex = (currentOkStockIndex - 1 + okStockRows.length) % okStockRows.length;
+      currentPositiveStockIndex = (currentPositiveStockIndex - 1 + positiveStockRows.length) % positiveStockRows.length;
       
       // Atualizar contador
-      document.getElementById('current-ok-stock').textContent = (currentOkStockIndex + 1).toString();
+      document.getElementById('current-positive-stock').textContent = (currentPositiveStockIndex + 1).toString();
       
       // Expandir accordion e rolar até a linha
-      const currentRow = okStockRows[currentOkStockIndex];
+      const currentRow = positiveStockRows[currentPositiveStockIndex];
       expandAccordionForRow(currentRow);
       highlightAndScrollToRow(currentRow, 'highlighted-row-success');
     });
@@ -824,6 +925,14 @@
     border-left: 4px solid #ffc107 !important;
   }
   
+  .highlighted-row-danger {
+    background-color: rgba(220, 53, 69, 0.3) !important;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+    position: relative;
+    border-left: 4px solid #dc3545 !important;
+  }
+  
   .highlighted-row-success {
     background-color: rgba(25, 135, 84, 0.3) !important;
     transition: background-color 0.3s ease;
@@ -838,6 +947,11 @@
     50% { background-color: rgba(255, 193, 7, 0.7); }
   }
   
+  @keyframes flash-danger {
+    0%, 100% { background-color: rgba(220, 53, 69, 0.3); }
+    50% { background-color: rgba(220, 53, 69, 0.7); }
+  }
+  
   @keyframes flash-success {
     0%, 100% { background-color: rgba(25, 135, 84, 0.3); }
     50% { background-color: rgba(25, 135, 84, 0.7); }
@@ -845,6 +959,10 @@
   
   .highlighted-row-warning.flash-animation {
     animation: flash-warning 0.8s ease-in-out;
+  }
+  
+  .highlighted-row-danger.flash-animation {
+    animation: flash-danger 0.8s ease-in-out;
   }
   
   .highlighted-row-success.flash-animation {
@@ -877,12 +995,13 @@
   }
   
   /* Destaque para a linha inteira */
-  .highlighted-row-warning td, .highlighted-row-success td {
+  .highlighted-row-warning td, .highlighted-row-danger td, .highlighted-row-success td {
     position: relative;
     z-index: 1;
   }
   
   .highlighted-row-warning td:first-child::before,
+  .highlighted-row-danger td:first-child::before,
   .highlighted-row-success td:first-child::before {
     content: "";
     position: absolute;
@@ -894,6 +1013,10 @@
   
   .highlighted-row-warning td:first-child::before {
     background-color: #ffc107;
+  }
+  
+  .highlighted-row-danger td:first-child::before {
+    background-color: #dc3545;
   }
   
   .highlighted-row-success td:first-child::before {

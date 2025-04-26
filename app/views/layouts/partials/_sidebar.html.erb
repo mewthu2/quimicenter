@@ -193,7 +193,7 @@
     <div class="user-profile mt-auto p-3">
       <div class="d-flex align-items-center">
         <div class="avatar-container me-3">
-          <div class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center">
+          <div class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 38px !important; height: 38px !important;">
             <i class="fas fa-user text-primary"></i>
           </div>
         </div>
@@ -202,7 +202,7 @@
           <small class="text-light opacity-75">Administrador</small>
         </div>
         <div class="ms-auto">
-          <%= link_to destroy_user_session_path, method: :delete, class: 'btn btn-sm btn-outline-light rounded-circle' do %>
+          <%= link_to destroy_user_session_path, method: :delete, class: 'btn btn-sm btn-outline-light rounded-circle', style: 'width: 38px !important; height: 38px !important;' do %>
             <i class="fas fa-sign-out-alt"></i>
           <% end %>
         </div>
