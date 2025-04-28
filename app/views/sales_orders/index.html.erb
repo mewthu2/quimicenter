@@ -265,7 +265,7 @@
                                   <td><code class="bg-secondary text-white"><%= item.produto_codigo %></code></td>
                                   <td><%= item.produto_descricao %></td>
                                   <td class="text-end"><%= number_with_precision(item.quantidade, precision: 2) %></td>
-                                  <td class="text-end"><%= item.produto_estoque.to_i %></td>
+                                  <td class="text-end"><%= item.produto_estoque %></td>
                                   <td>
                                     <% if item.sale_order_item_supply.present? %>
                                       <span class="badge bg-info text-dark">

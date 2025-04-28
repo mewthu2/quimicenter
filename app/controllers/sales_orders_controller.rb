@@ -5,18 +5,18 @@ class SalesOrdersController < ApplicationController
 
   def index
     permitted_params = params.permit(:data_inicial, :data_final, :situacao, :id_contato, :id_vendedor, :numero, :id_nota_fiscal)
-    @filters = permitted_params.to_h.symbolize_keys
+    # @filters = permitted_params.to_h.symbolize_keys
 
     begin
-      SaleOrder.sync_from_bling(filters: @filters)
+      # SaleOrder.sync_from_bling(filters: @filters)
 
       @orders = SaleOrder.includes(sale_order_items: :sale_order_item_supply)
                          .order(data: :desc)
 
-      @orders = @orders.where(data: @filters[:data_inicial]..@filters[:data_final]) if @filters[:data_inicial].present? && @filters[:data_final].present?
-      @orders = @orders.where(situacao_id: @filters[:situacao]) if @filters[:situacao].present?
-      @orders = @orders.where(contato_id: @filters[:id_contato]) if @filters[:id_contato].present?
-      @orders = @orders.where(numero: @filters[:numero]) if @filters[:numero].present?
+      # @orders = @orders.where(data: @filters[:data_inicial]..@filters[:data_final]) if @filters[:data_inicial].present? && @filters[:data_final].present?
+      # @orders = @orders.where(situacao_id: @filters[:situacao]) if @filters[:situacao].present?
+      # @orders = @orders.where(contato_id: @filters[:id_contato]) if @filters[:id_contato].present?
+      # @orders = @orders.where(numero: @filters[:numero]) if @filters[:numero].present?
 
       order_ids = @orders.pluck(:bling_id).map(&:to_s)
 
