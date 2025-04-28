@@ -4,91 +4,33 @@ class SalesOrdersController < ApplicationController
   before_action :set_order, only: [:show]
 
   def index
-    permitted_params = params.permit(:data_inicial, :data_final, :situacao, :id_contato, :id_vendedor, :numero, :id_nota_fiscal)
-    # @filters = permitted_params.to_h.symbolize_keys
-
     begin
-      # SaleOrder.sync_from_bling(filters: @filters)
-
-      @orders = SaleOrder.includes(sale_order_items: :sale_order_item_supply)
-                         .order(data: :desc)
-
-      # @orders = @orders.where(data: @filters[:data_inicial]..@filters[:data_final]) if @filters[:data_inicial].present? && @filters[:data_final].present?
-      # @orders = @orders.where(situacao_id: @filters[:situacao]) if @filters[:situacao].present?
-      # @orders = @orders.where(contato_id: @filters[:id_contato]) if @filters[:id_contato].present?
-      # @orders = @orders.where(numero: @filters[:numero]) if @filters[:numero].present?
-
-      order_ids = @orders.pluck(:bling_id).map(&:to_s)
-
-      @exported_attempts = Attempt.where(
-        kinds: :create_purchase_order,
-        status: :success
-      ).where(
-        'external_reference ~ ?',
-        "\\m(#{order_ids.join('|')})\\M"
-      ).each_with_object({}) do |attempt, hash|
-        matching_ids = attempt.external_reference.split(/\s*,\s*/) & order_ids
-        matching_ids.each { |id| hash[id] = attempt }
-      end
+      # Carrega apenas os itens com seus fornecedores
+      @items = SaleOrderItem.includes(:sale_order_item_supply)
+                            .order(created_at: :desc)
 
       # Inicializa contadores
-      @checked_items_count = 0
-      @ignored_items_count = 0
-      @total_items_count = 0
+      @checked_items_count = @items.where(checked_order: true).count
+      @ignored_items_count = @items.where(ignore_order: true).count
+      @total_items_count = @items.count
 
-      # Filtra os itens e conta as categorias
-      filtered_orders = @orders.map do |order|
-        checked_items = []
-        ignored_items = []
+      # Agrupa os itens por fornecedor, excluindo os marcados
+      @items_by_supplier = @items.each_with_object({}) do |item, hash|
 
-        filtered_items = order.sale_order_items.reject do |item|
-          if item.quantity_order.to_i > 0
-            if item.checked_order
-              @checked_items_count += 1
-              checked_items << item
-              true
-            elsif item.ignore_order
-              @ignored_items_count += 1
-              ignored_items << item
-              true
-            else
-              false
-            end
-          else
-            false
-          end
-        end
-
-        @total_items_count += order.sale_order_items.size
-
-        filtered_order = order.dup
-        filtered_order.sale_order_items = filtered_items
-        filtered_order
+        supplier_name = item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
+        hash[supplier_name] ||= []
+        hash[supplier_name] << item
       end
 
-      @orders_by_supplier = filtered_orders.each_with_object({}) do |order, hash|
-        suppliers = order.sale_order_items.map do |item|
-          item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
-        end.uniq
-
-        suppliers.each do |supplier|
-          hash[supplier] ||= []
-          hash[supplier] << order
-        end
-      end
-
-      @orders_by_supplier.each do |supplier, orders|
-        @orders_by_supplier[supplier] = orders.reject { |order| order.sale_order_items.empty? }
-      end
-      @orders_by_supplier.reject! { |supplier, orders| orders.empty? }
+      # Remove fornecedores sem itens válidos
+      @items_by_supplier.reject! { |_, items| items.empty? }
 
     rescue StandardError => e
-      @orders = []
-      @orders_by_supplier = {}
+      @items_by_supplier = {}
       @checked_items_count = 0
       @ignored_items_count = 0
       @total_items_count = 0
-      flash.now[:alert] = "Erro ao carregar pedidos: #{e.message}"
+      flash.now[:alert] = "Erro ao carregar itens: #{e.message}"
     end
   end
 
