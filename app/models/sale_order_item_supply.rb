@@ -6,19 +6,16 @@ class SaleOrderItemSupply < ApplicationRecord
   def self.sync_from_bling(sale_order_item, product_id)
     suppliers_data = Bling::ProductSuppliers.list(product_id:)['data'] || []
 
-    suppliers_data.each do |supplier_data|
-      next unless supplier_data['fornecedor'] && supplier_data['fornecedor']['id'].present?
+    last_supplier = suppliers_data.last
+    return unless last_supplier
 
-      contact_data = Bling::Contacts.find(supplier_data['fornecedor']['id'])['data'] || {}
-
-      create_or_update(
-        sale_order_item:,
-        supplier_id: contact_data['id'],
-        supplier_name: contact_data['nome'],
-        supplier_type: contact_data['tipo'],
-        default: supplier_data['padrao'] || false
-      )
-    end
+    create_or_update(
+      sale_order_item:,
+      supplier_id: last_supplier['id'],
+      supplier_name: last_supplier['nome'],
+      supplier_type: last_supplier['tipo'],
+      default: last_supplier['padrao'] || false
+    )
   rescue StandardError => e
     Rails.logger.error "Error syncing suppliers for product #{product_id}: #{e.message}"
   end
