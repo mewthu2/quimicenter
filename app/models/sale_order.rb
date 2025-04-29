@@ -68,6 +68,7 @@ class SaleOrder < ApplicationRecord
     order.sale_order_items.where.not(produto_id: incoming_ids).destroy_all
 
     items_data.each do |item_data|
+      sleep(1)
       produto_id = item_data.dig('produto', 'id')
       next unless produto_id.present?
 
