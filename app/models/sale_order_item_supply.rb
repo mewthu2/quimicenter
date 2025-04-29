@@ -9,11 +9,13 @@ class SaleOrderItemSupply < ApplicationRecord
     last_supplier = suppliers_data.last
     return unless last_supplier
 
+    contact_data = Bling::Contacts.find(last_supplier['fornecedor']['id'])['data'] || {}
+
     create_or_update(
       sale_order_item:,
-      supplier_id: last_supplier['id'],
-      supplier_name: last_supplier['nome'],
-      supplier_type: last_supplier['tipo'],
+      supplier_id: contact_data['id'],
+      supplier_name: contact_data['nome'],
+      supplier_type: contact_data['tipo'],
       default: last_supplier['padrao'] || false
     )
   rescue StandardError => e
