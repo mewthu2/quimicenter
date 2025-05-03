@@ -7,6 +7,8 @@ class SyncSaleOrdersJob < ApplicationJob
   RETRY_DELAY = 2.seconds
 
   def perform
+    return unless Date.current.wednesday?
+
     (SYNC_START_DATE..Date.current).each do |current_date|
       filters = { dataInicial: current_date.strftime('%Y-%m-%d'), dataFinal: current_date.strftime('%Y-%m-%d') }
 
