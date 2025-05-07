@@ -2,13 +2,17 @@
 class SyncSaleOrdersJob < ApplicationJob
   queue_as :default
 
-  SYNC_START_DATE = Date.parse('2025-04-29')
+  SYNC_START_DATE = Date.parse('2025-05-01')
   MAX_RETRIES = 3
   RETRY_DELAY = 2.seconds
 
   def perform
     (SYNC_START_DATE..Date.current).each do |current_date|
-      filters = { dataInicial: current_date.strftime('%Y-%m-%d'), dataFinal: current_date.strftime('%Y-%m-%d') }
+      filters = {
+        dataInicial: current_date.strftime('%Y-%m-%d'),
+        dataFinal: current_date.strftime('%Y-%m-%d'),
+        situacao: 6
+      }
 
       page = 1
       loop do
@@ -17,10 +21,13 @@ class SyncSaleOrdersJob < ApplicationJob
         break if orders_data.empty?
 
         orders_data.each do |order_data|
+          next unless order_data.dig('situacao', 'id') == 6
+
           sync_single_order_with_items(order_data['id'])
         end
 
         break if last_page?(response, page)
+
         page += 1
       end
     end
@@ -35,8 +42,13 @@ class SyncSaleOrdersJob < ApplicationJob
       order_data = order_response['data']
 
       if order_data.present?
-        sale_order = SaleOrder.create_or_update_from_bling(order_data)
-        sync_suppliers_for_order_items(sale_order) if sale_order.persisted?
+        # Verificação redundante (já filtramos antes, mas é boa prática)
+        if order_data.dig('situacao', 'id') == 6
+          sale_order = SaleOrder.create_or_update_from_bling(order_data)
+          sync_suppliers_for_order_items(sale_order) if sale_order.persisted?
+        else
+          Rails.logger.info "Pedido #{order_id} ignorado - situação não é 'Aberto'"
+        end
       else
         Rails.logger.warn "Pedido #{order_id} retornou sem dados"
       end
@@ -70,7 +82,7 @@ class SyncSaleOrdersJob < ApplicationJob
 
       combined_data = loja_ids.flat_map do |loja_id|
         local_filters = filters.merge(idLoja: loja_id)
-        response = Bling::Orders.all(1, local_filters)
+        response = Bling::Orders.all(page, local_filters)
         response['data'] || []
       end
 

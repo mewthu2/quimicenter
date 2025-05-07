@@ -10,6 +10,7 @@ class SaleOrder < ApplicationRecord
     invoiced: 2,     # Faturado
     canceled: 3,     # Cancelado
     returned: 4,     # Devolvido
+    opened: 6,       # Aberto
     partial: 5,      # Faturado Parcial
     completed: 9,    # Finalizado
     in_progress: 10  # Em Andamento
