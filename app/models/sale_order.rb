@@ -25,7 +25,9 @@ class SaleOrder < ApplicationRecord
     return nil unless order_data.present? && order_data['id'].present?
 
     situacao_id = order_data.dig('situacao', 'id')
-    situacao_id = SaleOrder.situacao_ids.key?(situacao_id.to_i) ? situacao_id : 0
+    situacao_id = situacao_id.present? ? situacao_id : 0
+
+    return unless situacao_id == 6
 
     order = SaleOrder.find_or_initialize_by(bling_id: order_data['id'])
 
