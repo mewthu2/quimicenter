@@ -2,7 +2,7 @@
 class SyncSaleOrdersJob < ApplicationJob
   queue_as :default
 
-  SYNC_START_DATE = Date.parse('2025-05-16')
+  SYNC_START_DATE = Date.parse('2025-05-23')
   MAX_RETRIES = 3
   RETRY_DELAY = 2.seconds
 
