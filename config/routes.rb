@@ -17,17 +17,16 @@ Rails.application.routes.draw do
   # Pedidos de Venda
   resources :sales_orders, only: [:index, :show] do
     collection do
-      get :export      # Exportação de dados
-      get :search      # Busca avançada
+      get :export_negative_stock
+      get :search
     end
 
     member do
-      post :cancel     # Cancelar pedido
-      post :duplicate  # Duplicar pedido
+      post :cancel
+      post :duplicate
     end
   end
 
-  # Rota alternativa para filtro rápido de pedidos de venda
   get 'pedidos/:status', 
     to: 'sales_orders#index', 
     as: :filtered_sales_orders,
