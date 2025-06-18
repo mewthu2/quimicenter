@@ -45,7 +45,7 @@
           <div class="d-flex align-items-center justify-content-between">
             <div>
               <h6 class="text-info mb-1">Itens Selecionados</h6>
-              <h2 class="mb-0 display-5 fw-bold text-white"><%= @checked_items_count %></h2>
+              <h2 class="mb-0 display-5 fw-bold text-white" id="checked-items-count"><%= @checked_items_count %></h2>
               <p class="text-light mb-0 small">Marcados para compra</p>
             </div>
             <div class="rounded-circle bg-info bg-opacity-10 p-3">
@@ -67,7 +67,7 @@
           <div class="d-flex align-items-center justify-content-between">
             <div>
               <h6 class="text-warning mb-1">Pendentes</h6>
-              <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count - @checked_items_count %></h2>
+              <h2 class="mb-0 display-5 fw-bold text-white" id="pending-items-count"><%= @total_items_count - @checked_items_count %></h2>
               <p class="text-light mb-0 small">Aguardando decisão</p>
             </div>
             <div class="rounded-circle bg-warning bg-opacity-10 p-3">
@@ -268,7 +268,6 @@
   </div>
 </div>
 
-<!-- Footer flutuante sem fundo -->
 <footer class="fixed-footer">
   <div class="footer-nav-container">
     <div class="footer-nav-section" id="negative-stock-nav">
@@ -362,7 +361,6 @@ $(document).ready(function() {
     highlightAndScrollToRow(currentRow);
   });
 
-  // Atualizar dados
   $('#refresh-data').on('click', function() {
     const btn = $(this);
     btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...').prop('disabled', true);
@@ -372,7 +370,6 @@ $(document).ready(function() {
     }, 1000);
   });
 
-  // Resto do JavaScript para salvar itens...
   $(document).on('change', '.checked-order-toggle', function() {
     const itemId = $(this).data('item-id');
     const isChecked = $(this).is(':checked');
@@ -398,19 +395,204 @@ $(document).ready(function() {
     }
   }
 
+  $(document).on('click', '.save-item-btn', function() {
+    const itemId = $(this).data('item-id');
+    const button = $(this);
+    const originalHtml = button.html();
+    
+    const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
+    const quantityOrder = $(`input[name="quantity_order[${itemId}]"]`).val();
+    
+    if (checkedOrder && (!quantityOrder || parseFloat(quantityOrder) <= 0)) {
+      showAlert('Quantidade deve ser maior que zero quando o item está selecionado', 'warning');
+      return;
+    }
+    
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+      url: `/sales_orders/${itemId}/save_item`,
+      method: 'PATCH',
+      data: {
+        checked_order: checkedOrder,
+        quantity_order: quantityOrder
+      },
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response.success) {
+          showAlert(response.message, 'success');
+          
+          updateItemInterface(itemId, response.item);
+          
+          button.addClass('d-none');
+        } else {
+          showAlert(response.message, 'error');
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        const message = response ? response.message : 'Erro ao salvar item';
+        showAlert(message, 'error');
+      },
+      complete: function() {
+        button.prop('disabled', false).html(originalHtml);
+      }
+    });
+  });
+
+  function showAlert(message, type) {
+    const alertClass = {
+      'success': 'alert-success',
+      'error': 'alert-danger', 
+      'warning': 'alert-warning',
+      'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    setTimeout(function() {
+      $('.alert').fadeOut();
+    }, 5000);
+  }
+
+  function updateItemInterface(itemId, itemData) {
+    const row = $(`.save-item-btn[data-item-id="${itemId}"]`).closest('tr');
+    
+    if (itemData.checked_order) {
+      row.removeClass('selection-pending').addClass('selection-checked');
+    } else {
+      row.removeClass('selection-checked').addClass('selection-pending');
+    }
+    
+    updateCounters();
+  }
+
+  function updateCounters() {
+    const checkedCount = $('.checked-order-toggle:checked').length;
+    const totalCount = $('.checked-order-toggle').length;
+    const pendingCount = totalCount - checkedCount;
+    
+    $('#checked-items-count').text(checkedCount);
+    $('#pending-items-count').text(pendingCount);
+    
+    const percentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+    $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', checkedCount);
+    
+    $('.supplier-group').each(function() {
+      const supplierGroup = $(this);
+      const supplierItems = supplierGroup.find('.checked-order-toggle');
+      const supplierCheckedCount = supplierItems.filter(':checked').length;
+      const supplierPendingCount = supplierItems.length - supplierCheckedCount;
+      
+      supplierGroup.find('.badge.bg-info').html(`<i class="fas fa-check"></i> ${supplierCheckedCount}`);
+      supplierGroup.find('.badge.bg-secondary').html(`<i class="fas fa-question"></i> ${supplierPendingCount}`);
+    });
+  }
+
+  $(document).on('input', '.quantity-order-input', function() {
+    const itemId = $(this).data('item-id');
+    toggleSaveButton(itemId);
+  });
+
+  $('#search-button, #search-input').on('click keypress', function(e) {
+    if (e.type === 'click' || e.which === 13) {
+      const searchTerm = $('#search-input').val().toLowerCase();
+      filterItems(searchTerm);
+    }
+  });
+
+  $('#date-filter').on('change', function() {
+    const selectedDate = $(this).val();
+    filterItemsByDate(selectedDate);
+  });
+
+  function filterItems(searchTerm) {
+    $('.item-row').each(function() {
+      const row = $(this);
+      const productCode = row.data('product-code').toString().toLowerCase();
+      const productDesc = row.data('product-desc').toString().toLowerCase();
+      
+      if (searchTerm === '' || productCode.includes(searchTerm) || productDesc.includes(searchTerm)) {
+        row.show();
+      } else {
+        row.hide();
+      }
+    });
+    
+    $('.supplier-group').each(function() {
+      const visibleItems = $(this).find('.item-row:visible').length;
+      if (visibleItems === 0) {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    });
+  }
+
+  function filterItemsByDate(selectedDate) {
+    if (!selectedDate) {
+      $('.item-row, .supplier-group').show();
+      return;
+    }
+    
+    $('.item-row').each(function() {
+      const row = $(this);
+      const itemDate = row.find('td:nth-child(2)').text().trim();
+      const [day, month, year] = itemDate.split('/');
+      const itemDateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      
+      if (itemDateFormatted === selectedDate) {
+        row.show();
+      } else {
+        row.hide();
+      }
+    });
+    
+    $('.supplier-group').each(function() {
+      const visibleItems = $(this).find('.item-row:visible').length;
+      if (visibleItems === 0) {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    });
+  }
+
+  $(document).on('keydown', function(e) {
+    if (e.ctrlKey && e.which === 83) {
+      e.preventDefault();
+      const focusedRow = $('.item-row:focus-within');
+      if (focusedRow.length) {
+        const saveBtn = focusedRow.find('.save-item-btn:visible');
+        if (saveBtn.length) {
+          saveBtn.click();
+        }
+      }
+    }
+  });
+
   initStockNavigation();
 });
 <% end %>
 
 <style>
-/* Estilos para a página */
 body {
   background-color: #212529;
   color: #fff;
   padding-bottom: 60px;
 }
 
-/* Estilos para o footer flutuante sem fundo */
 .fixed-footer {
   position: fixed;
   bottom: 20px;
@@ -475,7 +657,6 @@ body {
   color: white;
 }
 
-/* Animação de entrada */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -491,7 +672,6 @@ body {
   animation: fadeInUp 0.5s ease-out;
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .footer-nav-section {
     min-width: 180px;
@@ -508,7 +688,6 @@ body {
   }
 }
 
-/* Estilos para outros elementos da página */
 .highlighted-row-danger {
   background-color: rgba(220, 53, 69, 0.5) !important;
   transition: background-color 0.3s ease;
@@ -523,5 +702,33 @@ body {
 
 .highlighted-row-danger.flash-animation {
   animation: flash-danger 1s ease-in-out;
+}
+
+.alert {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.save-item-btn {
+  transition: all 0.3s ease;
+}
+
+.save-item-btn:hover {
+  transform: scale(1.05);
+}
+
+.quantity-order-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  border-color: #28a745;
+}
+
+.selection-checked {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-left: 3px solid #28a745;
+}
+
+.selection-pending {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-left: 3px solid #ffc107;
 }
 </style>

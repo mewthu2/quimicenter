@@ -1,29 +1,26 @@
-# config/routes.rb
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
-  # Devise (autenticação)
   devise_for :user, skip: [:registrations]
   root to: 'home#index'
 
-  # Sidekiq (monitoramento de jobs)
   authenticate :user do
     mount Sidekiq::Web => '/sidekiq'
   end
 
-  # Dashboard
   resources :dashboard, only: [:index]
 
-  # Pedidos de Venda
   resources :sales_orders, only: [:index, :show] do
     collection do
       get :export_negative_stock
       get :search
+      post :save_multiple_items
     end
 
     member do
       post :cancel
       post :duplicate
+      patch :save_item
     end
   end
 
@@ -32,38 +29,39 @@ Rails.application.routes.draw do
     as: :filtered_sales_orders,
     constraints: { status: /all|completed|canceled|draft/ }
 
-  # Pedidos de Compra
   resources :purchase_orders do
     collection do
-      get 'load_items' # Carregar itens via AJAX
+      get 'load_items'
     end
   end
 
-  # Rota alternativa para filtro rápido de pedidos de compra
   get 'pedidos-compra/:status', to: 'purchase_orders#index', as: :filtered_purchase_orders,constraints: { status: /all|draft|verified|received|partially_received|canceled|in_progress|completed/ }
 
-  # Histórico de Tentativas
   resources :attempts, only: [:index] do
     collection do
-      get :reprocess       # Reprocessar tentativas
-      get :verify_attempts # Verificar tentativas
+      get :reprocess
+      get :verify_attempts
     end
   end
 
-  # Contatos
   resources :contacts, only: [:index] do
     collection do
-      get :suppliers  # Rota específica para fornecedores
+      get :suppliers
     end
   end
 
   resources :sale_order_items do
     collection do
       get :index
+      post :process_multiple
+      post :ignore_multiple
     end
     member do
       post :assign_supplier
       patch :update_item
+      post :process_item
+      post :ignore_item
+      get :item_details
     end
   end
 end
