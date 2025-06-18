@@ -1,17 +1,17 @@
 class SaleOrderItemsController < ApplicationController
   before_action :authenticate_user!
-  
+
   def index
     @status = params[:status] || 'pending'
     @search = params[:search]
     @supplier = params[:supplier]
     @sort_by = params[:sort_by] || 'date_desc'
-    
+
     @items = build_items_query
     @items = apply_search(@items) if @search.present?
     @items = apply_supplier_filter(@items) if @supplier.present?
     @items = apply_sorting(@items)
-    
+
     @items = @items.limit(100)
   end
 
@@ -52,35 +52,35 @@ class SaleOrderItemsController < ApplicationController
   def process_item
     begin
       item = SaleOrderItem.find(params[:id])
-      
+
       if item.sale_order_item_supply.blank?
-        render json: { 
-          success: false, 
+        render json: {
+          success: false,
           message: 'Item precisa ter um fornecedor definido antes de ser processado' 
         }, status: :unprocessable_entity
         return
       end
-      
+
       item.update!(
         purchase_order_created_at: Time.current,
         processed: true
       )
-      
-      render json: { 
-        success: true, 
-        message: 'Item processado com sucesso!' 
+
+      render json: {
+        success: true,
+        message: 'Item processado com sucesso!'
       }
-      
+
     rescue ActiveRecord::RecordNotFound
-      render json: { 
-        success: false, 
-        message: 'Item não encontrado' 
+      render json: {
+        success: false,
+        message: 'Item não encontrado'
       }, status: :not_found
-      
+
     rescue StandardError => e
-      render json: { 
-        success: false, 
-        message: "Erro ao processar item: #{e.message}" 
+      render json: {
+        success: false,
+        message: "Erro ao processar item: #{e.message}"
       }, status: :internal_server_error
     end
   end
@@ -198,8 +198,8 @@ class SaleOrderItemsController < ApplicationController
           unit_value: item.valor_unitario,
           total_value: item.valor_total,
           integration_date: item.purchase_order_created_at&.strftime('%d/%m/%Y %H:%M'),
-          purchase_order_id: item.purchase_order_created_at ? item.id : nil,
-          status: item.purchase_order_created_at ? 'completed' : 'pending'
+          bling_order_id: item.bling_order_id,
+          status: item.bling_order_id.present? ? 'completed' : 'pending'
         }
       }
       
@@ -214,17 +214,22 @@ class SaleOrderItemsController < ApplicationController
   private
 
   def build_items_query
-    base_query = SaleOrderItem.joins(:sale_order).left_joins(:sale_order_item_supply)
+    # Base query com filtro de estoque negativo (mesma lógica do sales_orders)
+    base_query = SaleOrderItem.joins(:sale_order)
+                              .left_joins(:sale_order_item_supply)
+                              .where(ignore_order: [false, nil])
+                              .where.not(produto_estoque: nil)
+                              .where('CAST(produto_estoque AS INTEGER) < 0')
     
     case @status
     when 'pending'
-      base_query.where(checked_order: true, ignore_order: [false, nil])
-                .where('CAST(quantity_order AS DECIMAL) > 0')
+      # Pendentes: itens que não foram selecionados (checked_order = false/nil)
+      base_query.where(checked_order: [false, nil])
                 .where.not('sale_orders.bling_id': nil)
-                .where(sale_order_item_supplies: { id: nil })
                 
     when 'completed'
-      base_query.where.not(purchase_order_created_at: nil)
+      # Concluídos: itens que têm bling_order_id
+      base_query.where.not(bling_order_id: nil)
                 
     else
       base_query.none
