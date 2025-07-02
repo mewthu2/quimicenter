@@ -1,473 +1,506 @@
 <div class="container-fluid mt-4 text-white">
   <div class="row mb-4 align-items-center">
-    <div class="col-md-12">
+    <div class="col-md-8">
       <div class="d-flex align-items-center">
-        <i class="fas fa-exchange-alt fa-2x text-info me-3"></i>
-        <div>
-          <h1 class="h3 mb-1 text-white">Fila de Integração</h1>
-          <p class="text-light mb-0">Gerenciamento de itens para integração com pedidos de compra</p>
-        </div>
+        <% if @view_mode == 'migrated' %>
+          <i class="fas fa-check-double fa-2x text-info me-3"></i>
+          <div>
+            <h1 class="h3 mb-1 text-white">Itens Migrados</h1>
+            <p class="text-light mb-0">Itens que já foram processados e migrados</p>
+          </div>
+        <% else %>
+          <i class="fas fa-cogs fa-2x text-success me-3"></i>
+          <div>
+            <h1 class="h3 mb-1 text-white">Itens Prontos para Processamento</h1>
+            <p class="text-light mb-0">Itens marcados para compra aguardando processamento</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <% if @view_mode == 'migrated' %>
+          <%= link_to sale_order_items_path(view_mode: 'ready'), class: "btn btn-outline-success" do %>
+            <i class="fas fa-cogs me-2"></i>Ver Prontos
+          <% end %>
+        <% else %>
+          <%= link_to sale_order_items_path(view_mode: 'migrated'), class: "btn btn-outline-info" do %>
+            <i class="fas fa-check-double me-2"></i>Ver Migrados
+          <% end %>
+        <% end %>
+        <button class="btn btn-outline-secondary" id="refresh-data">
+          <i class="fas fa-sync-alt me-2"></i>Atualizar
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Cards de estatísticas -->
   <div class="row mb-4">
-    <div class="col-md-2 mb-3 mb-md-0">
-      <div class="card bg-dark border-info shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-info mb-1">Total</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <%= SaleOrderItem.count %>
-              </h2>
-              <p class="text-light mb-0 small">Todos os itens</p>
-            </div>
-            <div class="rounded-circle bg-info bg-opacity-10 p-2">
-              <i class="fas fa-shopping-cart fa-lg text-info"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-2 mb-3 mb-md-0">
-      <div class="card bg-dark border-primary shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-primary mb-1">Selecionados</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <% selected_count = SaleOrderItem.where(checked_order: true, ignore_order: [false, nil]).count %>
-                <%= selected_count %>
-              </h2>
-              <p class="text-light mb-0 small">Marcados para integração</p>
-            </div>
-            <div class="rounded-circle bg-primary bg-opacity-10 p-2">
-              <i class="fas fa-check fa-lg text-primary"></i>
+    <% if @view_mode == 'migrated' %>
+      <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-dark border-info shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-info mb-1">Itens Migrados</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count %></h2>
+                <p class="text-light mb-0 small">Já processados</p>
+              </div>
+              <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                <i class="fas fa-check-double fa-2x text-info"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="col-md-2 mb-3 mb-md-0">
-      <div class="card bg-dark border-warning shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-warning mb-1">Pendentes</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <% pending_count = SaleOrderItem.where(checked_order: true, ignore_order: [false, nil])
-                                                .where(purchase_order_created_at: nil)
-                                                .count %>
-                <%= pending_count %>
-              </h2>
-              <p class="text-light mb-0 small">Aguardando integração</p>
-            </div>
-            <div class="rounded-circle bg-warning bg-opacity-10 p-2">
-              <i class="fas fa-clock fa-lg text-warning"></i>
+      <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-dark border-success shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-success mb-1">Fornecedores</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white"><%= @items_by_supplier.count %></h2>
+                <p class="text-light mb-0 small">Com itens migrados</p>
+              </div>
+              <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                <i class="fas fa-truck fa-2x text-success"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="col-md-2 mb-3 mb-md-0">
-      <div class="card bg-dark border-success shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-success mb-1">Concluídos</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <% completed_count = SaleOrderItem.where.not(purchase_order_created_at: nil).count %>
-                <%= completed_count %>
-              </h2>
-              <p class="text-light mb-0 small">Já integrados</p>
-            </div>
-            <div class="rounded-circle bg-success bg-opacity-10 p-2">
-              <i class="fas fa-check-circle fa-lg text-success"></i>
+      <div class="col-md-4">
+        <div class="card bg-dark border-warning shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-warning mb-1">Valor Total</h6>
+                <h2 class="mb-0 display-6 fw-bold text-white">
+                  <%= number_to_currency(@items.sum { |item| (item.valor_unitario.to_f || 0) * (item.quantity_order.to_f || item.quantidade.to_f || 0) }, unit: "R$ ") %>
+                </h2>
+                <p class="text-light mb-0 small">Processado</p>
+              </div>
+              <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                <i class="fas fa-dollar-sign fa-2x text-warning"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="col-md-2 mb-3 mb-md-0">
-      <div class="card bg-dark border-danger shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-danger mb-1">Ignorados</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <% ignored_count = SaleOrderItem.where(ignore_order: true).count %>
-                <%= ignored_count %>
-              </h2>
-              <p class="text-light mb-0 small">Marcados para ignorar</p>
-            </div>
-            <div class="rounded-circle bg-danger bg-opacity-10 p-2">
-              <i class="fas fa-ban fa-lg text-danger"></i>
+    <% else %>
+      <div class="col-md-6 mb-3 mb-md-0">
+        <div class="card bg-dark border-success shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-success mb-1">Prontos para Processamento</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count %></h2>
+                <p class="text-light mb-0 small">Itens marcados para compra</p>
+              </div>
+              <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                <i class="fas fa-check-circle fa-2x text-success"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="col-md-2">
-      <div class="card bg-dark border-secondary shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-secondary mb-1">Não Processados</h6>
-              <h2 class="mb-0 display-6 fw-bold text-white">
-                <% not_processed_count = SaleOrderItem.where(checked_order: [false, nil], ignore_order: [false, nil]).count %>
-                <%= not_processed_count %>
-              </h2>
-              <p class="text-light mb-0 small">Sem ação definida</p>
-            </div>
-            <div class="rounded-circle bg-secondary bg-opacity-10 p-2">
-              <i class="fas fa-question fa-lg text-secondary"></i>
+      <div class="col-md-6">
+        <div class="card bg-dark border-info shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-info mb-1">Fornecedores</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white"><%= @items_by_supplier.count %></h2>
+                <p class="text-light mb-0 small">Fornecedores com itens</p>
+              </div>
+              <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                <i class="fas fa-truck fa-2x text-info"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    <% end %>
   </div>
 
-  <!-- Gráfico de progresso geral -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card bg-dark border-secondary shadow-sm">
-        <div class="card-body">
-          <h6 class="text-info mb-3">
-            <i class="fas fa-chart-bar me-2"></i>Progresso Geral de Integração
-          </h6>
-          <div class="progress mb-2" style="height: 20px;">
-            <% total_items = SaleOrderItem.count %>
-            <% if total_items > 0 %>
-              <div class="progress-bar bg-success" role="progressbar" 
-                   style="width: <%= (completed_count.to_f / total_items * 100).round(1) %>%" 
-                   title="Concluídos: <%= completed_count %>">
-                <%= (completed_count.to_f / total_items * 100).round(1) %>%
-              </div>
-              <div class="progress-bar bg-warning" role="progressbar" 
-                   style="width: <%= (pending_count.to_f / total_items * 100).round(1) %>%" 
-                   title="Pendentes: <%= pending_count %>">
-                <%= (pending_count.to_f / total_items * 100).round(1) %>%
-              </div>
-              <div class="progress-bar bg-danger" role="progressbar" 
-                   style="width: <%= (ignored_count.to_f / total_items * 100).round(1) %>%" 
-                   title="Ignorados: <%= ignored_count %>">
-                <%= (ignored_count.to_f / total_items * 100).round(1) %>%
-              </div>
+  <!-- Filtros -->
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+    <div class="card-header py-3 bg-dark border-secondary">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-info">
+          <i class="fas fa-filter me-2"></i>Filtros e Busca
+        </h6>
+        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+          <i class="fas fa-filter me-1"></i> Filtros <i class="fas fa-chevron-down ms-1" id="filterIcon"></i>
+        </button>
+      </div>
+    </div>
+    <div class="collapse show" id="filterCollapse">
+      <div class="card-body bg-dark border-secondary py-3">
+        <%= form_with url: sale_order_items_path, method: :get, local: true, class: "d-flex flex-wrap gap-3 align-items-end" do |form| %>
+          <%= form.hidden_field :view_mode, value: @view_mode %>
+          <div class="flex-fill">
+            <%= form.text_field :search, value: @search, placeholder: "Buscar por código, descrição ou pedido...", 
+                class: "form-control bg-dark text-white border-secondary" %>
+          </div>
+          <div>
+            <% if @view_mode == 'migrated' %>
+              <%= form.select :sort_by, options_for_select([
+                ['Processamento (Mais recente)', 'processed_desc'],
+                ['Processamento (Mais antigo)', 'processed_asc'],
+                ['Data (Mais recente)', 'date_desc'],
+                ['Data (Mais antigo)', 'date_asc'],
+                ['Quantidade (Maior)', 'quantity_desc'],
+                ['Quantidade (Menor)', 'quantity_asc']
+              ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
+            <% else %>
+              <%= form.select :sort_by, options_for_select([
+                ['Data (Mais recente)', 'date_desc'],
+                ['Data (Mais antigo)', 'date_asc'],
+                ['Quantidade (Maior)', 'quantity_desc'],
+                ['Quantidade (Menor)', 'quantity_asc']
+              ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
             <% end %>
           </div>
-          <div class="d-flex justify-content-between text-sm">
-            <span class="text-success">
-              <i class="fas fa-check-circle me-1"></i>Concluídos: <%= completed_count %>
-            </span>
-            <span class="text-warning">
-              <i class="fas fa-clock me-1"></i>Pendentes: <%= pending_count %>
-            </span>
-            <span class="text-danger">
-              <i class="fas fa-ban me-1"></i>Ignorados: <%= ignored_count %>
-            </span>
-            <span class="text-secondary">
-              <i class="fas fa-question me-1"></i>Não processados: <%= not_processed_count %>
-            </span>
+          <div>
+            <%= form.submit "Filtrar", class: "btn btn-info" %>
           </div>
-        </div>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="card bg-dark border-secondary shadow-sm mb-4">
-    <div class="card-header bg-dark border-secondary p-0">
-      <ul class="nav nav-tabs border-bottom-0" id="statusTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <a class="nav-link <%= @status == 'pending' ? 'active bg-warning text-dark' : 'text-light' %>" 
-             href="<%= sale_order_items_path(status: 'pending') %>" 
-             role="tab">
-            <i class="fas fa-clock me-1"></i> Pendentes (<%= pending_count %>)
-          </a>
-        </li>
-        <li class="nav-item" role="presentation">
-          <a class="nav-link <%= @status == 'completed' ? 'active bg-success text-dark' : 'text-light' %>" 
-             href="<%= sale_order_items_path(status: 'completed') %>" 
-             role="tab">
-            <i class="fas fa-check-circle me-1"></i> Concluídos (<%= completed_count %>)
-          </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="card bg-dark border-secondary shadow-sm mb-4">
+  <!-- Lista de itens agrupados por fornecedor -->
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
     <div class="card-header py-3 bg-dark border-secondary">
       <h6 class="m-0 font-weight-bold text-info">
-        <i class="fas fa-filter me-2"></i>Filtros Rápidos
-      </h6>
-    </div>
-    <div class="card-body">
-      <%= form_with url: sale_order_items_path, method: :get, local: true, class: "form-inline" do |f| %>
-        <%= f.hidden_field :status, value: @status %>
-        <div class="row">
-          <div class="col-md-4 mb-2">
-            <div class="input-group">
-              <span class="input-group-text bg-dark border-secondary text-light">
-                <i class="fas fa-search"></i>
-              </span>
-              <%= f.text_field :search, class: "form-control bg-dark border-secondary text-white", placeholder: "Buscar por produto, pedido...", value: params[:search] %>
-            </div>
-          </div>
-          <div class="col-md-3 mb-2">
-            <div class="input-group">
-              <span class="input-group-text bg-dark border-secondary text-light">
-                <i class="fas fa-user"></i>
-              </span>
-              <%= f.select :supplier, 
-                  options_for_select([['Todos os Fornecedores', '']] + SaleOrderItemSupply.all.map { |s| [s.supplier_name, s.id] }, params[:supplier]), 
-                  {}, 
-                  class: "form-select bg-dark border-secondary text-white" %>
-            </div>
-          </div>
-          <div class="col-md-3 mb-2">
-            <div class="input-group">
-              <span class="input-group-text bg-dark border-secondary text-light">
-                <i class="fas fa-sort-amount-down"></i>
-              </span>
-              <%= f.select :sort_by, 
-                  options_for_select([
-                    ['Data do Pedido (Recente)', 'date_desc'],
-                    ['Data do Pedido (Antigo)', 'date_asc'],
-                    ['Quantidade (Maior)', 'quantity_desc'],
-                    ['Quantidade (Menor)', 'quantity_asc']
-                  ], params[:sort_by] || 'date_desc'), 
-                  {}, 
-                  class: "form-select bg-dark border-secondary text-white" %>
-            </div>
-          </div>
-          <div class="col-md-2 mb-2 d-flex">
-            <%= f.button type: :submit, class: "btn btn-info me-2", name: nil do %>
-              <i class="fas fa-search me-1"></i> Filtrar
-            <% end %>
-            <%= link_to sale_order_items_path(status: @status), class: "btn btn-outline-secondary" do %>
-              <i class="fas fa-undo me-1"></i> Limpar
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  </div>
-
-  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-dark border-secondary">
-      <h6 class="m-0 font-weight-bold <%= @status == 'pending' ? 'text-warning' : 'text-success' %>">
-        <i class="fas <%= @status == 'pending' ? 'fa-clock' : 'fa-check-circle' %> me-2"></i>
-        Itens <%= @status == 'pending' ? 'Pendentes' : 'Concluídos' %>
-      </h6>
-      <div>
-        <% if @status == 'pending' %>
-          <button id="process-selected-btn" class="btn btn-sm btn-success me-2" disabled>
-            <i class="fas fa-cogs me-1"></i> Processar Selecionados
-          </button>
-          <button id="ignore-selected-btn" class="btn btn-sm btn-danger me-2" disabled>
-            <i class="fas fa-ban me-1"></i> Ignorar Selecionados
-          </button>
+        <i class="fas fa-boxes me-2"></i>Itens Agrupados por Fornecedor
+        <% if @view_mode == 'migrated' %>
+          <span class="badge bg-info ms-2">Migrados</span>
+        <% else %>
+          <span class="badge bg-success ms-2">Prontos</span>
         <% end %>
-        <span class="badge <%= @status == 'pending' ? 'bg-warning text-dark' : 'bg-success' %>">
-          <%= @items.count %> itens
-        </span>
-      </div>
+      </h6>
     </div>
     <div class="card-body p-0">
-      <% if @items.empty? %>
-        <div class="alert alert-dark border-secondary m-3">
-          <i class="fas fa-info-circle me-2"></i>
-          Nenhum item <%= @status == 'pending' ? 'pendente' : 'concluído' %> encontrado com os filtros atuais.
+      <% if @items_by_supplier.empty? %>
+        <div class="text-center py-5">
+          <% if @view_mode == 'migrated' %>
+            <i class="fas fa-inbox fa-4x text-secondary mb-3"></i>
+            <h5 class="text-white">Nenhum item migrado encontrado!</h5>
+            <p class="text-light">Não há itens processados com os filtros aplicados</p>
+          <% else %>
+            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+            <h5 class="text-white">Nenhum item pronto para processamento!</h5>
+            <p class="text-light">Todos os itens marcados já foram processados ou não há itens selecionados</p>
+          <% end %>
         </div>
       <% else %>
-        <div class="table-responsive">
-          <table class="table table-hover table-dark mb-0 border-secondary">
-            <thead class="table-dark border-secondary">
-              <tr>
-                <% if @status == 'pending' %>
-                  <th class="text-center">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="select-all">
-                    </div>
-                  </th>
-                <% end %>
-                <th>Pedido</th>
-                <th>Data</th>
-                <th>Produto</th>
-                <th>Fornecedor</th>
-                <th class="text-center">Quantidade</th>
-                <% if @status == 'completed' %>
-                  <th>Data Integração</th>
-                  <th>Pedido Compra</th>
-                <% end %>
-                <th class="text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody class="border-secondary">
-              <% @items.each do |item| %>
-                <tr>
-                  <% if @status == 'pending' %>
-                    <td class="text-center">
-                      <div class="form-check">
-                        <input class="form-check-input item-checkbox" type="checkbox" value="<%= item.id %>">
+        <div class="accordion" id="suppliersAccordion">
+          <% @items_by_supplier.each_with_index do |(supplier, items), index| %>
+            <% 
+              items_count = items.size
+              total_value = items.sum { |item| (item.valor_unitario.to_f || 0) * (item.quantity_order.to_f || item.quantidade.to_f || 0) }
+            %>
+            <div class="accordion-item border-secondary bg-dark supplier-group" data-supplier="<%= supplier %>">
+              <h2 class="accordion-header" id="supplierHeading<%= index %>">
+                <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3 bg-dark text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
+                  <div class="d-flex align-items-center w-100">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center">
+                        <div class="me-3">
+                          <% if @view_mode == 'migrated' %>
+                            <span class="badge bg-info text-white rounded-pill">
+                              <i class="fas fa-check-double me-1"></i><%= items_count %> migrado(s)
+                            </span>
+                          <% else %>
+                            <span class="badge bg-success text-white rounded-pill">
+                              <i class="fas fa-check-circle me-1"></i><%= items_count %> pronto(s)
+                            </span>
+                          <% end %>
+                        </div>
+                        <h5 class="mb-0 text-white"><%= supplier.presence || "Fornecedor não identificado" %></h5>
                       </div>
-                    </td>
-                  <% end %>
-                  <td>
-                    <code class="bg-secondary text-white"><%= item.sale_order.numero %></code>
-                  </td>
-                  <td><%= item.sale_order.data.strftime("%d/%m/%Y") %></td>
-                  <td>
+                    </div>
                     <div class="d-flex align-items-center">
-                      <div class="product-info">
-                        <div class="fw-bold"><%= item.produto_descricao %></div>
-                        <small class="text-muted"><%= item.produto_codigo %></small>
+                      <div class="text-light small">
+                        Total: <%= number_to_currency(total_value, unit: "R$ ") %>
                       </div>
                     </div>
-                  </td>
-                  <td>
-                    <% if item.sale_order_item_supply&.supplier_name.present? %>
-                      <span class="badge bg-info">
-                        <%= item.sale_order_item_supply.supplier_name %>
-                      </span>
-                    <% else %>
-                      <span class="badge bg-secondary">Não definido</span>
-                    <% end %>
-                  </td>
-                  <td class="text-center">
-                    <span class="badge bg-primary"><%= item.quantity_order %></span>
-                  </td>
-                  <% if @status == 'completed' %>
-                    <td><%= item.purchase_order_created_at&.strftime("%d/%m/%Y %H:%M") %></td>
-                    <td>
-                      <% if item.sale_order_item_supply.present? %>
-                        <code class="bg-success text-white"><%= item.id %></code>
-                      <% else %>
-                        <span class="badge bg-secondary">N/A</span>
-                      <% end %>
-                    </td>
-                  <% end %>
-                  <td class="text-center">
-                    <% if @status == 'pending' %>
-                      <button class="btn btn-sm btn-outline-success process-btn me-1" data-id="<%= item.id %>" title="Processar Item">
-                        <i class="fas fa-cogs"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger ignore-btn me-1" data-id="<%= item.id %>" title="Ignorar Item">
-                        <i class="fas fa-ban"></i>
-                      </button>
-                    <% end %>
-                    <button class="btn btn-sm btn-outline-info view-details-btn" data-id="<%= item.id %>" data-bs-toggle="modal" data-bs-target="#detailsModal" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary">
-          <div class="text-light">
-            Mostrando <%= @items.count %> itens
-          </div>
+                  </div>
+                </button>
+              </h2>
+              <div id="supplierCollapse<%= index %>" class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" aria-labelledby="supplierHeading<%= index %>" data-bs-parent="#suppliersAccordion">
+                <div class="accordion-body p-0 bg-dark">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-hover table-dark mb-0 border-secondary">
+                      <thead class="table-dark border-secondary sticky-top">
+                        <tr>
+                          <th width="12%">Código</th>
+                          <th width="12%">Pedido</th>
+                          <th width="<%= @view_mode == 'migrated' ? '30%' : '25%' %>">Descrição</th>
+                          <th width="10%" class="text-end">Qtd.</th>
+                          <th width="10%" class="text-end">Estoque</th>
+                          <th width="10%" class="text-end">Unitário</th>
+                          <th width="10%" class="text-end">Total</th>
+                          <% if @view_mode == 'migrated' %>
+                            <th width="12%" class="text-center">Processado</th>
+                            <th width="12%" class="text-center">Bling ID</th>
+                          <% else %>
+                            <th width="14%" class="text-center">Ações</th>
+                          <% end %>
+                        </tr>
+                      </thead>
+                      <tbody class="border-secondary">
+                        <% items.each do |item| %>
+                          <% 
+                            estoque = item.produto_estoque.to_i
+                            selection_class = if @view_mode == 'migrated'
+                              'selection-migrated'
+                            elsif item.checked_order
+                              'selection-checked'
+                            else
+                              'selection-pending'
+                            end
+                          %>
+                          <tr class="<%= selection_class %> item-row" 
+                              data-product-code="<%= item.produto_codigo %>" 
+                              data-product-desc="<%= item.produto_descricao %>"
+                              data-item-id="<%= item.id %>">
+                            <td>
+                              <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
+                            </td>
+                            <td>
+                              <span class="badge bg-primary"><%= item.sale_order.numero %></span>
+                            </td>
+                            <td>
+                              <div class="d-flex flex-column">
+                                <span><%= item.produto_descricao %></span>
+                                <% if item.descricao_detalhada.present? %>
+                                  <small class="text-light"><%= truncate(item.descricao_detalhada, length: 50) %></small>
+                                <% end %>
+                              </div>
+                            </td>
+                            <td class="text-end fw-bold"><%= number_with_precision(item.quantity_order || item.quantidade, precision: 2) %></td>
+                            <td class="text-end fw-bold text-danger"><%= item.produto_estoque %></td>
+                            <td class="text-end"><%= number_to_currency(item.valor_unitario, unit: "R$ ") %></td>
+                            <td class="text-end fw-bold"><%= number_to_currency(item.valor_total, unit: "R$ ") %></td>
+                            <% if @view_mode == 'migrated' %>
+                              <td class="text-center">
+                                <% if item.purchase_order_created_at.present? %>
+                                  <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    <%= item.purchase_order_created_at.strftime('%d/%m/%Y %H:%M') %>
+                                  </small>
+                                <% else %>
+                                  <small class="text-muted">-</small>
+                                <% end %>
+                              </td>
+                              <td class="text-center">
+                                <% if item.bling_order_id.present? %>
+                                  <span class="badge bg-success"><%= item.bling_order_id %></span>
+                                <% else %>
+                                  <small class="text-muted">-</small>
+                                <% end %>
+                              </td>
+                            <% else %>
+                              <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                  <% if item.sale_order_item_supply.present? %>
+                                    <button type="button" class="btn btn-outline-success process-item-btn" 
+                                            data-item-id="<%= item.id %>"
+                                            title="Processar item">
+                                      <i class="fas fa-check"></i>
+                                    </button>
+                                  <% else %>
+                                    <button type="button" class="btn btn-outline-warning add-supplier-btn"
+                                            data-bs-toggle="modal" data-bs-target="#supplierModal"
+                                            data-item-id="<%= item.id %>"
+                                            data-product-id="<%= item.produto_id %>"
+                                            title="Adicionar fornecedor">
+                                      <i class="fas fa-plus"></i>
+                                    </button>
+                                  <% end %>
+                                  <button type="button" class="btn btn-outline-danger ignore-item-btn" 
+                                          data-item-id="<%= item.id %>"
+                                          title="Ignorar item">
+                                    <i class="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            <% end %>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
         </div>
       <% end %>
     </div>
   </div>
 </div>
 
+<%= javascript_tag do %>
+$(document).ready(function() {
+  <% unless @view_mode == 'migrated' %>
+    // Processar item individual
+    $('.process-item-btn').on('click', function() {
+      const itemId = $(this).data('item-id');
+      const button = $(this);
+      const originalHtml = button.html();
+
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+      $.ajax({
+        url: `/sale_order_items/${itemId}/process_item`,
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message, 'success');
+            // Remover a linha ou atualizar o status
+            button.closest('tr').fadeOut();
+          } else {
+            showAlert(response.message, 'error');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao processar item';
+          showAlert(message, 'error');
+        },
+        complete: function() {
+          button.prop('disabled', false).html(originalHtml);
+        }
+      });
+    });
+
+    // Ignorar item individual
+    $('.ignore-item-btn').on('click', function() {
+      const itemId = $(this).data('item-id');
+      const button = $(this);
+      const originalHtml = button.html();
+
+      if (!confirm('Tem certeza que deseja ignorar este item?')) {
+        return;
+      }
+
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+      $.ajax({
+        url: `/sale_order_items/${itemId}/ignore_item`,
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message, 'success');
+            button.closest('tr').fadeOut();
+          } else {
+            showAlert(response.message, 'error');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao ignorar item';
+          showAlert(message, 'error');
+        },
+        complete: function() {
+          button.prop('disabled', false).html(originalHtml);
+        }
+      });
+    });
+  <% end %>
+
+  // Atualizar dados
+  $('#refresh-data').on('click', function() {
+    const btn = $(this);
+    btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...').prop('disabled', true);
+    setTimeout(() => {
+      location.reload();
+    }, 1000);
+  });
+
+  function showAlert(message, type) {
+    const alertClass = {
+      'success': 'alert-success',
+      'error': 'alert-danger', 
+      'warning': 'alert-warning',
+      'info': 'alert-info'
+    }[type] || 'alert-info';
+
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+
+    $('body').append(alertHtml);
+    setTimeout(function() {
+      $('.alert').fadeOut();
+    }, 5000);
+  }
+});
+<% end %>
+
 <style>
 body {
   background-color: #212529;
   color: #fff;
+  padding-bottom: 60px;
 }
 
-.card {
+.selection-checked {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-left: 3px solid #28a745;
+}
+
+.selection-pending {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-left: 3px solid #ffc107;
+}
+
+.selection-migrated {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  border-left: 3px solid #0d6efd;
+}
+
+.alert {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-group-sm .btn {
   transition: all 0.3s ease;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+.btn-group-sm .btn:hover {
+  transform: scale(1.05);
 }
 
-.display-6 {
-  font-size: 2rem;
+.accordion-button:not(.collapsed) {
+  background-color: rgba(13, 110, 253, 0.1);
+  border-color: rgba(13, 110, 253, 0.5);
 }
 
-.progress {
-  border-radius: 4px;
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
 }
 
-.rounded-circle {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.table-dark {
-  --bs-table-bg: #212529;
-  --bs-table-striped-bg: #2c3034;
-  --bs-table-striped-color: #fff;
-  --bs-table-active-bg: #373b3e;
-  --bs-table-active-color: #fff;
-  --bs-table-hover-bg: #323539;
-  --bs-table-hover-color: #fff;
-  color: #fff;
-  border-color: #495057;
-}
-
-.border-secondary {
-  border-color: #495057 !important;
-}
-
-.nav-tabs {
-  border-bottom: 1px solid #495057;
-}
-
-.nav-tabs .nav-link {
-  border: 1px solid transparent;
-  border-top-left-radius: 0.25rem;
-  border-top-right-radius: 0.25rem;
-  padding: 0.5rem 1rem;
-}
-
-.nav-tabs .nav-link:hover {
-  border-color: #495057 #495057 #495057;
-  background-color: #2c3034;
-}
-
-.nav-tabs .nav-link.active {
-  color: #fff;
-  background-color: transparent;
-  border-color: #495057 #495057 #212529;
-}
-
-.form-control, .form-select {
-  color: #fff;
-}
-
-.form-control:focus, .form-select:focus {
-  background-color: #2c3034;
-  color: #fff;
-  border-color: #0dcaf0;
-  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
-}
-
-.product-info {
-  max-width: 250px;
-}
-
-.text-sm {
-  font-size: 0.875rem;
+.form-check-input:indeterminate {
+  background-color: #6c757d;
+  border-color: #6c757d;
 }
 </style>

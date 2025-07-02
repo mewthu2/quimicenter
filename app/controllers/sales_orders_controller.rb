@@ -1,5 +1,6 @@
 class SalesOrdersController < ApplicationController
   include OrderReferenceHelper
+
   before_action :authenticate_user!
   before_action :set_order, only: [:show]
 
@@ -9,6 +10,7 @@ class SalesOrdersController < ApplicationController
                             .where(ignore_order: [false, nil])
                             .where.not(produto_estoque: nil)
                             .where('CAST(produto_estoque AS INTEGER) < 0')
+                            .where(bling_order_id: [nil, ''])  # Não mostrar itens já processados
                             .order(created_at: :desc)
 
       @checked_items_count = @items.where(checked_order: true).count
@@ -46,10 +48,9 @@ class SalesOrdersController < ApplicationController
       @item = SaleOrderItem.find(params[:id])
 
       item_params = params.permit(:checked_order, :quantity_order)
-
       checked_order = item_params[:checked_order] == '1' || item_params[:checked_order] == 'true'
       quantity_order = item_params[:quantity_order].to_f
-      
+
       if checked_order && quantity_order <= 0
         render json: { 
           success: false, 
@@ -78,13 +79,11 @@ class SalesOrdersController < ApplicationController
         success: false,
         message: 'Item não encontrado'
       }, status: :not_found
-
     rescue ActiveRecord::RecordInvalid => e
       render json: {
         success: false,
         message: "Erro ao salvar: #{e.message}"
       }, status: :unprocessable_entity
-
     rescue StandardError => e
       render json: {
         success: false,
@@ -98,29 +97,29 @@ class SalesOrdersController < ApplicationController
       items_data = params[:items] || []
       updated_items = []
       errors = []
-      
+
       items_data.each do |item_data|
         item = SaleOrderItem.find(item_data[:id])
         checked_order = item_data[:checked_order] == '1' || item_data[:checked_order] == 'true'
         quantity_order = item_data[:quantity_order].to_f
-        
+
         if checked_order && quantity_order <= 0
           errors << "Item #{item.produto_codigo}: Quantidade deve ser maior que zero"
           next
         end
-        
+
         item.update!(
           checked_order: checked_order,
           quantity_order: checked_order ? quantity_order : nil
         )
-        
+
         updated_items << {
           id: item.id,
           checked_order: item.checked_order,
           quantity_order: item.quantity_order
         }
       end
-      
+
       if errors.any?
         render json: { 
           success: false, 
@@ -135,7 +134,7 @@ class SalesOrdersController < ApplicationController
           updated_items: updated_items
         }
       end
-      
+
     rescue StandardError => e
       render json: { 
         success: false, 
@@ -151,6 +150,7 @@ class SalesOrdersController < ApplicationController
                           .where(ignore_order: [false, nil])
                           .where.not(produto_estoque: nil)
                           .where('CAST(produto_estoque AS INTEGER) < 0')
+                          .where(bling_order_id: [nil, ''])  # Não exportar itens já processados
                           .order(created_at: :desc)
 
     filename = "itens_estoque_negativo_#{Date.today.strftime('%d%m%Y')}.csv"
@@ -171,7 +171,7 @@ class SalesOrdersController < ApplicationController
         ]
       end
     end
-    
+
     send_data csv_data, filename: filename, type: 'text/csv'
   end
 
