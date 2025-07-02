@@ -1,6 +1,6 @@
 class CreatePurchaseOrderJob < ApplicationJob
   def perform
-    return unless Date.current.saturday?
+    return unless Date.current.thursday? && Time.current.strftime("%H:%M") == "17:30"
 
     items = SaleOrderItem.where(checked_order: true)
                          .where.not(quantity_order: [nil, 0])
