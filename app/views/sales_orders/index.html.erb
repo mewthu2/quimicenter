@@ -14,6 +14,12 @@
         <%= link_to export_negative_stock_sales_orders_path, class: "btn btn-outline-danger", id: "export-excel" do %>
           <i class="fas fa-file-excel me-2"></i>Exportar Excel
         <% end %>
+        <%= link_to sales_orders_path(show_ignored: !@show_ignored), 
+            class: "btn #{ @show_ignored ? 'btn-outline-warning' : 'btn-outline-secondary'}", 
+            id: "toggle-ignored-items" do %>
+          <i class="fas fa-<%= @show_ignored ? 'eye-slash' : 'eye' %> me-2"></i>
+          <%= @show_ignored ? 'Ocultar Excluídos' : 'Mostrar Excluídos' %>
+        <% end %>
         <button class="btn btn-outline-info" id="refresh-data">
           <i class="fas fa-sync-alt me-2"></i>Atualizar
         </button>
@@ -22,7 +28,7 @@
   </div>
 
   <div class="row mb-4">
-    <div class="col-md-4 mb-3 mb-md-0">
+    <div class="col-md-3 mb-3 mb-md-0">
       <div class="card bg-dark border-danger shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
@@ -38,8 +44,7 @@
         </div>
       </div>
     </div>
-    
-    <div class="col-md-4 mb-3 mb-md-0">
+    <div class="col-md-3 mb-3 mb-md-0">
       <div class="card bg-dark border-info shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
@@ -53,15 +58,12 @@
             </div>
           </div>
           <div class="progress mt-3 bg-dark border border-secondary">
-            <div class="progress-bar bg-info" role="progressbar" 
-                 style="width: <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" 
-                 aria-valuenow="<%= @checked_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
+            <div class="progress-bar bg-info" role="progressbar" style="width: <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" aria-valuenow="<%= @checked_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="col-md-4">
+    <div class="col-md-3 mb-3 mb-md-0">
       <div class="card bg-dark border-warning shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
@@ -77,6 +79,45 @@
         </div>
       </div>
     </div>
+    <div class="col-md-3">
+      <div class="card bg-dark border-secondary shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-secondary mb-1">Excluídos</h6>
+              <h2 class="mb-0 display-5 fw-bold text-white" id="ignored-items-count"><%= @ignored_items_count %></h2>
+              <p class="text-light mb-0 small">Removidos da listagem</p>
+            </div>
+            <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+              <i class="fas fa-trash fa-2x text-secondary"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de ações em lote -->
+  <div class="card bg-dark border-secondary mb-3" id="bulk-actions-bar" style="display: none;">
+    <div class="card-body py-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <span class="text-white me-3">
+            <span id="selected-count">0</span> item(ns) selecionado(s)
+          </span>
+          <button class="btn btn-sm btn-outline-danger me-2" id="bulk-remove-btn">
+            <i class="fas fa-trash me-1"></i>Excluir Selecionados
+          </button>
+          <button class="btn btn-sm btn-outline-success me-2" id="bulk-restore-btn" 
+        style="<%= @show_ignored ? '' : 'display: none;' %>">
+  <i class="fas fa-undo me-1"></i>Restaurar Selecionados
+</button>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" id="clear-selection">
+          <i class="fas fa-times me-1"></i>Limpar Seleção
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="card shadow mb-4 border-0 bg-dark border-secondary">
@@ -85,9 +126,11 @@
         <h6 class="m-0 font-weight-bold text-danger">
           <i class="fas fa-exclamation-triangle me-2"></i>Itens com Estoque Negativo por Fornecedor
         </h6>
-        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-          <i class="fas fa-filter me-1"></i> Filtros <i class="fas fa-chevron-down ms-1" id="filterIcon"></i>
-        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+            <i class="fas fa-filter me-1"></i> Filtros <i class="fas fa-chevron-down ms-1" id="filterIcon"></i>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -95,7 +138,7 @@
       <div class="card-body bg-dark border-secondary py-3">
         <div class="filter-container bg-dark">
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="filter-group">
                 <label for="date-filter" class="form-label text-light small mb-1">
                   <i class="fas fa-calendar-alt me-1 text-info"></i> Data do Pedido
@@ -103,25 +146,24 @@
                 <input type="date" id="date-filter" class="form-control form-control-sm bg-dark text-white border-secondary">
               </div>
             </div>
-            
-            <div class="col-md-6">
-              <div class="filter-group">
-                <label for="search-input" class="form-label text-light small mb-1">
-                  <i class="fas fa-search me-1 text-info"></i> Pesquisar por Código ou Descrição
+            <div class="col-md-4">
+              <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" id="select-all-items">
+                <label class="form-check-label text-white" for="select-all-items">
+                  Selecionar todos os itens visíveis
                 </label>
-                <div class="input-group input-group-sm">
-                  <input type="text" id="search-input" class="form-control bg-dark text-white border-secondary" placeholder="Digite para pesquisar...">
-                  <button class="btn btn-info" type="button" id="search-button">
-                    <i class="fas fa-search me-1"></i> Pesquisar
-                  </button>
-                </div>
               </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button class="btn btn-outline-secondary btn-sm" id="clear-filters">
+                <i class="fas fa-times me-1"></i> Limpar Filtros
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <div class="card-body p-0">
       <% if @items_by_supplier.empty? %>
         <div class="text-center py-5">
@@ -132,11 +174,14 @@
       <% else %>
         <div class="accordion" id="suppliersAccordion">
           <% @items_by_supplier.each_with_index do |(supplier, items), index| %>
-            <% 
+            <%
               items_count = items.size
               total_value = items.sum { |item| (item.valor_unitario || 0) * (item.quantidade || 0) }
               checked_count = items.count { |item| item.checked_order }
               pending_count = items_count - checked_count
+              
+              # Busca itens excluídos do mesmo fornecedor
+              ignored_items = @ignored_items_by_supplier[supplier] || []
             %>
             <div class="accordion-item border-secondary bg-dark supplier-group" data-supplier="<%= supplier %>">
               <h2 class="accordion-header" id="supplierHeading<%= index %>">
@@ -174,9 +219,12 @@
                     <table class="table table-sm table-hover table-dark mb-0 border-secondary">
                       <thead class="table-dark border-secondary sticky-top">
                         <tr>
-                          <th width="8%" class="ps-3">Código</th>
+                          <th width="4%" class="ps-3">
+                            <input type="checkbox" class="form-check-input supplier-select-all" data-supplier="<%= supplier %>">
+                          </th>
+                          <th width="8%">Código</th>
                           <th width="8%">Data</th>
-                          <th width="24%">Descrição</th>
+                          <th width="20%">Descrição</th>
                           <th width="7%" class="text-end">Qtd.</th>
                           <th width="7%" class="text-end">Estoque</th>
                           <th width="10%" class="text-end">Unitário</th>
@@ -186,76 +234,101 @@
                         </tr>
                       </thead>
                       <tbody class="border-secondary">
-                        <% items.each do |item| %>
-                          <% 
-                            estoque = item.produto_estoque.to_i
-                            selection_class = if item.checked_order
-                                                'selection-checked'
-                                              else
-                                                'selection-pending'
-                                              end
-                          %>
-                          <tr class="bg-danger text-white stock-negative <%= selection_class %> item-row" 
-                              data-product-code="<%= item.produto_codigo %>" 
-                              data-product-desc="<%= item.produto_descricao %>"
-                              data-stock-status="negative"
-                              data-selection-status="<%= item.checked_order ? 'checked' : 'pending' %>">
-                            <td class="ps-3">
-                              <i class="fas fa-exclamation-triangle me-1" title="Estoque negativo"></i>
-                              <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
-                            </td>
-                            <td>
-                              <%= item.created_at&.strftime('%d/%m/%Y') %>
-                            </td>
-                            <td>
-                              <div class="d-flex flex-column">
-                                <span><%= item.produto_descricao %></span>
-                                <% if item.descricao_detalhada.present? %>
-                                  <small class="text-light"><%= truncate(item.descricao_detalhada, length: 50) %></small>
-                                <% end %>
-                              </div>
-                            </td>
-                            <td class="text-end fw-bold"><%= number_with_precision(item.quantidade, precision: 2) %></td>
-                            <td class="text-end fw-bold text-warning"><%= item.produto_estoque %></td>
-                            <td class="text-end"><%= number_to_currency(item.valor_unitario, unit: "R$ ") %></td>
-                            <td class="text-end fw-bold"><%= number_to_currency(item.valor_total, unit: "R$ ") %></td>
-                            <td>
-                              <% if item.sale_order_item_supply.present? %>
-                                <div class="input-group input-group-sm">
-                                  <%= text_field_tag "quantity_order[#{item.id}]", item.quantity_order || estoque.abs, 
-                                      class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
-                                      placeholder: "Qtd.", 
-                                      data: { item_id: item.id },
-                                      disabled: !item.checked_order %>
-                                </div>
-                              <% end %>
-                            </td>
-                            <td>
-                              <div class="d-flex justify-content-center">
-                                <% if item.sale_order_item_supply.present? %>
-                                  <div class="form-check form-switch me-2">
-                                    <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
-                                        class: "form-check-input checked-order-toggle", 
-                                        data: { item_id: item.id } %>
-                                    <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
-                                  </div>
-                                  <button type="button" class="btn btn-sm btn-outline-success save-item-btn <%= item.checked_order ? '' : 'd-none' %>" 
-                                          data-item-id="<%= item.id %>">
-                                    <i class="fas fa-save"></i>
-                                  </button>
-                                <% else %>
-                                  <button type="button" class="btn btn-sm btn-outline-warning add-supplier-btn"
-                                          data-bs-toggle="modal" data-bs-target="#supplierModal"
-                                          data-item-id="<%= item.id %>"
-                                          data-product-id="<%= item.produto_id %>">
-                                    <i class="fas fa-plus me-1"></i>Fornecedor
-                                  </button>
-                                <% end %>
-                              </div>
-                            </td>
-                          </tr>
-                        <% end %>
-                      </tbody>
+  <% items.each do |item| %>
+    <%
+      estoque = item.produto_estoque.to_i
+      is_ignored = item.ignore_order
+      
+      selection_class = if is_ignored
+        'item-ignored'
+      elsif item.checked_order
+        'selection-checked'
+      else
+        'selection-pending'
+      end
+    %>
+    <tr class="bg-danger text-white stock-negative <%= selection_class %> item-row" 
+        data-product-code="<%= item.produto_codigo %>" 
+        data-product-desc="<%= item.produto_descricao %>"
+        data-stock-status="negative"
+        data-selection-status="<%= is_ignored ? 'ignored' : (item.checked_order ? 'checked' : 'pending') %>"
+        data-item-date="<%= item.created_at&.strftime('%Y-%m-%d') %>"
+        data-item-id="<%= item.id %>"
+        data-ignored="<%= is_ignored %>">
+      <td class="ps-3">
+        <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>">
+      </td>
+      <td>
+        <% if is_ignored %>
+          <i class="fas fa-trash me-1 text-secondary" title="Item excluído"></i>
+        <% else %>
+          <i class="fas fa-exclamation-triangle me-1" title="Estoque negativo"></i>
+        <% end %>
+        <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
+      </td>
+      <td><%= item.created_at&.strftime('%d/%m/%Y') %></td>
+      <td>
+        <div class="d-flex flex-column">
+          <span><%= item.produto_descricao %></span>
+          <% if item.descricao_detalhada.present? %>
+            <small class="text-light"><%= truncate(item.descricao_detalhada, length: 50) %></small>
+          <% end %>
+        </div>
+      </td>
+      <td class="text-end fw-bold"><%= number_with_precision(item.quantidade, precision: 2) %></td>
+      <td class="text-end fw-bold text-warning"><%= item.produto_estoque %></td>
+      <td class="text-end"><%= number_to_currency(item.valor_unitario, unit: "R$ ") %></td>
+      <td class="text-end fw-bold"><%= number_to_currency(item.valor_total, unit: "R$ ") %></td>
+      <td>
+        <% if item.sale_order_item_supply.present? && !is_ignored %>
+          <div class="input-group input-group-sm">
+            <%= text_field_tag "quantity_order[#{item.id}]", 
+                item.quantity_order || estoque.abs, 
+                class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
+                placeholder: "Qtd.", 
+                data: { item_id: item.id },
+                disabled: !item.checked_order %>
+          </div>
+        <% end %>
+      </td>
+      <td>
+        <div class="d-flex justify-content-center gap-1">
+          <% if is_ignored %>
+            <button type="button" class="btn btn-sm btn-outline-success restore-item-btn" 
+                    data-item-id="<%= item.id %>"
+                    title="Restaurar item">
+              <i class="fas fa-undo"></i>
+            </button>
+          <% else %>
+            <% if item.sale_order_item_supply.present? %>
+              <div class="form-check form-switch">
+                <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
+                    class: "form-check-input checked-order-toggle", 
+                    data: { item_id: item.id } %>
+                <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-success save-item-btn <%= item.checked_order ? '' : 'd-none' %>" data-item-id="<%= item.id %>">
+                <i class="fas fa-save"></i>
+              </button>
+            <% else %>
+              <button type="button" class="btn btn-sm btn-outline-warning add-supplier-btn"
+                      data-bs-toggle="modal" data-bs-target="#supplierModal"
+                      data-item-id="<%= item.id %>"
+                      data-product-id="<%= item.produto_id %>">
+                <i class="fas fa-plus me-1"></i>Fornecedor
+              </button>
+            <% end %>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" 
+                    data-item-id="<%= item.id %>"
+                    title="Remover item da listagem">
+              <i class="fas fa-times"></i>
+            </button>
+          <% end %>
+        </div>
+      </td>
+    </tr>
+  <% end %>
+</tbody>
                     </table>
                   </div>
                 </div>
@@ -297,9 +370,10 @@
 $(document).ready(function() {
   let negativeStockRows = [];
   let currentNegativeStockIndex = -1;
+  const showingIgnored = <%= @show_ignored ? 'true' : 'false' %>;
 
   function initStockNavigation() {
-    negativeStockRows = $('tr.stock-negative').toArray();
+    negativeStockRows = $('tr.stock-negative:not(.item-ignored):visible').toArray();
     const negativeStockCount = negativeStockRows.length;
     
     if (negativeStockCount > 0) {
@@ -311,6 +385,8 @@ $(document).ready(function() {
       document.getElementById('next-negative-stock').setAttribute('disabled', 'disabled');
       document.getElementById('current-negative-stock').textContent = '0';
     }
+    
+    document.getElementById('total-negative-stock').textContent = negativeStockCount.toString();
   }
 
   function expandAccordionForRow(row) {
@@ -338,27 +414,209 @@ $(document).ready(function() {
     }, 300);
   }
 
-  document.getElementById('next-negative-stock').addEventListener('click', function() {
+  function updateSelectionCount() {
+    const selectedCount = $('.item-select:checked').length;
+    $('#selected-count').text(selectedCount);
+    
+    if (selectedCount > 0) {
+      $('#bulk-actions-bar').show();
+    } else {
+      $('#bulk-actions-bar').hide();
+    }
+  }
+
+  function updateSupplierSelectAll() {
+    $('.supplier-group').each(function() {
+      const supplierGroup = $(this);
+      const visibleItems = supplierGroup.find('.item-row:visible .item-select');
+      const checkedItems = supplierGroup.find('.item-row:visible .item-select:checked');
+      const selectAllCheckbox = supplierGroup.find('.supplier-select-all');
+      
+      if (visibleItems.length === 0) {
+        selectAllCheckbox.prop('indeterminate', false).prop('checked', false);
+      } else if (checkedItems.length === visibleItems.length) {
+        selectAllCheckbox.prop('indeterminate', false).prop('checked', true);
+      } else if (checkedItems.length > 0) {
+        selectAllCheckbox.prop('indeterminate', true).prop('checked', false);
+      } else {
+        selectAllCheckbox.prop('indeterminate', false).prop('checked', false);
+      }
+    });
+  }
+
+  function showAlert(message, type) {
+    const alertClass = {
+      'success': 'alert-success',
+      'error': 'alert-danger', 
+      'warning': 'alert-warning',
+      'info': 'alert-info'
+    }[type] || 'alert-info';
+
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+
+    $('body').append(alertHtml);
+
+    setTimeout(function() {
+      $('.alert').fadeOut();
+    }, 5000);
+  }
+
+  // Navegação entre itens
+  $('#next-negative-stock').on('click', function() {
     if (negativeStockRows.length === 0) return;
     
     currentNegativeStockIndex = (currentNegativeStockIndex + 1) % negativeStockRows.length;
-    document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
-    document.getElementById('prev-negative-stock').removeAttribute('disabled');
+    $('#current-negative-stock').text(currentNegativeStockIndex + 1);
+    $('#prev-negative-stock').prop('disabled', false);
     
     const currentRow = negativeStockRows[currentNegativeStockIndex];
     expandAccordionForRow(currentRow);
     highlightAndScrollToRow(currentRow);
   });
 
-  document.getElementById('prev-negative-stock').addEventListener('click', function() {
+  $('#prev-negative-stock').on('click', function() {
     if (negativeStockRows.length === 0) return;
     
     currentNegativeStockIndex = (currentNegativeStockIndex - 1 + negativeStockRows.length) % negativeStockRows.length;
-    document.getElementById('current-negative-stock').textContent = (currentNegativeStockIndex + 1).toString();
+    $('#current-negative-stock').text(currentNegativeStockIndex + 1);
     
     const currentRow = negativeStockRows[currentNegativeStockIndex];
     expandAccordionForRow(currentRow);
     highlightAndScrollToRow(currentRow);
+  });
+
+  // Seleção múltipla - EVENTOS PRINCIPAIS
+  $(document).on('change', '.item-select', function() {
+    console.log('Item selecionado:', $(this).data('item-id'), 'Checked:', $(this).is(':checked'));
+    updateSelectionCount();
+    updateSupplierSelectAll();
+  });
+
+  $(document).on('change', '.supplier-select-all', function() {
+    const supplier = $(this).data('supplier');
+    const isChecked = $(this).is(':checked');
+    const supplierGroup = $(this).closest('.supplier-group');
+    
+    console.log('Supplier select all:', supplier, 'Checked:', isChecked);
+    
+    supplierGroup.find('.item-row:visible .item-select').prop('checked', isChecked);
+    updateSelectionCount();
+  });
+
+  $('#select-all-items').on('change', function() {
+    const isChecked = $(this).is(':checked');
+    console.log('Select all items:', isChecked);
+    
+    $('.item-row:visible .item-select').prop('checked', isChecked);
+    $('.supplier-select-all').prop('checked', isChecked);
+    updateSelectionCount();
+  });
+
+  $('#clear-selection').on('click', function() {
+    $('.item-select, .supplier-select-all, #select-all-items').prop('checked', false);
+    updateSelectionCount();
+  });
+
+  // Exclusão em lote
+  $('#bulk-remove-btn').on('click', function() {
+    const selectedItems = $('.item-select:checked').map(function() {
+      return $(this).data('item-id');
+    }).get();
+    
+    console.log('Selected items for removal:', selectedItems);
+    
+    if (selectedItems.length === 0) {
+      showAlert('Nenhum item selecionado', 'warning');
+      return;
+    }
+    
+    if (confirm(`Tem certeza que deseja remover ${selectedItems.length} item(ns) da listagem?`)) {
+      const button = $(this);
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Removendo...');
+      
+      $.ajax({
+        url: '/sales_orders/bulk_ignore_items',
+        method: 'PATCH',
+        data: {
+          item_ids: selectedItems
+        },
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message, 'success');
+            
+            // Recarrega a página após 1 segundo para mostrar o resultado
+            setTimeout(function() {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showAlert(response.message, 'error');
+            button.prop('disabled', false).html('<i class="fas fa-trash me-1"></i>Excluir Selecionados');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao remover itens';
+          showAlert(message, 'error');
+          button.prop('disabled', false).html('<i class="fas fa-trash me-1"></i>Excluir Selecionados');
+        }
+      });
+    }
+  });
+
+  // Restauração em lote
+  $('#bulk-restore-btn').on('click', function() {
+    const selectedItems = $('.item-ignored .item-select:checked').map(function() {
+      return $(this).data('item-id');
+    }).get();
+    
+    if (selectedItems.length === 0) {
+      showAlert('Nenhum item excluído selecionado', 'warning');
+      return;
+    }
+    
+    if (confirm(`Tem certeza que deseja restaurar ${selectedItems.length} item(ns)?`)) {
+      const button = $(this);
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Restaurando...');
+      
+      $.ajax({
+        url: '/sales_orders/bulk_restore_items',
+        method: 'PATCH',
+        data: {
+          item_ids: selectedItems
+        },
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message, 'success');
+            
+            // Recarrega a página após 1 segundo para mostrar o resultado
+            setTimeout(function() {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showAlert(response.message, 'error');
+            button.prop('disabled', false).html('<i class="fas fa-undo me-1"></i>Restaurar Selecionados');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao restaurar itens';
+          showAlert(message, 'error');
+          button.prop('disabled', false).html('<i class="fas fa-undo me-1"></i>Restaurar Selecionados');
+        }
+      });
+    }
   });
 
   $('#refresh-data').on('click', function() {
@@ -370,24 +628,23 @@ $(document).ready(function() {
     }, 1000);
   });
 
+  // Outros eventos...
   $(document).on('change', '.checked-order-toggle', function() {
     const itemId = $(this).data('item-id');
     const isChecked = $(this).is(':checked');
-    
     const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
-    quantityInput.prop('disabled', !isChecked);
     
+    quantityInput.prop('disabled', !isChecked);
     toggleSaveButton(itemId);
   });
-  
+
   function toggleSaveButton(itemId) {
     const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
     const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
     const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
-    
     const quantityValue = parseFloat(quantityInput.val());
     const isQuantityValid = !isNaN(quantityValue) && quantityValue > 0;
-    
+
     if (checkedOrder && isQuantityValid) {
       saveButton.removeClass('d-none');
     } else {
@@ -395,170 +652,44 @@ $(document).ready(function() {
     }
   }
 
-  $(document).on('click', '.save-item-btn', function() {
-    const itemId = $(this).data('item-id');
-    const button = $(this);
-    const originalHtml = button.html();
-    
-    const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
-    const quantityOrder = $(`input[name="quantity_order[${itemId}]"]`).val();
-    
-    if (checkedOrder && (!quantityOrder || parseFloat(quantityOrder) <= 0)) {
-      showAlert('Quantidade deve ser maior que zero quando o item está selecionado', 'warning');
-      return;
-    }
-    
-    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-    
-    $.ajax({
-      url: `/sales_orders/${itemId}/save_item`,
-      method: 'PATCH',
-      data: {
-        checked_order: checkedOrder,
-        quantity_order: quantityOrder
-      },
-      headers: {
-        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-      },
-      success: function(response) {
-        if (response.success) {
-          showAlert(response.message, 'success');
-          
-          updateItemInterface(itemId, response.item);
-          
-          button.addClass('d-none');
-        } else {
-          showAlert(response.message, 'error');
-        }
-      },
-      error: function(xhr) {
-        const response = xhr.responseJSON;
-        const message = response ? response.message : 'Erro ao salvar item';
-        showAlert(message, 'error');
-      },
-      complete: function() {
-        button.prop('disabled', false).html(originalHtml);
-      }
-    });
-  });
-
-  function showAlert(message, type) {
-    const alertClass = {
-      'success': 'alert-success',
-      'error': 'alert-danger', 
-      'warning': 'alert-warning',
-      'info': 'alert-info'
-    }[type] || 'alert-info';
-    
-    const alertHtml = `
-      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    `;
-    
-    $('body').append(alertHtml);
-    
-    setTimeout(function() {
-      $('.alert').fadeOut();
-    }, 5000);
-  }
-
-  function updateItemInterface(itemId, itemData) {
-    const row = $(`.save-item-btn[data-item-id="${itemId}"]`).closest('tr');
-    
-    if (itemData.checked_order) {
-      row.removeClass('selection-pending').addClass('selection-checked');
-    } else {
-      row.removeClass('selection-checked').addClass('selection-pending');
-    }
-    
-    updateCounters();
-  }
-
-  function updateCounters() {
-    const checkedCount = $('.checked-order-toggle:checked').length;
-    const totalCount = $('.checked-order-toggle').length;
-    const pendingCount = totalCount - checkedCount;
-    
-    $('#checked-items-count').text(checkedCount);
-    $('#pending-items-count').text(pendingCount);
-    
-    const percentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
-    $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', checkedCount);
-    
-    $('.supplier-group').each(function() {
-      const supplierGroup = $(this);
-      const supplierItems = supplierGroup.find('.checked-order-toggle');
-      const supplierCheckedCount = supplierItems.filter(':checked').length;
-      const supplierPendingCount = supplierItems.length - supplierCheckedCount;
-      
-      supplierGroup.find('.badge.bg-info').html(`<i class="fas fa-check"></i> ${supplierCheckedCount}`);
-      supplierGroup.find('.badge.bg-secondary').html(`<i class="fas fa-question"></i> ${supplierPendingCount}`);
-    });
-  }
-
   $(document).on('input', '.quantity-order-input', function() {
     const itemId = $(this).data('item-id');
     toggleSaveButton(itemId);
   });
 
-  $('#search-button, #search-input').on('click keypress', function(e) {
-    if (e.type === 'click' || e.which === 13) {
-      const searchTerm = $('#search-input').val().toLowerCase();
-      filterItems(searchTerm);
-    }
-  });
-
+  // Filtro por data
   $('#date-filter').on('change', function() {
     const selectedDate = $(this).val();
     filterItemsByDate(selectedDate);
   });
 
-  function filterItems(searchTerm) {
-    $('.item-row').each(function() {
-      const row = $(this);
-      const productCode = row.data('product-code').toString().toLowerCase();
-      const productDesc = row.data('product-desc').toString().toLowerCase();
-      
-      if (searchTerm === '' || productCode.includes(searchTerm) || productDesc.includes(searchTerm)) {
-        row.show();
-      } else {
-        row.hide();
-      }
-    });
-    
-    $('.supplier-group').each(function() {
-      const visibleItems = $(this).find('.item-row:visible').length;
-      if (visibleItems === 0) {
-        $(this).hide();
-      } else {
-        $(this).show();
-      }
-    });
-  }
+  $('#clear-filters').on('click', function() {
+    $('#date-filter').val('');
+    $('#select-all-items').prop('checked', false);
+    $('.item-row, .supplier-group').show();
+    $('.item-select, .supplier-select-all').prop('checked', false);
+    updateSelectionCount();
+    initStockNavigation();
+  });
 
   function filterItemsByDate(selectedDate) {
     if (!selectedDate) {
       $('.item-row, .supplier-group').show();
+      initStockNavigation();
       return;
     }
-    
+
     $('.item-row').each(function() {
       const row = $(this);
-      const itemDate = row.find('td:nth-child(2)').text().trim();
-      const [day, month, year] = itemDate.split('/');
-      const itemDateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      const itemDate = row.data('item-date');
       
-      if (itemDateFormatted === selectedDate) {
+      if (itemDate === selectedDate) {
         row.show();
       } else {
         row.hide();
       }
     });
-    
+
     $('.supplier-group').each(function() {
       const visibleItems = $(this).find('.item-row:visible').length;
       if (visibleItems === 0) {
@@ -567,22 +698,17 @@ $(document).ready(function() {
         $(this).show();
       }
     });
+
+    initStockNavigation();
   }
 
-  $(document).on('keydown', function(e) {
-    if (e.ctrlKey && e.which === 83) {
-      e.preventDefault();
-      const focusedRow = $('.item-row:focus-within');
-      if (focusedRow.length) {
-        const saveBtn = focusedRow.find('.save-item-btn:visible');
-        if (saveBtn.length) {
-          saveBtn.click();
-        }
-      }
-    }
-  });
-
+  // Inicialização
   initStockNavigation();
+  
+  // Debug: Verificar se os elementos existem
+  console.log('Bulk actions bar:', $('#bulk-actions-bar').length);
+  console.log('Item selects:', $('.item-select').length);
+  console.log('Selected count element:', $('#selected-count').length);
 });
 <% end %>
 
@@ -709,11 +835,11 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.save-item-btn {
+.save-item-btn, .remove-item-btn, .restore-item-btn {
   transition: all 0.3s ease;
 }
 
-.save-item-btn:hover {
+.save-item-btn:hover, .remove-item-btn:hover, .restore-item-btn:hover {
   transform: scale(1.05);
 }
 
@@ -730,5 +856,24 @@ body {
 .selection-pending {
   background-color: rgba(255, 193, 7, 0.1) !important;
   border-left: 3px solid #ffc107;
+}
+
+.item-ignored {
+  background-color: rgba(108, 117, 125, 0.3) !important;
+  opacity: 0.7;
+  border-left: 3px solid #6c757d;
+}
+
+#bulk-actions-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.form-check-input:indeterminate {
+  background-color: #ffc107;
+  border-color: #ffc107;
 }
 </style>

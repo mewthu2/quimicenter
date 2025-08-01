@@ -1,1 +1,327 @@
-<% title 'Home' %>
+<div class="container-fluid mt-4 text-white">
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-home fa-2x text-primary me-3"></i>
+        <div>
+          <h1 class="h3 mb-1 text-white">Dashboard Principal</h1>
+          <p class="text-light mb-0">Sistema de Gestão de Pedidos Quimicenter</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <button class="btn btn-outline-info" id="refresh-data">
+          <i class="fas fa-sync-alt me-2"></i>Atualizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de navegação principal -->
+  <div class="row mb-4">
+    <div class="col-md-6 mb-3 mb-md-0">
+      <%= link_to sales_orders_path, class: "text-decoration-none" do %>
+        <div class="card bg-dark border-danger shadow-sm h-100 hover-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-danger mb-1">Estoque Negativo</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white">
+                  <i class="fas fa-exclamation-triangle me-2"></i>Crítico
+                </h2>
+                <p class="text-light mb-0 small">Itens que precisam de reposição urgente</p>
+              </div>
+              <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                <i class="fas fa-arrow-right fa-2x text-danger"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <div class="col-md-6">
+      <%= link_to sale_order_items_path, class: "text-decoration-none" do %>
+        <div class="card bg-dark border-success shadow-sm h-100 hover-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-success mb-1">Fila de Processamento</h6>
+                <h2 class="mb-0 display-5 fw-bold text-white">
+                  <i class="fas fa-tasks me-2"></i>Prontos
+                </h2>
+                <p class="text-light mb-0 small">Itens marcados para processamento</p>
+              </div>
+              <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                <i class="fas fa-arrow-right fa-2x text-success"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Menu de funcionalidades -->
+  <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+    <div class="card-header py-3 bg-dark border-secondary">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-th-large me-2"></i>Funcionalidades do Sistema
+        </h6>
+      </div>
+    </div>
+    <div class="card-body p-4">
+      <div class="row g-4">
+        <!-- Configurações de Sincronização -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to sync_configuration_path, class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-info h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-cogs fa-3x text-info"></i>
+                </div>
+                <h5 class="text-white mb-2">Configurações</h5>
+                <p class="text-light mb-3 small">
+                  Configure horários de sincronização e parâmetros do sistema
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Histórico de Tentativas -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to attempts_path, class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-warning h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-history fa-3x text-warning"></i>
+                </div>
+                <h5 class="text-white mb-2">Histórico</h5>
+                <p class="text-light mb-3 small">
+                  Consulte o histórico de tentativas de integração
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Contatos -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to contacts_path, class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-secondary h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-address-book fa-3x text-secondary"></i>
+                </div>
+                <h5 class="text-white mb-2">Contatos</h5>
+                <p class="text-light mb-3 small">
+                  Gerencie fornecedores e contatos do sistema
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Dashboard Resumo -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to dashboard_index_path, class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-primary h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-chart-bar fa-3x text-primary"></i>
+                </div>
+                <h5 class="text-white mb-2">Resumo dos Pedidos</h5>
+                <p class="text-light mb-3 small">
+                  Visualize estatísticas e resumos dos pedidos
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Pedidos de Venda -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to sales_orders_path, class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-success h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-shopping-cart fa-3x text-success"></i>
+                </div>
+                <h5 class="text-white mb-2">Pedidos de Venda</h5>
+                <p class="text-light mb-3 small">
+                  Visualize todos os pedidos de venda do sistema
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Fila de Criação no Bling -->
+        <div class="col-lg-4 col-md-6">
+          <%= link_to sale_order_items_path(status: 'pending'), class: "text-decoration-none" do %>
+            <div class="function-card bg-secondary border-info h-100">
+              <div class="card-body text-center py-4">
+                <div class="function-icon mb-3">
+                  <i class="fas fa-list-ul fa-3x text-info"></i>
+                </div>
+                <h5 class="text-white mb-2">Fila de Criação</h5>
+                <p class="text-light mb-3 small">
+                  Itens pendentes para criação no Bling
+                </p>
+                <div class="function-action">
+                  <span class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer com informações do sistema -->
+  <div class="card bg-dark border-secondary shadow">
+    <div class="card-body text-center py-4">
+      <div class="d-flex align-items-center justify-content-center mb-3">
+        <i class="fas fa-flask fa-2x text-primary me-3"></i>
+        <div>
+          <h5 class="mb-0 text-white">Sistema Quimicenter</h5>
+          <small class="text-light">Gestão Integrada de Pedidos</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center justify-content-center">
+        <i class="fas fa-code me-2 text-primary"></i>
+        <small class="text-light">Desenvolvido por <span class="fw-bold text-primary">mewtda</span></small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  $('#refresh-data').on('click', function() {
+    const btn = $(this);
+    btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...').prop('disabled', true);
+    
+    setTimeout(() => {
+      location.reload();
+    }, 1000);
+  });
+});
+<% end %>
+
+<style>
+body {
+  background-color: #212529;
+  color: #fff;
+  padding-bottom: 60px;
+}
+
+.hover-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.function-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.function-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.function-card:hover .function-icon i {
+  transform: scale(1.1);
+}
+
+.function-icon i {
+  transition: transform 0.3s ease;
+}
+
+.function-action {
+  margin-top: auto;
+}
+
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* Animações de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card, .function-card {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.function-card:nth-child(1) { animation-delay: 0.1s; }
+.function-card:nth-child(2) { animation-delay: 0.2s; }
+.function-card:nth-child(3) { animation-delay: 0.3s; }
+.function-card:nth-child(4) { animation-delay: 0.4s; }
+.function-card:nth-child(5) { animation-delay: 0.5s; }
+.function-card:nth-child(6) { animation-delay: 0.6s; }
+
+@media (max-width: 768px) {
+  .function-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .card-body {
+    padding: 1.5rem 1rem !important;
+  }
+  
+  .fa-3x {
+    font-size: 2.5rem !important;
+  }
+}
+</style>

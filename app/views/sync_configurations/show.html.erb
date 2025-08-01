@@ -1,0 +1,278 @@
+<div class="container-fluid mt-4 text-white">
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-cogs fa-2x text-info me-3"></i>
+        <div>
+          <h1 class="h3 mb-1 text-white">Configurações de Sincronização</h1>
+          <p class="text-light mb-0">Configure quando e como os pedidos serão sincronizados</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <%= link_to sale_order_items_path, class: "btn btn-outline-success" do %>
+          <i class="fas fa-list me-2"></i>Ver Itens
+        <% end %>
+        <%= form_with url: test_sync_sync_configuration_path, method: :post, local: true, class: "d-inline" do %>
+          <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Deseja executar a sincronização agora?')">
+            <i class="fas fa-play me-2"></i>Testar Sync
+          </button>
+        <% end %>
+        <%= form_with url: cleanup_data_sync_configuration_path, method: :delete, local: true, class: "d-inline" do %>
+          <button type="submit" class="btn btn-outline-danger" onclick="return confirm('⚠️ ZONA DE PERIGO\n\nEsta ação irá APAGAR PERMANENTEMENTE:\n• Todos os pedidos de venda\n• Todos os itens de pedidos\n• Todas as associações com fornecedores\n• Todo o histórico de tentativas\n\nEsta operação é IRREVERSÍVEL!\n\nDeseja continuar?')">
+            <i class="fas fa-trash me-2"></i>Limpar Dados
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="card bg-dark border-info shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="flex-grow-1">
+              <h6 class="text-info mb-1">Data de Início</h6>
+              <%= form_with model: @config, url: sync_configuration_path, method: :patch, local: true, class: "d-flex align-items-center" do |form| %>
+                <%= form.date_field :sync_start_date, 
+                    class: "form-control bg-dark text-white border-secondary me-2", 
+                    style: "max-width: 150px;" %>
+                <button type="submit" class="btn btn-sm btn-outline-info">
+                  <i class="fas fa-save"></i>
+                </button>
+              <% end %>
+              <p class="text-light mb-0 small">Sincronização a partir de</p>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+              <i class="fas fa-calendar-alt fa-2x text-info"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card bg-dark border-success shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-success mb-1">Dias Ativos</h6>
+              <h4 class="mb-0 text-white"><%= @config.enabled_days.count %></h4>
+              <p class="text-light mb-0 small">Dias da semana configurados</p>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+              <i class="fas fa-calendar-week fa-2x text-success"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card bg-dark border-warning shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="text-warning mb-1">Última Sync</h6>
+              <h6 class="mb-0 text-white">
+                <%= @config.last_sync_at&.strftime('%d/%m/%Y %H:%M') || 'Nunca' %>
+              </h6>
+              <p class="text-light mb-0 small">Última execução</p>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+              <i class="fas fa-clock fa-2x text-warning"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulário de Configuração -->
+  <%= form_with model: @config, url: sync_configuration_path, method: :patch, local: true do |form| %>
+    
+    <!-- Configuração de Horários -->
+    <div class="card shadow mb-4 border-0 bg-dark border-secondary">
+      <div class="card-header py-3 bg-dark border-secondary">
+        <h6 class="m-0 font-weight-bold text-info">
+          <i class="fas fa-clock me-2"></i>Agendamento por Dia da Semana
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <% %w[monday tuesday wednesday thursday friday saturday sunday].each_with_index do |day, index| %>
+            <% day_config = @config.schedule_for_day(day) %>
+            <% day_name = { 
+                'monday' => 'Segunda-feira', 
+                'tuesday' => 'Terça-feira', 
+                'wednesday' => 'Quarta-feira', 
+                'thursday' => 'Quinta-feira', 
+                'friday' => 'Sexta-feira', 
+                'saturday' => 'Sábado', 
+                'sunday' => 'Domingo' 
+               }[day] %>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+              <div class="card bg-secondary border-secondary h-100">
+                <div class="card-header py-2 bg-secondary border-secondary">
+                  <div class="form-check form-switch">
+                    <%= check_box_tag "sync_configuration[schedule_data][#{day}][enabled]", 
+                        true, 
+                        day_config['enabled'], 
+                        class: "form-check-input day-toggle", 
+                        id: "day_#{day}",
+                        data: { day: day } %>
+                    <%= label_tag "day_#{day}", day_name, class: "form-check-label text-white fw-bold" %>
+                  </div>
+                </div>
+                <div class="card-body py-2" id="hours_#{day}" style="<%= day_config['enabled'] ? '' : 'display: none;' %>">
+                  <div class="mb-2">
+                    <small class="text-light">Horários de execução:</small>
+                  </div>
+                  <div class="hours-container" data-day="<%= day %>">
+                    <% (day_config['hours'] || []).each_with_index do |hour, hour_index| %>
+                      <div class="input-group input-group-sm mb-2 hour-input">
+                        <input type="time" 
+                               name="sync_configuration[schedule_data][<%= day %>][hours][]" 
+                               value="<%= hour %>" 
+                               class="form-control bg-dark text-white border-secondary">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-hour">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+                  <button type="button" class="btn btn-outline-success btn-sm add-hour" data-day="<%= day %>">
+                    <i class="fas fa-plus me-1"></i>Adicionar Horário
+                  </button>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mb-4">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="fas fa-save me-2"></i>Salvar Configurações
+      </button>
+      <%= link_to sale_order_items_path, class: "btn btn-secondary btn-lg ms-2" do %>
+        <i class="fas fa-times me-2"></i>Cancelar
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  // Toggle de dias da semana
+  $('.day-toggle').on('change', function() {
+    const day = $(this).data('day');
+    const hoursContainer = $(`#hours_${day}`);
+    
+    if ($(this).is(':checked')) {
+      hoursContainer.show();
+    } else {
+      hoursContainer.hide();
+      // Limpar horários quando desabilitar o dia
+      hoursContainer.find('.hours-container').empty();
+    }
+  });
+
+  // Adicionar horário
+  $('.add-hour').on('click', function() {
+    const day = $(this).data('day');
+    const container = $(`.hours-container[data-day="${day}"]`);
+    
+    const hourInput = `
+      <div class="input-group input-group-sm mb-2 hour-input">
+        <input type="time" 
+               name="sync_configuration[schedule_data][${day}][hours][]" 
+               value="08:00" 
+               class="form-control bg-dark text-white border-secondary">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-hour">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+    
+    container.append(hourInput);
+  });
+
+  // Remover horário
+  $(document).on('click', '.remove-hour', function() {
+    $(this).closest('.hour-input').remove();
+  });
+
+  // Validação do formulário
+  $('form').on('submit', function(e) {
+    let hasEnabledDay = false;
+    
+    $('.day-toggle:checked').each(function() {
+      const day = $(this).data('day');
+      const hoursCount = $(`.hours-container[data-day="${day}"] .hour-input`).length;
+      
+      if (hoursCount > 0) {
+        hasEnabledDay = true;
+        return false; // break
+      }
+    });
+    
+    if (!hasEnabledDay) {
+      e.preventDefault();
+      alert('Configure pelo menos um dia da semana com horários de execução.');
+      return false;
+    }
+  });
+});
+<% end %>
+
+<style>
+body {
+  background-color: #212529;
+  color: #fff;
+  padding-bottom: 60px;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.hours-container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.hour-input {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-group .btn {
+  transition: all 0.3s ease;
+}
+
+.btn-group .btn:hover {
+  transform: scale(1.05);
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+</style>

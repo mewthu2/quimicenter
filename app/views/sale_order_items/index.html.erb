@@ -19,6 +19,9 @@
     </div>
     <div class="col-md-4 text-end">
       <div class="btn-group">
+        <%= link_to sync_configuration_path, class: "btn btn-outline-info" do %>
+          <i class="fas fa-cogs me-2"></i>Configurações
+        <% end %>
         <% if @view_mode == 'migrated' %>
           <%= link_to sale_order_items_path(view_mode: 'ready'), class: "btn btn-outline-success" do %>
             <i class="fas fa-cogs me-2"></i>Ver Prontos
@@ -95,7 +98,7 @@
             <div class="d-flex align-items-center justify-content-between">
               <div>
                 <h6 class="text-success mb-1">Prontos para Processamento</h6>
-                <h2 class="mb-0 display-5 fw-bold text-white"><%= @total_items_count %></h2>
+                <h2 class="mb-0 display-5 fw-bold text-white" id="total-items-count"><%= @total_items_count %></h2>
                 <p class="text-light mb-0 small">Itens marcados para compra</p>
               </div>
               <div class="rounded-circle bg-success bg-opacity-10 p-3">
@@ -124,6 +127,30 @@
     <% end %>
   </div>
 
+  <!-- Barra de ações em lote -->
+  <% unless @view_mode == 'migrated' %>
+    <div class="card bg-dark border-secondary mb-3" id="bulk-actions-bar" style="display: none;">
+      <div class="card-body py-2">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <span class="text-white me-3">
+              <span id="selected-count">0</span> item(ns) selecionado(s)
+            </span>
+            <button class="btn btn-sm btn-outline-success me-2" id="bulk-process-btn">
+              <i class="fas fa-check me-1"></i>Processar Selecionados
+            </button>
+            <button class="btn btn-sm btn-outline-danger me-2" id="bulk-ignore-btn">
+              <i class="fas fa-times me-1"></i>Ignorar Selecionados
+            </button>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" id="clear-selection">
+            <i class="fas fa-times me-1"></i>Limpar Seleção
+          </button>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Filtros -->
   <div class="card shadow mb-4 border-0 bg-dark border-secondary">
     <div class="card-header py-3 bg-dark border-secondary">
@@ -141,26 +168,33 @@
         <%= form_with url: sale_order_items_path, method: :get, local: true, class: "d-flex flex-wrap gap-3 align-items-end" do |form| %>
           <%= form.hidden_field :view_mode, value: @view_mode %>
           <div class="flex-fill">
-            <%= form.text_field :search, value: @search, placeholder: "Buscar por código, descrição ou pedido...", 
-                class: "form-control bg-dark text-white border-secondary" %>
+            <%= form.text_field :search, value: @search, placeholder: "Buscar por código, descrição ou pedido...", class: "form-control bg-dark text-white border-secondary" %>
           </div>
+          <% unless @view_mode == 'migrated' %>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="select-all-items">
+              <label class="form-check-label text-white" for="select-all-items">
+                Selecionar todos visíveis
+              </label>
+            </div>
+          <% end %>
           <div>
             <% if @view_mode == 'migrated' %>
               <%= form.select :sort_by, options_for_select([
-                ['Processamento (Mais recente)', 'processed_desc'],
-                ['Processamento (Mais antigo)', 'processed_asc'],
-                ['Data (Mais recente)', 'date_desc'],
-                ['Data (Mais antigo)', 'date_asc'],
-                ['Quantidade (Maior)', 'quantity_desc'],
-                ['Quantidade (Menor)', 'quantity_asc']
-              ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
+                    ['Processamento (Mais recente)', 'processed_desc'],
+                    ['Processamento (Mais antigo)', 'processed_asc'],
+                    ['Data (Mais recente)', 'date_desc'],
+                    ['Data (Mais antigo)', 'date_asc'],
+                    ['Quantidade (Maior)', 'quantity_desc'],
+                    ['Quantidade (Menor)', 'quantity_asc']
+                  ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
             <% else %>
               <%= form.select :sort_by, options_for_select([
-                ['Data (Mais recente)', 'date_desc'],
-                ['Data (Mais antigo)', 'date_asc'],
-                ['Quantidade (Maior)', 'quantity_desc'],
-                ['Quantidade (Menor)', 'quantity_asc']
-              ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
+                    ['Data (Mais recente)', 'date_desc'],
+                    ['Data (Mais antigo)', 'date_asc'],
+                    ['Quantidade (Maior)', 'quantity_desc'],
+                    ['Quantidade (Menor)', 'quantity_asc']
+                  ], @sort_by), {}, { class: "form-select bg-dark text-white border-secondary" } %>
             <% end %>
           </div>
           <div>
@@ -199,7 +233,7 @@
       <% else %>
         <div class="accordion" id="suppliersAccordion">
           <% @items_by_supplier.each_with_index do |(supplier, items), index| %>
-            <% 
+            <%
               items_count = items.size
               total_value = items.sum { |item| (item.valor_unitario.to_f || 0) * (item.quantity_order.to_f || item.quantidade.to_f || 0) }
             %>
@@ -209,6 +243,11 @@
                   <div class="d-flex align-items-center w-100">
                     <div class="flex-grow-1">
                       <div class="d-flex align-items-center">
+                        <% unless @view_mode == 'migrated' %>
+                          <div class="me-3">
+                            <input type="checkbox" class="form-check-input supplier-select-all" data-supplier="<%= supplier %>">
+                          </div>
+                        <% end %>
                         <div class="me-3">
                           <% if @view_mode == 'migrated' %>
                             <span class="badge bg-info text-white rounded-pill">
@@ -237,6 +276,11 @@
                     <table class="table table-sm table-hover table-dark mb-0 border-secondary">
                       <thead class="table-dark border-secondary sticky-top">
                         <tr>
+                          <% unless @view_mode == 'migrated' %>
+                            <th width="4%" class="ps-3">
+                              <input type="checkbox" class="form-check-input supplier-items-select-all" data-supplier="<%= supplier %>">
+                            </th>
+                          <% end %>
                           <th width="12%">Código</th>
                           <th width="12%">Pedido</th>
                           <th width="<%= @view_mode == 'migrated' ? '30%' : '25%' %>">Descrição</th>
@@ -254,7 +298,7 @@
                       </thead>
                       <tbody class="border-secondary">
                         <% items.each do |item| %>
-                          <% 
+                          <%
                             estoque = item.produto_estoque.to_i
                             selection_class = if @view_mode == 'migrated'
                               'selection-migrated'
@@ -268,6 +312,11 @@
                               data-product-code="<%= item.produto_codigo %>" 
                               data-product-desc="<%= item.produto_descricao %>"
                               data-item-id="<%= item.id %>">
+                            <% unless @view_mode == 'migrated' %>
+                              <td class="ps-3">
+                                <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>">
+                              </td>
+                            <% end %>
                             <td>
                               <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
                             </td>
@@ -348,17 +397,171 @@
 <%= javascript_tag do %>
 $(document).ready(function() {
   <% unless @view_mode == 'migrated' %>
+    function updateSelectionCount() {
+      const selectedCount = $('.item-select:checked').length;
+      $('#selected-count').text(selectedCount);
+      
+      if (selectedCount > 0) {
+        $('#bulk-actions-bar').show();
+      } else {
+        $('#bulk-actions-bar').hide();
+      }
+    }
+
+    function updateSupplierSelectAll() {
+      $('.supplier-group').each(function() {
+        const supplierGroup = $(this);
+        const visibleItems = supplierGroup.find('.item-row:visible .item-select');
+        const checkedItems = supplierGroup.find('.item-row:visible .item-select:checked');
+        const selectAllCheckbox = supplierGroup.find('.supplier-items-select-all');
+        
+        if (visibleItems.length === 0) {
+          selectAllCheckbox.prop('indeterminate', false).prop('checked', false);
+        } else if (checkedItems.length === visibleItems.length) {
+          selectAllCheckbox.prop('indeterminate', false).prop('checked', true);
+        } else if (checkedItems.length > 0) {
+          selectAllCheckbox.prop('indeterminate', true).prop('checked', false);
+        } else {
+          selectAllCheckbox.prop('indeterminate', false).prop('checked', false);
+        }
+      });
+    }
+
+    // Seleção de itens individuais
+    $(document).on('change', '.item-select', function() {
+      updateSelectionCount();
+      updateSupplierSelectAll();
+    });
+
+    // Seleção por fornecedor
+    $(document).on('change', '.supplier-items-select-all', function() {
+      const supplier = $(this).data('supplier');
+      const isChecked = $(this).is(':checked');
+      const supplierGroup = $(this).closest('.supplier-group');
+      
+      supplierGroup.find('.item-row:visible .item-select').prop('checked', isChecked);
+      updateSelectionCount();
+    });
+
+    // Selecionar todos os itens visíveis
+    $('#select-all-items').on('change', function() {
+      const isChecked = $(this).is(':checked');
+      $('.item-row:visible .item-select').prop('checked', isChecked);
+      $('.supplier-items-select-all').prop('checked', isChecked);
+      updateSelectionCount();
+    });
+
+    // Limpar seleção
+    $('#clear-selection').on('click', function() {
+      $('.item-select, .supplier-items-select-all, #select-all-items').prop('checked', false);
+      updateSelectionCount();
+    });
+
+    // Processar itens em lote
+    $('#bulk-process-btn').on('click', function() {
+      const selectedItems = $('.item-select:checked').map(function() {
+        return $(this).data('item-id');
+      }).get();
+      
+      if (selectedItems.length === 0) {
+        showAlert('Nenhum item selecionado', 'warning');
+        return;
+      }
+      
+      if (confirm(`Tem certeza que deseja processar ${selectedItems.length} item(ns)?`)) {
+        const button = $(this);
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Processando...');
+        
+        $.ajax({
+          url: '/sale_order_items/process_multiple',
+          method: 'POST',
+          data: {
+            item_ids: selectedItems
+          },
+          headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+          },
+          success: function(response) {
+            if (response.success) {
+              showAlert(response.message, 'success');
+              
+              // Recarrega a página após 1 segundo
+              setTimeout(function() {
+                window.location.reload();
+              }, 1000);
+            } else {
+              showAlert(response.message, 'error');
+              button.prop('disabled', false).html('<i class="fas fa-check me-1"></i>Processar Selecionados');
+            }
+          },
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            const message = response ? response.message : 'Erro ao processar itens';
+            showAlert(message, 'error');
+            button.prop('disabled', false).html('<i class="fas fa-check me-1"></i>Processar Selecionados');
+          }
+        });
+      }
+    });
+
+    // Ignorar itens em lote
+    $('#bulk-ignore-btn').on('click', function() {
+      const selectedItems = $('.item-select:checked').map(function() {
+        return $(this).data('item-id');
+      }).get();
+      
+      if (selectedItems.length === 0) {
+        showAlert('Nenhum item selecionado', 'warning');
+        return;
+      }
+      
+      if (confirm(`Tem certeza que deseja ignorar ${selectedItems.length} item(ns)?`)) {
+        const button = $(this);
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Ignorando...');
+        
+        $.ajax({
+          url: '/sale_order_items/ignore_multiple',
+          method: 'POST',
+          data: {
+            item_ids: selectedItems
+          },
+          headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+          },
+          success: function(response) {
+            if (response.success) {
+              showAlert(response.message, 'success');
+              
+              // Recarrega a página após 1 segundo
+              setTimeout(function() {
+                window.location.reload();
+              }, 1000);
+            } else {
+              showAlert(response.message, 'error');
+              button.prop('disabled', false).html('<i class="fas fa-times me-1"></i>Ignorar Selecionados');
+            }
+          },
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            const message = response ? response.message : 'Erro ao ignorar itens';
+            showAlert(message, 'error');
+            button.prop('disabled', false).html('<i class="fas fa-times me-1"></i>Ignorar Selecionados');
+          }
+        });
+      }
+    });
+
     // Processar item individual
     $('.process-item-btn').on('click', function() {
       const itemId = $(this).data('item-id');
       const button = $(this);
       const originalHtml = button.html();
-
+      
       button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
+      
       $.ajax({
         url: `/sale_order_items/${itemId}/process_item`,
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
         },
@@ -387,16 +590,16 @@ $(document).ready(function() {
       const itemId = $(this).data('item-id');
       const button = $(this);
       const originalHtml = button.html();
-
+      
       if (!confirm('Tem certeza que deseja ignorar este item?')) {
         return;
       }
-
+      
       button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
+      
       $.ajax({
         url: `/sale_order_items/${itemId}/ignore_item`,
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
         },
@@ -424,6 +627,7 @@ $(document).ready(function() {
   $('#refresh-data').on('click', function() {
     const btn = $(this);
     btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...').prop('disabled', true);
+    
     setTimeout(() => {
       location.reload();
     }, 1000);
@@ -438,8 +642,7 @@ $(document).ready(function() {
     }[type] || 'alert-info';
 
     const alertHtml = `
-      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -447,6 +650,7 @@ $(document).ready(function() {
     `;
 
     $('body').append(alertHtml);
+
     setTimeout(function() {
       $('.alert').fadeOut();
     }, 5000);
@@ -502,5 +706,13 @@ body {
 .form-check-input:indeterminate {
   background-color: #6c757d;
   border-color: #6c757d;
+}
+
+#bulk-actions-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 </style>

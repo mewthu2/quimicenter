@@ -10,24 +10,32 @@ Rails.application.routes.draw do
 
   resources :dashboard, only: [:index]
 
+  # Configurações de sincronização
+  resource :sync_configuration, only: [:show, :update] do
+    post :test_sync
+    delete :cleanup_data
+  end
+
   resources :sales_orders, only: [:index, :show] do
     collection do
       get :export_negative_stock
       get :search
       post :save_multiple_items
+      patch :bulk_ignore_items
+      patch :bulk_restore_items
     end
 
     member do
       post :cancel
       post :duplicate
       patch :save_item
+      patch :ignore_item
+      patch :restore_item
     end
   end
 
-  get 'pedidos/:status', 
-    to: 'sales_orders#index', 
-    as: :filtered_sales_orders,
-    constraints: { status: /all|completed|canceled|draft/ }
+  get 'pedidos/:status', to: 'sales_orders#index', as: :filtered_sales_orders,
+      constraints: { status: /all|completed|canceled|draft/ }
 
   resources :purchase_orders do
     collection do
@@ -35,7 +43,8 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'pedidos-compra/:status', to: 'purchase_orders#index', as: :filtered_purchase_orders,constraints: { status: /all|draft|verified|received|partially_received|canceled|in_progress|completed/ }
+  get 'pedidos-compra/:status', to: 'purchase_orders#index', as: :filtered_purchase_orders,
+      constraints: { status: /all|draft|verified|received|partially_received|canceled|in_progress|completed/ }
 
   resources :attempts, only: [:index] do
     collection do
@@ -56,6 +65,7 @@ Rails.application.routes.draw do
       post :process_multiple
       post :ignore_multiple
     end
+
     member do
       post :assign_supplier
       patch :update_item

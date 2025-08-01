@@ -4,8 +4,7 @@
     <i class="fas fa-bars"></i>
   </button>
   <div class="mobile-actions d-flex align-items-center">
-    <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 30px !important;
-    height: 30px !important;">
+    <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 30px !important; height: 30px !important;">
       <i class="fas fa-user text-primary"></i>
     </div>
   </div>
@@ -28,7 +27,7 @@
       </div>
       <div class="divider"></div>
     </div>
-    
+
     <!-- Search bar at top -->
     <div class="search-container p-3">
       <div class="input-group">
@@ -39,7 +38,7 @@
       </div>
     </div>
     <div class="divider"></div>
-    
+
     <!-- Navigation menu with improved visual hierarchy -->
     <div class="sidebar-menu">
       <div class="menu-section">
@@ -55,34 +54,9 @@
             </a>
           </li>
 
-          <!-- Dashboard dropdown -->
-          <li class="nav-item">
-            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-dashboard" role="button" aria-expanded="false" aria-controls="collase-dashboard">
-              <div class="d-flex align-items-center justify-content-between w-100">
-                <div class="d-flex align-items-center">
-                  <div class="sidebar-icon-container">
-                    <i class="fas fa-tachometer-alt"></i>
-                  </div>
-                  <span class="menu-text">Dashboard</span>
-                </div>
-                <i class="fas fa-chevron-down menu-arrow"></i>
-              </div>
-            </a>
-            
-            <div class="collapse submenu" id="collase-dashboard">
-              <ul class="nav flex-column">
-                <li class="nav-item">
-                  <%= link_to dashboard_index_path, class: 'nav-link submenu-link' do %>
-                    <i class="fas fa-binoculars"></i>
-                    <span class="menu-text">Resumo dos pedidos</span>
-                  <% end %>
-                </li>
-              </ul>
-            </div>
-          </li>
         </ul>
       </div>
-      
+
       <div class="menu-section mt-2">
         <p class="menu-label px-3 mb-2 text-uppercase"><small>Gerenciamento</small></p>
         <ul class="nav flex-column">
@@ -99,7 +73,6 @@
                 <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
             </a>
-            
             <div class="collapse submenu" id="collase-orders">
               <ul class="nav flex-column">
                 <!-- Pedidos de Venda -->
@@ -109,7 +82,6 @@
                     <span class="menu-text">Pedidos de Venda</span>
                   <% end %>
                 </li>
-                
                 <!-- Fila de criação no Bling -->
                 <li class="nav-item">
                   <%= link_to sale_order_items_path(status: 'pending'), class: 'nav-link submenu-link' do %>
@@ -117,42 +89,23 @@
                     <span class="menu-text">Fila de criação no Bling</span>
                   <% end %>
                 </li>
-                
               </ul>
             </div>
           </li>
 
-          <!-- Nova Seção de Contatos -->
-          <li class="nav-item">
-            <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-contacts" role="button" aria-expanded="false" aria-controls="collase-contacts">
-              <div class="d-flex align-items-center justify-content-between w-100">
-                <div class="d-flex align-items-center">
-                  <div class="sidebar-icon-container">
-                    <i class="fas fa-address-book"></i>
-                  </div>
-                  <span class="menu-text">Contatos</span>
-                </div>
-                <i class="fas fa-chevron-down menu-arrow"></i>
-              </div>
-            </a>
-            
-            <div class="collapse submenu" id="collase-contacts">
-              <ul class="nav flex-column">
-                <li class="nav-item">
-                  <%= link_to contacts_path, class: 'nav-link submenu-link' do %>
-                    <i class="fas fa-users"></i>
-                    <span class="menu-text">Todos os Contatos</span>
-                  <% end %>
-                </li>
-              </ul>
-            </div>
-          </li>
-        </ul>
-      </div>
-      
       <div class="menu-section mt-2">
         <p class="menu-label px-3 mb-2 text-uppercase"><small>Sistema</small></p>
         <ul class="nav flex-column">
+          <!-- Configurações de Sincronização -->
+          <li class="nav-item">
+            <%= link_to sync_configuration_path, class: 'nav-link sidebar-link' do %>
+              <div class="sidebar-icon-container">
+                <i class="fas fa-cogs"></i>
+              </div>
+              <span class="menu-text">Configurações Sync</span>
+            <% end %>
+          </li>
+
           <!-- Histórico de Tentativas dropdown -->
           <li class="nav-item">
             <a class="nav-link sidebar-link collapsed" data-bs-toggle="collapse" href="#collase-attempts" role="button" aria-expanded="false" aria-controls="collase-attempts">
@@ -166,7 +119,6 @@
                 <i class="fas fa-chevron-down menu-arrow"></i>
               </div>
             </a>
-            
             <div class="collapse submenu" id="collase-attempts">
               <ul class="nav flex-column">
                 <li class="nav-item">
@@ -181,7 +133,7 @@
         </ul>
       </div>
     </div>
-    
+
     <!-- User profile section above footer -->
     <div class="user-profile mt-auto p-3">
       <div class="d-flex align-items-center">
@@ -201,451 +153,421 @@
         </div>
       </div>
     </div>
-    
-    <!-- Footer with branding -->
-    <div class="sidebar-footer">
-      <div class="divider"></div>
-      <div class="footer-content p-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div class="branding">
-            <div class="d-flex align-items-center">
-              <div class="logo-icon me-2">
-                <i class="fas fa-flask"></i>
-              </div>
-              <div>
-                <h6 class="mb-0 text-white">Quimicenter</h6>
-                <small class="text-light opacity-75"><i class="fas fa-registered"></i> <%= Date.today.year %></small>
-              </div>
-            </div>
-          </div>
-          <div class="version">
-            <span class="badge bg-primary">v1.0</span>
-          </div>
-        </div>
-        <div class="mewtda-signature text-center">
-          <div class="d-flex align-items-center justify-content-center">
-            <i class="fas fa-code me-1 text-primary"></i>
-            <small class="text-light opacity-75">made by <span class="fw-bold text-primary">mewtda</span></small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <style>
-  :root {
-    --sidebar-bg: #1e3a5f;
-    --sidebar-hover: rgba(255, 255, 255, 0.1);
-    --sidebar-active: rgba(255, 255, 255, 0.15);
-    --sidebar-text: rgba(255, 255, 255, 0.85);
-    --sidebar-muted: rgba(255, 255, 255, 0.6);
-    --sidebar-border: rgba(255, 255, 255, 0.1);
-    --sidebar-icon-bg: rgba(255, 255, 255, 0.1);
-    --sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    --mewtda-color: #4e92f8;
+:root {
+  --sidebar-bg: #1e3a5f;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-active: rgba(255, 255, 255, 0.15);
+  --sidebar-text: rgba(255, 255, 255, 0.85);
+  --sidebar-muted: rgba(255, 255, 255, 0.6);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-icon-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  --mewtda-color: #4e92f8;
+}
+
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background-color: var(--sidebar-bg);
+  background-image: linear-gradient(to bottom, #1e3a5f, #1a325a);
+  color: #fff;
+  z-index: 1030;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  box-shadow: var(--sidebar-shadow);
+}
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+
+.sidebar-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+  background-color: var(--sidebar-border);
+  border-radius: 10px;
+}
+
+/* Mobile sidebar header */
+.mobile-sidebar-header {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.mobile-sidebar-header .logo-icon {
+  font-size: 1.2rem;
+}
+
+/* Search styling */
+.search-container .form-control {
+  border-color: var(--sidebar-border);
+}
+
+.search-container .form-control::placeholder {
+  color: var(--sidebar-muted);
+}
+
+.search-container .input-group-text {
+  border-color: var(--sidebar-border);
+}
+
+/* Menu section styling */
+.menu-section {
+  margin-bottom: 0.5rem;
+}
+
+.menu-label {
+  color: var(--sidebar-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* Sidebar link styling */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  color: var(--sidebar-text) !important;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  margin: 2px 0;
+}
+
+.sidebar-link:hover,
+.sidebar-link:focus {
+  color: #fff !important;
+  background-color: var(--sidebar-hover);
+  border-left-color: var(--mewtda-color);
+}
+
+.sidebar-link[aria-expanded="true"] {
+  background-color: var(--sidebar-active);
+  border-left-color: var(--mewtda-color);
+}
+
+/* Icon container styling */
+.sidebar-icon-container {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--sidebar-icon-bg);
+  border-radius: 8px;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-link:hover .sidebar-icon-container {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-text {
+  font-weight: 500;
+}
+
+.menu-arrow {
+  transition: transform 0.2s;
+  font-size: 0.7rem;
+}
+
+.sidebar-link[aria-expanded="true"] .menu-arrow {
+  transform: rotate(180deg);
+}
+
+/* Submenu styling */
+.submenu {
+  padding-left: 1rem;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 8px 8px;
+  margin: 0 0.5rem 0.5rem 0.5rem;
+}
+
+.submenu-link {
+  padding: 0.5rem 1rem !important;
+  color: var(--sidebar-muted) !important;
+  border-left: 2px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.submenu-link:hover {
+  color: #fff !important;
+  border-left-color: var(--mewtda-color);
+}
+
+.submenu-link i {
+  width: 20px;
+  margin-right: 8px;
+  font-size: 0.85rem;
+}
+
+/* Divider styling */
+.divider {
+  height: 1px;
+  margin: 0.25rem 1rem;
+  background-color: var(--sidebar-border);
+}
+
+/* User profile styling */
+.user-profile {
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+}
+
+/* Footer styling */
+.sidebar-footer {
+  padding: 0;
+  font-size: 0.8rem;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.logo-icon {
+  font-size: 1.2rem;
+}
+
+/* Mewtda signature styling */
+.mewtda-signature {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--sidebar-border);
+}
+
+.mewtda-signature .text-primary {
+  color: var(--mewtda-color) !important;
+}
+
+.mewtda-signature i {
+  font-size: 0.9rem;
+}
+
+/* Mobile header styling */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: var(--sidebar-bg);
+  border-bottom: 1px solid var(--sidebar-border);
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  color: white;
+}
+
+.btn-toggle-sidebar {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-toggle-sidebar:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.btn-close-sidebar {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-close-sidebar:hover {
+  background-color: var(--sidebar-hover);
+}
+
+/* Overlay styling */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1025;
+  display: none;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.3s;
+}
+
+/* Responsive styling */
+@media (max-width: 767.98px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+    width: 100%;
+    max-width: 300px;
   }
 
-  .app-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 260px;
-    background-color: var(--sidebar-bg);
-    background-image: linear-gradient(to bottom, #1e3a5f, #1a325a);
-    color: #fff;
-    z-index: 1030;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
+  .app-sidebar.show {
+    transform: translateX(0);
     box-shadow: var(--sidebar-shadow);
   }
 
-  .sidebar-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--sidebar-border) transparent;
-  }
-  
-  .sidebar-container::-webkit-scrollbar {
-    width: 5px;
-  }
-  
-  .sidebar-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .sidebar-container::-webkit-scrollbar-thumb {
-    background-color: var(--sidebar-border);
-    border-radius: 10px;
+  .sidebar-link, .submenu-link {
+    padding: 0.8rem 1.25rem !important;
   }
 
-  /* Mobile sidebar header */
-  .mobile-sidebar-header {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-  
-  .mobile-sidebar-header .logo-icon {
-    font-size: 1.2rem;
-  }
-
-  /* Search styling */
-  .search-container .form-control {
-    border-color: var(--sidebar-border);
-  }
-  
-  .search-container .form-control::placeholder {
-    color: var(--sidebar-muted);
-  }
-  
-  .search-container .input-group-text {
-    border-color: var(--sidebar-border);
-  }
-
-  /* Menu section styling */
-  .menu-section {
-    margin-bottom: 0.5rem;
-  }
-  
-  .menu-label {
-    color: var(--sidebar-muted);
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-
-  /* Sidebar link styling */
-  .sidebar-link {
-    display: flex;
-    align-items: center;
-    padding: 0.65rem 1.25rem;
-    color: var(--sidebar-text) !important;
-    transition: all 0.2s ease;
-    border-left: 3px solid transparent;
-    margin: 2px 0;
-  }
-
-  .sidebar-link:hover,
-  .sidebar-link:focus {
-    color: #fff !important;
-    background-color: var(--sidebar-hover);
-    border-left-color: var(--mewtda-color);
-  }
-  
-  .sidebar-link[aria-expanded="true"] {
-    background-color: var(--sidebar-active);
-    border-left-color: var(--mewtda-color);
-  }
-
-  /* Icon container styling */
   .sidebar-icon-container {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--sidebar-icon-bg);
-    border-radius: 8px;
-    margin-right: 12px;
-    transition: all 0.2s ease;
-  }
-  
-  .sidebar-link:hover .sidebar-icon-container {
-    background-color: rgba(255, 255, 255, 0.2);
+    width: 36px;
+    height: 36px;
   }
 
-  .menu-text {
-    font-weight: 500;
-  }
-
-  .menu-arrow {
-    transition: transform 0.2s;
-    font-size: 0.7rem;
-  }
-
-  .sidebar-link[aria-expanded="true"] .menu-arrow {
-    transform: rotate(180deg);
-  }
-
-  /* Submenu styling */
-  .submenu {
-    padding-left: 1rem;
-    background-color: rgba(0, 0, 0, 0.15);
-    border-radius: 0 0 8px 8px;
-    margin: 0 0.5rem 0.5rem 0.5rem;
-  }
-
-  .submenu-link {
-    padding: 0.5rem 1rem !important;
-    color: var(--sidebar-muted) !important;
-    border-left: 2px solid transparent;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-  }
-
-  .submenu-link:hover {
-    color: #fff !important;
-    border-left-color: var(--mewtda-color);
-  }
-  
-  .submenu-link i {
-    width: 20px;
-    margin-right: 8px;
-    font-size: 0.85rem;
-  }
-
-  /* Divider styling */
-  .divider {
-    height: 1px;
-    margin: 0.25rem 1rem;
-    background-color: var(--sidebar-border);
-  }
-
-  /* User profile styling */
-  .user-profile {
-    border-top: 1px solid var(--sidebar-border);
-  }
-  
-  .avatar {
-    width: 38px;
-    height: 38px;
-  }
-  
-  .avatar-sm {
-    width: 32px;
-    height: 32px;
-  }
-
-  /* Footer styling */
-  .sidebar-footer {
-    padding: 0;
-    font-size: 0.8rem;
-    background-color: rgba(0, 0, 0, 0.15);
-  }
-  
-  .logo-icon {
-    font-size: 1.2rem;
-  }
-  
-  /* Mewtda signature styling */
-  .mewtda-signature {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed var(--sidebar-border);
-  }
-  
-  .mewtda-signature .text-primary {
-    color: var(--mewtda-color) !important;
-  }
-  
-  .mewtda-signature i {
-    font-size: 0.9rem;
-  }
-
-  /* Mobile header styling */
-  .mobile-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background-color: var(--sidebar-bg);
-    border-bottom: 1px solid var(--sidebar-border);
-    position: sticky;
-    top: 0;
-    z-index: 1020;
-    color: white;
-  }
-
-  .btn-toggle-sidebar {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-  }
-  
-  .btn-toggle-sidebar:hover {
-    background-color: var(--sidebar-hover);
-  }
-
-  .btn-close-sidebar {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-  }
-  
-  .btn-close-sidebar:hover {
-    background-color: var(--sidebar-hover);
-  }
-
-  /* Overlay styling */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1025;
-    display: none;
-    backdrop-filter: blur(2px);
-    transition: opacity 0.3s;
-  }
-
-  /* Responsive styling */
-  @media (max-width: 767.98px) {
-    .app-sidebar {
-      transform: translateX(-100%);
-      width: 100%;
-      max-width: 300px;
-    }
-
-    .app-sidebar.show {
-      transform: translateX(0);
-      box-shadow: var(--sidebar-shadow);
-    }
-    
-    .sidebar-link, .submenu-link {
-      padding: 0.8rem 1.25rem !important;
-    }
-    
-    .sidebar-icon-container {
-      width: 36px;
-      height: 36px;
-    }
-
-    .sidebar-overlay.show {
-      display: block;
-    }
-    
-    .app-main {
-      margin-left: 0;
-      width: 100%;
-    }
-    
-    /* Improved touch targets for mobile */
-    .menu-arrow {
-      font-size: 0.8rem;
-      padding: 8px;
-      margin: -8px;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .app-main {
-      margin-left: 260px;
-      width: calc(100% - 260px);
-    }
-  }
-  
-  /* Animation for mobile sidebar */
-  @keyframes slideIn {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  .app-sidebar.show {
-    animation: slideIn 0.3s ease forwards;
-  }
-  
   .sidebar-overlay.show {
-    animation: fadeIn 0.3s ease forwards;
+    display: block;
   }
+
+  .app-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Improved touch targets for mobile */
+  .menu-arrow {
+    font-size: 0.8rem;
+    padding: 8px;
+    margin: -8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+  }
+}
+
+/* Animation for mobile sidebar */
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.app-sidebar.show {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.sidebar-overlay.show {
+  animation: fadeIn 0.3s ease forwards;
+}
 </style>
 
 <script>
-  function initSidebar() {
-    var toggleBtn = document.getElementById('toggleSidebar');
-    var closeBtn = document.getElementById('closeSidebar');
-    var sidebar = document.getElementById('sidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    
-    if (toggleBtn) {
-      toggleBtn.onclick = function() {
-        if (sidebar) {
-          sidebar.classList.add('show');
-          if (overlay) overlay.classList.add('show');
-          document.body.style.overflow = 'hidden';
-        }
-      };
-    }
-    
-    if (closeBtn) {
-      closeBtn.onclick = function() {
-        if (sidebar) {
-          sidebar.classList.remove('show');
-          if (overlay) overlay.classList.remove('show');
-          document.body.style.overflow = '';
-        }
-      };
-    }
+function initSidebar() {
+  var toggleBtn = document.getElementById('toggleSidebar');
+  var closeBtn = document.getElementById('closeSidebar');
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('sidebarOverlay');
 
-    if (overlay) {
-      overlay.onclick = function() {
-        if (sidebar) {
-          sidebar.classList.remove('show');
-          overlay.classList.remove('show');
-          document.body.style.overflow = '';
-        }
-      };
-    }
-    
-    // Handle touch swipe to close sidebar on mobile
-    var touchStartX = 0;
-    var touchEndX = 0;
-    
-    if (sidebar) {
-      sidebar.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX;
-      }, false);
-      
-      sidebar.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-      }, false);
-    }
-    
-    function handleSwipe() {
-      if (touchStartX - touchEndX > 70) { // Swipe left to close
-        if (sidebar) {
-          sidebar.classList.remove('show');
-          if (overlay) overlay.classList.remove('show');
-          document.body.style.overflow = '';
-        }
+  if (toggleBtn) {
+    toggleBtn.onclick = function() {
+      if (sidebar) {
+        sidebar.classList.add('show');
+        if (overlay) overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      }
+    };
+  }
+
+  if (closeBtn) {
+    closeBtn.onclick = function() {
+      if (sidebar) {
+        sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    };
+  }
+
+  if (overlay) {
+    overlay.onclick = function() {
+      if (sidebar) {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    };
+  }
+
+  // Handle touch swipe to close sidebar on mobile
+  var touchStartX = 0;
+  var touchEndX = 0;
+
+  if (sidebar) {
+    sidebar.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    sidebar.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+  }
+
+  function handleSwipe() {
+    if (touchStartX - touchEndX > 70) { // Swipe left to close
+      if (sidebar) {
+        sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
       }
     }
-    
-    // Add version number to console
-    console.log('Sidebar v1.0 - Made by mewtda');
   }
 
-  document.addEventListener('DOMContentLoaded', initSidebar);
-  
-  if (typeof Turbolinks !== 'undefined') {
-    document.addEventListener('turbolinks:load', initSidebar);
-  }
-  
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    initSidebar();
-  }
+  // Add version number to console
+  console.log('Sidebar v1.0 - Made by mewtda');
+}
+
+document.addEventListener('DOMContentLoaded', initSidebar);
+
+if (typeof Turbolinks !== 'undefined') {
+  document.addEventListener('turbolinks:load', initSidebar);
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initSidebar();
+}
 </script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_24_030842) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_01_015947) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -110,6 +110,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_24_030842) do
     t.index ["data"], name: "index_sale_orders_on_data"
     t.index ["numero"], name: "index_sale_orders_on_numero"
     t.index ["situacao_id"], name: "index_sale_orders_on_situacao_id"
+  end
+
+  create_table "sync_configurations", force: :cascade do |t|
+    t.date "sync_start_date", null: false
+    t.text "schedule_data", null: false
+    t.boolean "active", default: true
+    t.datetime "last_sync_at"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_sync_configurations_on_active"
+    t.index ["sync_start_date"], name: "index_sync_configurations_on_sync_start_date"
   end
 
   create_table "users", force: :cascade do |t|
