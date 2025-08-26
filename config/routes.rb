@@ -10,7 +10,6 @@ Rails.application.routes.draw do
 
   resources :dashboard, only: [:index]
 
-  # Configurações de sincronização
   resource :sync_configuration, only: [:show, :update] do
     post :test_sync
     delete :cleanup_data
@@ -20,6 +19,9 @@ Rails.application.routes.draw do
     collection do
       get :export_negative_stock
       get :search
+      get :search_supplier_bling
+      post :add_supplier_to_item
+      get :export_negative_stock
       post :save_multiple_items
       patch :bulk_ignore_items
       patch :bulk_restore_items
@@ -31,8 +33,10 @@ Rails.application.routes.draw do
       patch :save_item
       patch :ignore_item
       patch :restore_item
+      post :add_supplier_to_item
     end
   end
+
 
   get 'pedidos/:status', to: 'sales_orders#index', as: :filtered_sales_orders,
       constraints: { status: /all|completed|canceled|draft/ }

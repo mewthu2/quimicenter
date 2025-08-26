@@ -1,13 +1,14 @@
-# app/jobs/sync_sale_orders_job.rb
 class SyncSaleOrdersJob < ApplicationJob
   queue_as :default
 
-  SYNC_START_DATE = Date.parse('2025-06-27')
   MAX_RETRIES = 3
   RETRY_DELAY = 2.seconds
 
   def perform
-    (SYNC_START_DATE..Date.current).each do |current_date|
+    config = SyncConfiguration.current
+    sync_start_date = config.sync_start_date
+    
+    (sync_start_date..Date.current).each do |current_date|
       filters = {
         dataInicial: current_date.strftime('%Y-%m-%d'),
         dataFinal: current_date.strftime('%Y-%m-%d'),
@@ -31,6 +32,8 @@ class SyncSaleOrdersJob < ApplicationJob
         page += 1
       end
     end
+
+    config.update!(last_sync_at: Time.current)
   end
 
   private
@@ -42,7 +45,6 @@ class SyncSaleOrdersJob < ApplicationJob
       order_data = order_response['data']
 
       if order_data.present?
-        # Verificação redundante (já filtramos antes, mas é boa prática)
         if order_data.dig('situacao', 'id') == 6
           sale_order = SaleOrder.create_or_update_from_bling(order_data)
           sync_suppliers_for_order_items(sale_order) if sale_order.persisted?

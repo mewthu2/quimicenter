@@ -29,6 +29,19 @@ class SaleOrder < ApplicationRecord
 
     return unless situacao_id == 6
 
+    order_date = Date.parse(order_data['data'])
+    sync_start_date = SyncConfiguration.current.sync_start_date
+
+    Rails.logger.info "=== VALIDAÇÃO DATA PEDIDO #{order_data['id']} ==="
+    Rails.logger.info "Data do pedido: #{order_data['data']} (parsed: #{order_date})"
+    Rails.logger.info "Sync start date: #{sync_start_date}"
+    Rails.logger.info "Data válida? #{order_date >= sync_start_date}"
+
+    if order_date < sync_start_date
+      Rails.logger.info "PEDIDO REJEITADO: #{order_data['id']} - data #{order_date} anterior a #{sync_start_date}"
+      return nil
+    end
+
     order = SaleOrder.find_or_initialize_by(bling_id: order_data['id'])
 
     order.assign_attributes(

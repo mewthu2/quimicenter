@@ -1,5 +1,6 @@
 class CreatePurchaseOrderJob < ApplicationJob
   def perform
+    return unless should_execute_now?
 
     items = SaleOrderItem.where(checked_order: true)
                          .where.not(quantity_order: [nil, 0])
@@ -15,6 +16,48 @@ class CreatePurchaseOrderJob < ApplicationJob
     items_by_supplier.each do |supplier_id, supplier_items|
       create_order_for_supplier(supplier_id, supplier_items)
     end
+  end
+
+  def should_execute_now?
+    config = SyncConfiguration.active.first
+    return false unless config&.active?
+
+    current_time = Time.current
+    current_day = current_time.strftime('%A').downcase
+    current_hour_minute = current_time.strftime('%H:%M')
+
+    day_config = config.schedule_data[current_day]
+    return false unless day_config&.dig('enabled') == 'true'
+
+    scheduled_hours = day_config['hours'] || []
+    return true if scheduled_hours.empty?
+
+    scheduled_hours.any? { |hour| current_hour_minute >= hour }
+  end
+
+  def self.next_scheduled_execution
+    config = SyncConfiguration.active.first
+    return nil unless config&.active?
+
+    current_time = Time.current
+
+    7.times do |days_ahead|
+      check_date = current_time + days_ahead.days
+      day_name = check_date.strftime('%A').downcase
+      day_config = config.schedule_data[day_name]
+
+      next unless day_config&.dig('enabled') == 'true'
+
+      scheduled_hours = day_config['hours'] || []
+      next if scheduled_hours.empty?
+
+      scheduled_hours.each do |hour|
+        scheduled_time = Time.parse("#{check_date.strftime('%Y-%m-%d')} #{hour}")
+        return scheduled_time if scheduled_time > current_time
+      end
+    end
+    
+    nil
   end
 
   private

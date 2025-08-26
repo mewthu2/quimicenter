@@ -58,7 +58,8 @@
             </div>
           </div>
           <div class="progress mt-3 bg-dark border border-secondary">
-            <div class="progress-bar bg-info" role="progressbar" style="width: <%= @total_items_count > 0 ? (@checked_items_count.to_f / @total_items_count * 100).to_i : 0 %>%" aria-valuenow="<%= @checked_items_count %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count %>"></div>
+            <!-- Added nil checks to prevent undefined method error -->
+            <div class="progress-bar bg-info" role="progressbar" style="width: <%= (@total_items_count&.> 0) ? ((@checked_items_count || 0).to_f / @total_items_count * 100).to_i : 0 %>%" aria-valuenow="<%= @checked_items_count || 0 %>" aria-valuemin="0" aria-valuemax="<%= @total_items_count || 0 %>"></div>
           </div>
         </div>
       </div>
@@ -69,7 +70,8 @@
           <div class="d-flex align-items-center justify-content-between">
             <div>
               <h6 class="text-warning mb-1">Pendentes</h6>
-              <h2 class="mb-0 display-5 fw-bold text-white" id="pending-items-count"><%= @total_items_count - @checked_items_count %></h2>
+              <!-- Added nil checks for safe arithmetic operations -->
+              <h2 class="mb-0 display-5 fw-bold text-white" id="pending-items-count"><%= (@total_items_count || 0) - (@checked_items_count || 0) %></h2>
               <p class="text-light mb-0 small">Aguardando decisão</p>
             </div>
             <div class="rounded-circle bg-warning bg-opacity-10 p-3">
@@ -81,17 +83,10 @@
     </div>
     <div class="col-md-3">
       <div class="card bg-dark border-secondary shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h6 class="text-secondary mb-1">Excluídos</h6>
-              <h2 class="mb-0 display-5 fw-bold text-white" id="ignored-items-count"><%= @ignored_items_count %></h2>
-              <p class="text-light mb-0 small">Removidos da listagem</p>
-            </div>
-            <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
-              <i class="fas fa-trash fa-2x text-secondary"></i>
-            </div>
-          </div>
+        <div class="card-body text-center">
+          <i class="fas fa-trash fa-3x text-white mb-3"></i>
+          <h6 class="card-title text-white-50 text-uppercase fw-bold">Excluídos</h6>
+          <h2 class="mb-0 display-5 fw-bold text-white" id="ignored-items-count"><%= @ignored_items_count || 0 %></h2>
         </div>
       </div>
     </div>
@@ -137,27 +132,53 @@
     <div class="collapse" id="filterCollapse">
       <div class="card-body bg-dark border-secondary py-3">
         <div class="filter-container bg-dark">
-          <div class="row g-3">
-            <div class="col-md-4">
+          <div class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-4">
               <div class="filter-group">
-                <label for="date-filter" class="form-label text-light small mb-1">
-                  <i class="fas fa-calendar-alt me-1 text-info"></i> Data do Pedido
+                <label for="date-filter" class="form-label text-light small mb-2 fw-semibold">
+                  <i class="fas fa-calendar-alt me-2 text-info"></i> Data do Pedido
                 </label>
-                <input type="date" id="date-filter" class="form-control form-control-sm bg-dark text-white border-secondary">
+                <input type="date" id="date-filter" class="form-control form-control-sm bg-dark text-white border-secondary focus-ring focus-ring-info">
               </div>
             </div>
-            <div class="col-md-4">
-              <div class="form-check form-switch mt-4">
-                <input class="form-check-input" type="checkbox" id="select-all-items">
-                <label class="form-check-label text-white" for="select-all-items">
-                  Selecionar todos os itens visíveis
+            
+            <div class="col-lg-3 col-md-4">
+              <div class="filter-group">
+                <label for="supplier-filter" class="form-label text-light small mb-2 fw-semibold">
+                  <i class="fas fa-truck me-2 text-info"></i> Fornecedor
                 </label>
+                <select id="supplier-filter" class="form-select form-select-sm bg-dark text-white border-secondary focus-ring focus-ring-info">
+                  <option value="">Todos os fornecedores</option>
+                  <% (@items_by_supplier&.keys || []).each do |supplier| %>
+                    <option value="<%= supplier %>"><%= supplier %></option>
+                  <% end %>
+                </select>
               </div>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
-              <button class="btn btn-outline-secondary btn-sm" id="clear-filters">
-                <i class="fas fa-times me-1"></i> Limpar Filtros
-              </button>
+            
+            <div class="col-lg-3 col-md-4">
+              <div class="filter-group">
+                <label class="form-label text-light small mb-2 fw-semibold">
+                  <i class="fas fa-check-square me-2 text-info"></i> Seleção
+                </label>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="select-all-items">
+                  <label class="form-check-label text-white small" for="select-all-items">
+                    Selecionar todos visíveis
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-12">
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm flex-fill" id="clear-filters">
+                  <i class="fas fa-times me-1"></i> Limpar Filtros
+                </button>
+                <button class="btn btn-outline-info btn-sm" id="filter-status" style="min-width: 120px;">
+                  <i class="fas fa-info-circle me-1"></i> <span id="filter-count">Todos</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -165,15 +186,16 @@
     </div>
 
     <div class="card-body p-0">
-      <% if @items_by_supplier.empty? %>
+      <!-- Corrigindo condição e estrutura HTML da tabela -->
+      <% if @items_by_supplier.nil? || @items_by_supplier.empty? %>
         <div class="text-center py-5">
           <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
           <h5 class="text-white">Nenhum item com estoque negativo!</h5>
-          <p class="text-light">Todos os itens estão com estoque adequado</p>
+          <p class="text-white-50">Todos os itens estão com estoque adequado.</p>
         </div>
       <% else %>
         <div class="accordion" id="suppliersAccordion">
-          <% @items_by_supplier.each_with_index do |(supplier, items), index| %>
+          <% (@items_by_supplier || {}).each do |supplier, items| %>
             <%
               items_count = items.size
               total_value = items.sum { |item| (item.valor_unitario || 0) * (item.quantidade || 0) }
@@ -181,156 +203,126 @@
               pending_count = items_count - checked_count
               
               # Busca itens excluídos do mesmo fornecedor
-              ignored_items = @ignored_items_by_supplier[supplier] || []
+              ignored_items = (@ignored_items_by_supplier&.dig(supplier) || [])
             %>
-            <div class="accordion-item border-secondary bg-dark supplier-group" data-supplier="<%= supplier %>">
-              <h2 class="accordion-header" id="supplierHeading<%= index %>">
-                <button class="accordion-button <%= index != 0 ? 'collapsed' : '' %> py-3 bg-dark text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#supplierCollapse<%= index %>" aria-expanded="<%= index == 0 ? 'true' : 'false' %>" aria-controls="supplierCollapse<%= index %>">
-                  <div class="d-flex align-items-center w-100">
-                    <div class="flex-grow-1">
-                      <div class="d-flex align-items-center">
-                        <div class="me-3">
-                          <span class="badge bg-danger text-white rounded-pill">
-                            <i class="fas fa-exclamation-triangle me-1"></i><%= items_count %> crítico(s)
-                          </span>
-                        </div>
-                        <h5 class="mb-0 text-white"><%= supplier.presence || "Fornecedor não identificado" %></h5>
-                      </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                      <div class="d-none d-md-flex me-3">
-                        <span class="badge bg-info me-1" title="Selecionados">
-                          <i class="fas fa-check"></i> <%= checked_count %>
-                        </span>
-                        <span class="badge bg-secondary me-1" title="Pendentes">
-                          <i class="fas fa-question"></i> <%= pending_count %>
-                        </span>
-                      </div>
-                      <div class="text-light small">
-                        Total: <%= number_to_currency(total_value, unit: "R$ ") %>
-                      </div>
-                    </div>
-                  </div>
+            <div class="supplier-group border-bottom border-secondary" data-supplier="<%= supplier %>">
+              <div class="supplier-header bg-secondary p-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="mb-0 text-white">
+                    <i class="fas fa-building me-2"></i>
+                    <%= supplier.present? ? supplier : 'Fornecedor não informado' %>
+                  </h5>
+                  <small class="text-white-50"><%= items.size %> itens</small>
+                </div>
+                <button class="btn btn-outline-light btn-sm toggle-supplier" type="button">
+                  <i class="fas fa-chevron-down"></i>
                 </button>
-              </h2>
-              <div id="supplierCollapse<%= index %>" class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" aria-labelledby="supplierHeading<%= index %>" data-bs-parent="#suppliersAccordion">
-                <div class="accordion-body p-0 bg-dark">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-hover table-dark mb-0 border-secondary">
-                      <thead class="table-dark border-secondary sticky-top">
-                        <tr>
-                          <th width="4%" class="ps-3">
-                            <input type="checkbox" class="form-check-input supplier-select-all" data-supplier="<%= supplier %>">
-                          </th>
-                          <th width="8%">Código</th>
-                          <th width="8%">Data</th>
-                          <th width="20%">Descrição</th>
-                          <th width="7%" class="text-end">Qtd.</th>
-                          <th width="7%" class="text-end">Estoque</th>
-                          <th width="10%" class="text-end">Unitário</th>
-                          <th width="10%" class="text-end">Total</th>
-                          <th width="12%">Qtd. Compra</th>
-                          <th width="14%" class="text-center">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody class="border-secondary">
-  <% items.each do |item| %>
-    <%
-      estoque = item.produto_estoque.to_i
-      is_ignored = item.ignore_order
-      
-      selection_class = if is_ignored
-        'item-ignored'
-      elsif item.checked_order
-        'selection-checked'
-      else
-        'selection-pending'
-      end
-    %>
-    <tr class="bg-danger text-white stock-negative <%= selection_class %> item-row" 
-        data-product-code="<%= item.produto_codigo %>" 
-        data-product-desc="<%= item.produto_descricao %>"
-        data-stock-status="negative"
-        data-selection-status="<%= is_ignored ? 'ignored' : (item.checked_order ? 'checked' : 'pending') %>"
-        data-item-date="<%= item.created_at&.strftime('%Y-%m-%d') %>"
-        data-item-id="<%= item.id %>"
-        data-ignored="<%= is_ignored %>">
-      <td class="ps-3">
-        <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>">
-      </td>
-      <td>
-        <% if is_ignored %>
-          <i class="fas fa-trash me-1 text-secondary" title="Item excluído"></i>
-        <% else %>
-          <i class="fas fa-exclamation-triangle me-1" title="Estoque negativo"></i>
-        <% end %>
-        <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
-      </td>
-      <td><%= item.created_at&.strftime('%d/%m/%Y') %></td>
-      <td>
-        <div class="d-flex flex-column">
-          <span><%= item.produto_descricao %></span>
-          <% if item.descricao_detalhada.present? %>
-            <small class="text-light"><%= truncate(item.descricao_detalhada, length: 50) %></small>
-          <% end %>
-        </div>
-      </td>
-      <td class="text-end fw-bold"><%= number_with_precision(item.quantidade, precision: 2) %></td>
-      <td class="text-end fw-bold text-warning"><%= item.produto_estoque %></td>
-      <td class="text-end"><%= number_to_currency(item.valor_unitario, unit: "R$ ") %></td>
-      <td class="text-end fw-bold"><%= number_to_currency(item.valor_total, unit: "R$ ") %></td>
-      <td>
-        <% if item.sale_order_item_supply.present? && !is_ignored %>
-          <div class="input-group input-group-sm">
-            <%= text_field_tag "quantity_order[#{item.id}]", 
-                item.quantity_order || estoque.abs, 
-                class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
-                placeholder: "Qtd.", 
-                data: { item_id: item.id },
-                disabled: !item.checked_order %>
-          </div>
-        <% end %>
-      </td>
-      <td>
-        <div class="d-flex justify-content-center gap-1">
-          <% if is_ignored %>
-            <button type="button" class="btn btn-sm btn-outline-success restore-item-btn" 
-                    data-item-id="<%= item.id %>"
-                    title="Restaurar item">
-              <i class="fas fa-undo"></i>
-            </button>
-          <% else %>
-            <% if item.sale_order_item_supply.present? %>
-              <div class="form-check form-switch">
-                <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
-                    class: "form-check-input checked-order-toggle", 
-                    data: { item_id: item.id } %>
-                <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-success save-item-btn <%= item.checked_order ? '' : 'd-none' %>" data-item-id="<%= item.id %>">
-                <i class="fas fa-save"></i>
-              </button>
-            <% else %>
-              <button type="button" class="btn btn-sm btn-outline-warning add-supplier-btn"
-                      data-bs-toggle="modal" data-bs-target="#supplierModal"
-                      data-item-id="<%= item.id %>"
-                      data-product-id="<%= item.produto_id %>">
-                <i class="fas fa-plus me-1"></i>Fornecedor
-              </button>
-            <% end %>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" 
-                    data-item-id="<%= item.id %>"
-                    title="Remover item da listagem">
-              <i class="fas fa-times"></i>
-            </button>
-          <% end %>
-        </div>
-      </td>
-    </tr>
-  <% end %>
-</tbody>
-                    </table>
-                  </div>
+              <div class="supplier-items">
+                <!-- Adicionando estrutura de tabela apropriada -->
+                <div class="table-responsive">
+                  <table class="table table-dark table-hover mb-0">
+                    <thead class="table-secondary">
+                      <tr>
+                        <th width="40"><input type="checkbox" class="form-check-input supplier-select-all" data-supplier="<%= supplier %>"></th>
+                        <th>Código</th>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th class="text-end">Qtd</th>
+                        <th class="text-end">Estoque</th>
+                        <th class="text-end">Valor Unit.</th>
+                        <th class="text-end">Valor Total</th>
+                        <th class="text-center">Qtd. Pedido</th>
+                        <th class="text-center">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% items.each do |item| %>
+                        <% is_ignored = ignored_items.include?(item.id) %>
+                        <% estoque = item.produto_estoque || 0 %>
+                        <tr class="bg-danger text-white stock-negative <%= is_ignored ? 'item-ignored' : (item.checked_order ? 'selection-checked' : 'selection-pending') %> item-row" 
+                            data-product-code="<%= item.produto_codigo %>" 
+                            data-product-desc="<%= item.produto_descricao %>"
+                            data-stock-status="negative"
+                            data-selection-status="<%= is_ignored ? 'ignored' : (item.checked_order ? 'checked' : 'pending') %>"
+                            data-item-date="<%= item.sale_order&.data&.strftime('%Y-%m-%d') %>"
+                            data-item-id="<%= item.id %>"
+                            data-ignored="<%= is_ignored %>">
+                          <td class="ps-3">
+                            <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>">
+                          </td>
+                          <td>
+                            <% if is_ignored %>
+                              <i class="fas fa-trash me-1 text-secondary" title="Item excluído"></i>
+                            <% else %>
+                              <i class="fas fa-exclamation-triangle me-1" title="Estoque negativo"></i>
+                            <% end %>
+                            <code class="bg-secondary text-white"><%= item.produto_codigo %></code>
+                          </td>
+                          <td><%= item.sale_order&.data&.strftime('%d/%m/%Y') %></td>
+                          <td>
+                            <div class="d-flex flex-column">
+                              <span><%= item.produto_descricao %></span>
+                              <% if item.descricao_detalhada.present? %>
+                                <small class="text-light"><%= truncate(item.descricao_detalhada, length: 50) %></small>
+                              <% end %>
+                            </div>
+                          </td>
+                          <td class="text-end fw-bold"><%= number_with_precision(item.quantidade, precision: 2) %></td>
+                          <td class="text-end fw-bold text-warning"><%= estoque %></td>
+                          <td class="text-end"><%= number_to_currency(item.valor_unitario, unit: "R$ ") %></td>
+                          <td class="text-end fw-bold"><%= number_to_currency(item.valor_total, unit: "R$ ") %></td>
+                          <td class="text-center">
+                            <% if item.sale_order_item_supply.present? && !is_ignored %>
+                              <div class="input-group input-group-sm">
+                                <%= text_field_tag "quantity_order[#{item.id}]", 
+                                    item.quantity_order || estoque.abs, 
+                                    class: "form-control form-control-sm quantity-order-input bg-dark text-white border-secondary", 
+                                    placeholder: "Qtd.", 
+                                    data: { item_id: item.id },
+                                    disabled: !item.checked_order %>
+                              </div>
+                            <% end %>
+                          </td>
+                          <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                              <% if is_ignored %>
+                                <button type="button" class="btn btn-sm btn-outline-success restore-item-btn" 
+                                        data-item-id="<%= item.id %>"
+                                        title="Restaurar item">
+                                  <i class="fas fa-undo"></i>
+                                </button>
+                              <% else %>
+                                <% if item.sale_order_item_supply.present? %>
+                                  <div class="form-check form-switch">
+                                    <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
+                                        class: "form-check-input checked-order-toggle", 
+                                        data: { item_id: item.id } %>
+                                    <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
+                                  </div>
+                                  <button type="button" class="btn btn-sm btn-outline-success save-item-btn <%= item.checked_order ? '' : 'd-none' %>" data-item-id="<%= item.id %>">
+                                    <i class="fas fa-save"></i>
+                                  </button>
+                                <% else %>
+                                  <button type="button" class="btn btn-sm btn-outline-warning add-supplier-btn"
+                                          data-bs-toggle="modal" data-bs-target="#supplierModal"
+                                          data-item-id="<%= item.id %>"
+                                          data-product-id="<%= item.produto_id %>">
+                                    <i class="fas fa-plus me-1"></i>Fornecedor
+                                  </button>
+                                <% end %>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" 
+                                        data-item-id="<%= item.id %>"
+                                        title="Remover item da listagem">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              <% end %>
+                            </div>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -354,9 +346,9 @@
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="nav-counter">
-          <span id="current-negative-stock">0</span>/<span id="total-negative-stock"><%= @negative_stock_count %></span>
+          <span id="current-negative-stock">0</span>/<span id="total-negative-stock"><%= @negative_stock_count || 0 %></span>
         </span>
-        <button type="button" id="next-negative-stock" class="btn btn-sm ms-2" <%= @negative_stock_count > 0 ? '' : 'disabled' %>>
+        <button type="button" id="next-negative-stock" class="btn btn-sm ms-2" <%= (@negative_stock_count || 0) > 0 ? '' : 'disabled' %>>
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
@@ -365,6 +357,67 @@
 </footer>
 
 <div class="pb-5 mb-5"></div>
+
+<!-- Adicionando modal para buscar fornecedor no Bling -->
+<div class="modal fade" id="supplierModal" tabindex="-1" aria-labelledby="supplierModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="supplierModalLabel">
+          <i class="fas fa-search me-2"></i>Buscar Fornecedor no Bling
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="supplier-form">
+          <input type="hidden" id="modal-item-id" name="item_id">
+          
+          <div class="mb-3">
+            <label for="supplier-search" class="form-label">ID do Fornecedor no Bling</label>
+            <div class="input-group">
+              <input type="text" class="form-control bg-dark text-white border-secondary" id="supplier-search" placeholder="Digite o ID do fornecedor">
+              <button class="btn btn-outline-info" type="button" id="search-supplier-btn">
+                <i class="fas fa-search me-1"></i>Buscar
+              </button>
+            </div>
+            <small class="form-text text-muted">Digite o ID numérico do fornecedor no sistema Bling</small>
+          </div>
+          
+          <div id="supplier-info" class="d-none">
+            <div class="alert alert-info">
+              <h6><i class="fas fa-info-circle me-2"></i>Informações do Fornecedor</h6>
+              <div id="supplier-details"></div>
+            </div>
+            
+            <input type="hidden" id="supplier-id" name="supplier_id">
+            <input type="hidden" id="supplier-name" name="supplier_name">
+            
+            <div class="mb-3">
+              <label for="supplier-type" class="form-label">Tipo de Fornecedor</label>
+              <select class="form-select bg-dark text-white border-secondary" id="supplier-type" name="supplier_type">
+                <option value="Pessoa Jurídica">Pessoa Jurídica</option>
+                <option value="Pessoa Física">Pessoa Física</option>
+              </select>
+            </div>
+            
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="default-supplier" name="default">
+              <label class="form-check-label" for="default-supplier">
+                Definir como fornecedor padrão para este produto
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="save-supplier-btn" disabled>
+          <i class="fas fa-save me-1"></i>Salvar Fornecedor
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <%= javascript_tag do %>
 $(document).ready(function() {
@@ -523,6 +576,162 @@ $(document).ready(function() {
     updateSelectionCount();
   });
 
+  // CORREÇÃO: Event listener para botão de adicionar fornecedor
+  $(document).on('click', '.add-supplier-btn', function() {
+    const itemId = $(this).data('item-id');
+    
+    console.log('Abrindo modal para item:', itemId);
+    
+    // Preenche os campos hidden do modal
+    $('#modal-item-id').val(itemId);
+    
+    // Limpa os campos do formulário
+    $('#supplier-search').val('');
+    $('#supplier-id').val('');
+    $('#supplier-name').val('');
+    $('#supplier-type').val('Pessoa Jurídica');
+    $('#default-supplier').prop('checked', false);
+    $('#supplier-info').addClass('d-none');
+    $('#save-supplier-btn').prop('disabled', true);
+  });
+
+  // CORREÇÃO: Event listener para salvar fornecedor
+  $('#save-supplier-btn').on('click', function() {
+    const itemId = $('#modal-item-id').val();
+    const supplierId = $('#supplier-id').val();
+    const supplierName = $('#supplier-name').val();
+    const supplierType = $('#supplier-type').val();
+    const isDefault = $('#default-supplier').is(':checked');
+    
+    if (!supplierId || !supplierName) {
+      showAlert('Por favor, busque e selecione um fornecedor', 'warning');
+      return;
+    }
+    
+    const button = $(this);
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Salvando...');
+    
+    $.ajax({
+      url: '/sales_orders/add_supplier_to_item',
+      method: 'POST',
+      data: {
+        sale_order_item_id: itemId,
+        supplier_id: supplierId,
+        supplier_name: supplierName,
+        supplier_type: supplierType,
+        default: isDefault
+      },
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response.success) {
+          showAlert(response.message || 'Fornecedor adicionado com sucesso!', 'success');
+          $('#supplierModal').modal('hide');
+          
+          // Recarrega a página após 1 segundo
+          setTimeout(function() {
+            window.location.reload();
+          }, 1000);
+        } else {
+          showAlert(response.message || 'Erro ao adicionar fornecedor', 'error');
+        }
+        button.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Salvar Fornecedor');
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        const message = response ? response.message : 'Erro ao adicionar fornecedor';
+        showAlert(message, 'error');
+        button.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Salvar Fornecedor');
+        $('#save-supplier-btn').prop('disabled', true);
+      }
+    });
+  });
+
+  // CORREÇÃO: Event listener para botão de remover item
+  $(document).on('click', '.remove-item-btn', function() {
+    const itemId = $(this).data('item-id');
+    
+    console.log('Removendo item:', itemId);
+    
+    if (confirm('Tem certeza que deseja remover este item da listagem?')) {
+      const button = $(this);
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+      
+      $.ajax({
+        url: '/sales_orders/ignore_item', // Ajuste a URL conforme sua rota
+        method: 'PATCH',
+        data: {
+          item_id: itemId
+        },
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message || 'Item removido com sucesso!', 'success');
+            
+            // Recarrega a página após 1 segundo
+            setTimeout(function() {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showAlert(response.message || 'Erro ao remover item', 'error');
+            button.prop('disabled', false).html('<i class="fas fa-times"></i>');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao remover item';
+          showAlert(message, 'error');
+          button.prop('disabled', false).html('<i class="fas fa-times"></i>');
+        }
+      });
+    }
+  });
+
+  // CORREÇÃO: Event listener para botão de restaurar item
+  $(document).on('click', '.restore-item-btn', function() {
+    const itemId = $(this).data('item-id');
+    
+    console.log('Restaurando item:', itemId);
+    
+    if (confirm('Tem certeza que deseja restaurar este item?')) {
+      const button = $(this);
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+      
+      $.ajax({
+        url: '/sales_orders/restore_item', // Ajuste a URL conforme sua rota
+        method: 'PATCH',
+        data: {
+          item_id: itemId
+        },
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message || 'Item restaurado com sucesso!', 'success');
+            
+            // Recarrega a página após 1 segundo para mostrar o resultado
+            setTimeout(function() {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showAlert(response.message || 'Erro ao restaurar item', 'error');
+            button.prop('disabled', false).html('<i class="fas fa-undo"></i>');
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao restaurar item';
+          showAlert(message, 'error');
+          button.prop('disabled', false).html('<i class="fas fa-undo"></i>');
+        }
+      });
+    }
+  });
+
   // Exclusão em lote
   $('#bulk-remove-btn').on('click', function() {
     const selectedItems = $('.item-select:checked').map(function() {
@@ -657,6 +866,11 @@ $(document).ready(function() {
     toggleSaveButton(itemId);
   });
 
+  $('#supplier-filter').on('change', function() {
+    const selectedSupplier = $(this).val();
+    filterItemsBySupplier(selectedSupplier);
+  });
+
   // Filtro por data
   $('#date-filter').on('change', function() {
     const selectedDate = $(this).val();
@@ -665,42 +879,157 @@ $(document).ready(function() {
 
   $('#clear-filters').on('click', function() {
     $('#date-filter').val('');
+    $('#supplier-filter').val('');
     $('#select-all-items').prop('checked', false);
     $('.item-row, .supplier-group').show();
     $('.item-select, .supplier-select-all').prop('checked', false);
     updateSelectionCount();
+    updateFilterStatus();
     initStockNavigation();
   });
 
   function filterItemsByDate(selectedDate) {
+    $('.item-row, .supplier-group').show();
+    
     if (!selectedDate) {
-      $('.item-row, .supplier-group').show();
       initStockNavigation();
+      updateFilterStatus();
       return;
     }
 
+    let visibleItemsCount = 0;
+    
     $('.item-row').each(function() {
-      const row = $(this);
-      const itemDate = row.data('item-date');
-      
+      const itemDate = $(this).data('item-date');
       if (itemDate === selectedDate) {
-        row.show();
+        $(this).show();
+        visibleItemsCount++;
       } else {
-        row.hide();
+        $(this).hide();
       }
     });
 
+    // Esconde grupos de fornecedores sem itens visíveis
     $('.supplier-group').each(function() {
       const visibleItems = $(this).find('.item-row:visible').length;
-      if (visibleItems === 0) {
-        $(this).hide();
-      } else {
+      if (visibleItems > 0) {
         $(this).show();
+      } else {
+        $(this).hide();
       }
     });
-
+    
     initStockNavigation();
+    updateFilterStatus();
   }
+
+  function filterItemsBySupplier(selectedSupplier) {
+    $('.supplier-group, .item-row').show();
+    
+    if (!selectedSupplier) {
+      initStockNavigation();
+      updateFilterStatus();
+      return;
+    }
+
+    $('.supplier-group').each(function() {
+      const supplierName = $(this).find('.supplier-header h5').text().trim();
+      if (supplierName === selectedSupplier) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+    
+    initStockNavigation();
+    updateFilterStatus();
+  }
+
+  function updateFilterStatus() {
+    const visibleItems = $('.item-row:visible').length;
+    const totalItems = $('.item-row').length;
+    const activeFilters = [];
+    
+    if ($('#date-filter').val()) activeFilters.push('Data');
+    if ($('#supplier-filter').val()) activeFilters.push('Fornecedor');
+    
+    if (activeFilters.length > 0) {
+      $('#filter-count').text(`${visibleItems}/${totalItems} itens`);
+      $('#filter-status').removeClass('btn-outline-info').addClass('btn-outline-warning');
+    } else {
+      $('#filter-count').text('Todos');
+      $('#filter-status').removeClass('btn-outline-warning').addClass('btn-outline-info');
+    }
+  }
+
+  $('#search-supplier-btn').on('click', function() {
+    const supplierId = $('#supplier-search').val();
+    
+    if (!supplierId) {
+      showAlert('Por favor, digite o ID do fornecedor', 'warning');
+      return;
+    }
+    
+    const button = $(this);
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Buscando...');
+    
+    $.ajax({
+      url: '/sales_orders/search_supplier_bling',
+      method: 'GET',
+      data: { supplier_id: supplierId },
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response.success && response.supplier) {
+          const supplier = response.supplier;
+          
+          $('#supplier-id').val(supplier.id);
+          $('#supplier-name').val(supplier.nome);
+          $('#supplier-type').val(supplier.tipo || 'Pessoa Jurídica');
+          
+          $('#supplier-info').removeClass('d-none');
+          $('#supplier-details').html(`
+            <strong>Nome:</strong> ${supplier.nome}<br>
+            <strong>Tipo:</strong> ${supplier.tipo || 'Pessoa Jurídica'}<br>
+            <strong>ID Bling:</strong> ${supplier.id}
+          `);
+          
+          $('#save-supplier-btn').prop('disabled', false);
+          showAlert('Fornecedor encontrado com sucesso!', 'success');
+        } else {
+          showAlert(response.message || 'Fornecedor não encontrado', 'error');
+          $('#save-supplier-btn').prop('disabled', true);
+        }
+        
+        button.prop('disabled', false).html('<i class="fas fa-search me-1"></i>Buscar');
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        const message = response ? response.message : 'Erro ao buscar fornecedor';
+        showAlert(message, 'error');
+        button.prop('disabled', false).html('<i class="fas fa-search me-1"></i>Buscar');
+        $('#save-supplier-btn').prop('disabled', true);
+      }
+    });
+  });
+
+  $(document).on('click', '.toggle-supplier', function() {
+    const button = $(this);
+    const supplierGroup = button.closest('.supplier-group');
+    const supplierItems = supplierGroup.find('.supplier-items');
+    const icon = button.find('i');
+    
+    // Toggle da visibilidade dos itens
+    supplierItems.slideToggle(300, function() {
+      // Atualiza o ícone após a animação
+      if (supplierItems.is(':visible')) {
+        icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+      } else {
+        icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+      }
+    });
+  });
 
   // Inicialização
   initStockNavigation();
@@ -709,6 +1038,8 @@ $(document).ready(function() {
   console.log('Bulk actions bar:', $('#bulk-actions-bar').length);
   console.log('Item selects:', $('.item-select').length);
   console.log('Selected count element:', $('#selected-count').length);
+  console.log('Add supplier buttons:', $('.add-supplier-btn').length);
+  console.log('Remove item buttons:', $('.remove-item-btn').length);
 });
 <% end %>
 
@@ -875,5 +1206,27 @@ body {
 .form-check-input:indeterminate {
   background-color: #ffc107;
   border-color: #ffc107;
+}
+
+/* Estilos para o modal */
+.modal-content {
+  border: 1px solid #495057;
+}
+
+.modal-header {
+  background-color: #343a40;
+}
+
+.modal-body {
+  background-color: #212529;
+}
+
+.modal-footer {
+  background-color: #343a40;
+}
+
+.form-select:focus, .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 </style>

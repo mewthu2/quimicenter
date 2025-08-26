@@ -6,6 +6,9 @@ class SalesOrdersController < ApplicationController
   def index
     begin
       show_ignored = params[:show_ignored] == 'true'
+      
+      start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : nil
+      end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : nil
     
       # Query base para todos os itens com estoque negativo
       base_query = SaleOrderItem.includes(:sale_order_item_supply)
@@ -13,6 +16,14 @@ class SalesOrdersController < ApplicationController
                                .where('CAST(produto_estoque AS INTEGER) < 0')
                                .where(bling_order_id: [nil, ''])
                                .order(created_at: :desc)
+
+      if start_date.present? && end_date.present?
+        base_query = base_query.where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+      elsif start_date.present?
+        base_query = base_query.where('created_at >= ?', start_date.beginning_of_day)
+      elsif end_date.present?
+        base_query = base_query.where('created_at <= ?', end_date.end_of_day)
+      end
 
       if show_ignored
         # Mostra todos os itens (ativos + excluídos)
@@ -26,32 +37,31 @@ class SalesOrdersController < ApplicationController
         @ignored_items = []
       end
 
+      @sale_order_items = @all_items
+
+      @items_by_supplier = @active_items.group_by do |item|
+        item.sale_order_item_supply&.supplier_name || "Fornecedor não identificado"
+      end
+
+      @ignored_items_by_supplier = @ignored_items.group_by do |item|
+        item.sale_order_item_supply&.supplier_name || "Fornecedor não identificado"
+      end
+
       @show_ignored = show_ignored
+      @start_date = start_date
+      @end_date = end_date
       @checked_items_count = @active_items.where(checked_order: true).count
       @ignored_items_count = base_query.where(ignore_order: true).count
       @total_items_count = @active_items.count
       @negative_stock_count = @active_items.count
 
-      # Agrupa os itens por fornecedor
-      @items_by_supplier = @all_items.each_with_object({}) do |item, hash|
-        supplier_name = item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
-        hash[supplier_name] ||= []
-        hash[supplier_name] << item
-      end
-
-      @items_by_supplier.reject! { |_, items| items.empty? }
-
-      # Agrupa os itens excluídos por fornecedor
-      @ignored_items_by_supplier = @ignored_items.each_with_object({}) do |item, hash|
-        supplier_name = item.sale_order_item_supply&.supplier_name || 'Fornecedor não apontado'
-        hash[supplier_name] ||= []
-        hash[supplier_name] << item
-      end
-
-      @items_by_supplier.reject! { |_, items| items.empty? }
     rescue StandardError => e
+      @sale_order_items = []
       @items_by_supplier = {}
+      @ignored_items_by_supplier = {}
       @show_ignored = false
+      @start_date = nil
+      @end_date = nil
       @checked_items_count = 0
       @ignored_items_count = 0
       @total_items_count = 0
@@ -60,42 +70,42 @@ class SalesOrdersController < ApplicationController
     end
   end
 
-  def show
-    @order_items = @order.sale_order_items
-  rescue StandardError => e
-    flash[:alert] = 'Pedido não encontrado'
-    redirect_to sales_orders_path
-  end
 
-  def save_item
+  def add_supplier_to_item
     begin
-      @item = SaleOrderItem.find(params[:id])
+      @item = SaleOrderItem.find(params[:sale_order_item_id])
       
-      item_params = params.permit(:checked_order, :quantity_order)
-      checked_order = item_params[:checked_order] == '1' || item_params[:checked_order] == 'true'
-      quantity_order = item_params[:quantity_order].to_f
-
-      if checked_order && quantity_order <= 0
-        render json: { 
-          success: false, 
-          message: 'Quantidade deve ser maior que zero quando o item está selecionado' 
+      supplier_params = params.permit(:supplier_id, :supplier_name, :supplier_type, :default)
+      
+      # Validações
+      if supplier_params[:supplier_id].blank?
+        render json: {
+          success: false,
+          message: 'ID do fornecedor é obrigatório'
         }, status: :unprocessable_entity
         return
       end
 
-      @item.update!(
-        checked_order: checked_order,
-        quantity_order: checked_order ? quantity_order : nil
+      if supplier_params[:supplier_name].blank?
+        render json: {
+          success: false,
+          message: 'Nome do fornecedor é obrigatório'
+        }, status: :unprocessable_entity
+        return
+      end
+
+      SaleOrderItemSupply.create_or_update(
+        sale_order_item: @item,
+        supplier_id: supplier_params[:supplier_id].to_i,
+        supplier_name: supplier_params[:supplier_name],
+        supplier_type: supplier_params[:supplier_type] || 'Pessoa Jurídica',
+        default: supplier_params[:default] == '1' || supplier_params[:default] == 'true'
       )
       
       render json: {
         success: true,
-        message: 'Item salvo com sucesso!',
-        item: {
-          id: @item.id,
-          checked_order: @item.checked_order,
-          quantity_order: @item.quantity_order
-        }
+        message: 'Fornecedor adicionado com sucesso!',
+        supplier_name: supplier_params[:supplier_name]
       }
     rescue ActiveRecord::RecordNotFound
       render json: {
@@ -105,170 +115,12 @@ class SalesOrdersController < ApplicationController
     rescue ActiveRecord::RecordInvalid => e
       render json: {
         success: false,
-        message: "Erro ao salvar: #{e.message}"
+        message: "Erro ao adicionar fornecedor: #{e.message}"
       }, status: :unprocessable_entity
     rescue StandardError => e
       render json: {
         success: false,
         message: "Erro interno: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def ignore_item
-    begin
-      @item = SaleOrderItem.find(params[:id])
-      
-      @item.update!(ignore_order: true)
-      
-      render json: {
-        success: true,
-        message: 'Item removido da listagem com sucesso!'
-      }
-    rescue ActiveRecord::RecordNotFound
-      render json: {
-        success: false,
-        message: 'Item não encontrado'
-      }, status: :not_found
-    rescue ActiveRecord::RecordInvalid => e
-      render json: {
-        success: false,
-        message: "Erro ao remover item: #{e.message}"
-      }, status: :unprocessable_entity
-    rescue StandardError => e
-      render json: {
-        success: false,
-        message: "Erro interno: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def restore_item
-    begin
-      @item = SaleOrderItem.find(params[:id])
-      
-      @item.update!(ignore_order: false)
-      
-      render json: {
-        success: true,
-        message: 'Item restaurado com sucesso!'
-      }
-    rescue ActiveRecord::RecordNotFound
-      render json: {
-        success: false,
-        message: 'Item não encontrado'
-      }, status: :not_found
-    rescue ActiveRecord::RecordInvalid => e
-      render json: {
-        success: false,
-        message: "Erro ao restaurar item: #{e.message}"
-      }, status: :unprocessable_entity
-    rescue StandardError => e
-      render json: {
-        success: false,
-        message: "Erro interno: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def bulk_ignore_items
-    begin
-      item_ids = params[:item_ids] || []
-      
-      if item_ids.empty?
-        render json: {
-          success: false,
-          message: 'Nenhum item selecionado'
-        }, status: :unprocessable_entity
-        return
-      end
-
-      updated_count = SaleOrderItem.where(id: item_ids).update_all(ignore_order: true)
-      
-      render json: {
-        success: true,
-        message: "#{updated_count} item(ns) removido(s) da listagem com sucesso!"
-      }
-    rescue StandardError => e
-      render json: {
-        success: false,
-        message: "Erro ao remover itens: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def bulk_restore_items
-    begin
-      item_ids = params[:item_ids] || []
-      
-      if item_ids.empty?
-        render json: {
-          success: false,
-          message: 'Nenhum item selecionado'
-        }, status: :unprocessable_entity
-        return
-      end
-
-      updated_count = SaleOrderItem.where(id: item_ids).update_all(ignore_order: false)
-      
-      render json: {
-        success: true,
-        message: "#{updated_count} item(ns) restaurado(s) com sucesso!"
-      }
-    rescue StandardError => e
-      render json: {
-        success: false,
-        message: "Erro ao restaurar itens: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def save_multiple_items
-    begin
-      items_data = params[:items] || []
-      updated_items = []
-      errors = []
-
-      items_data.each do |item_data|
-        item = SaleOrderItem.find(item_data[:id])
-        checked_order = item_data[:checked_order] == '1' || item_data[:checked_order] == 'true'
-        quantity_order = item_data[:quantity_order].to_f
-
-        if checked_order && quantity_order <= 0
-          errors << "Item #{item.produto_codigo}: Quantidade deve ser maior que zero"
-          next
-        end
-
-        item.update!(
-          checked_order: checked_order,
-          quantity_order: checked_order ? quantity_order : nil
-        )
-
-        updated_items << {
-          id: item.id,
-          checked_order: item.checked_order,
-          quantity_order: item.quantity_order
-        }
-      end
-
-      if errors.any?
-        render json: { 
-          success: false, 
-          message: 'Alguns itens não puderam ser salvos',
-          errors: errors,
-          updated_items: updated_items
-        }, status: :unprocessable_entity
-      else
-        render json: { 
-          success: true, 
-          message: "#{updated_items.count} itens salvos com sucesso!",
-          updated_items: updated_items
-        }
-      end
-    rescue StandardError => e
-      render json: { 
-        success: false, 
-        message: "Erro ao salvar itens: #{e.message}" 
       }, status: :internal_server_error
     end
   end
@@ -276,23 +128,45 @@ class SalesOrdersController < ApplicationController
   def export_negative_stock
     require 'csv'
 
+    start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : nil
+    end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : nil
+
     @items = SaleOrderItem.includes(:sale_order_item_supply)
                           .where(ignore_order: [false, nil])
                           .where.not(produto_estoque: nil)
                           .where('CAST(produto_estoque AS INTEGER) < 0')
                           .where(bling_order_id: [nil, ''])
                           .order(created_at: :desc)
+
+    if start_date.present? && end_date.present?
+      @items = @items.where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+    elsif start_date.present?
+      @items = @items.where('created_at >= ?', start_date.beginning_of_day)
+    elsif end_date.present?
+      @items = @items.where('created_at <= ?', end_date.end_of_day)
+    end
     
-    filename = "itens_estoque_negativo_#{Date.today.strftime('%d%m%Y')}.csv"
+    date_suffix = if start_date.present? && end_date.present?
+                    "_#{start_date.strftime('%d%m%Y')}_a_#{end_date.strftime('%d%m%Y')}"
+                  elsif start_date.present?
+                    "_a_partir_#{start_date.strftime('%d%m%Y')}"
+                  elsif end_date.present?
+                    "_ate_#{end_date.strftime('%d%m%Y')}"
+                  else
+                    "_#{Date.today.strftime('%d%m%Y')}"
+                  end
+    
+    filename = "itens_estoque_negativo#{date_suffix}.csv"
     
     csv_data = CSV.generate(headers: true) do |csv|
-      csv << ['Código', 'Descrição', 'Fornecedor', 'Estoque', 'Quantidade', 'Valor Unitário', 'Valor Total', 'Data']
+      csv << ['Código', 'Descrição', 'Fornecedor', 'Código Bling Fornecedor', 'Estoque', 'Quantidade', 'Valor Unitário', 'Valor Total', 'Data']
 
       @items.each do |item|
         csv << [
           item.produto_codigo,
           item.produto_descricao,
           item.sale_order_item_supply&.supplier_name || 'Não definido',
+          item.sale_order_item_supply&.supplier_bling_code || 'Não definido',
           item.produto_estoque,
           item.quantidade,
           item.valor_unitario,
@@ -308,14 +182,6 @@ class SalesOrdersController < ApplicationController
   private
 
   def set_order
-    @order = SaleOrder.find_by(bling_id: params[:id])
-    raise 'Pedido não encontrado' unless @order.present?
-  end
-
-  def generate_order_reference(order)
-    [
-      order.data.to_s.strip,
-      order.contato_id.to_s
-    ].join('#')
+    # Implementar se necessário
   end
 end
