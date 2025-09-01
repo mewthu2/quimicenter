@@ -247,9 +247,11 @@
                             data-selection-status="<%= is_ignored ? 'ignored' : (item.checked_order ? 'checked' : 'pending') %>"
                             data-item-date="<%= item.sale_order&.data&.strftime('%Y-%m-%d') %>"
                             data-item-id="<%= item.id %>"
-                            data-ignored="<%= is_ignored %>">
+                            data-ignored="<%= is_ignored %>"
+                            data-checked-order="<%= item.checked_order ? 'true' : 'false' %>">
                           <td class="ps-3">
-                            <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>">
+                            <!-- Inicializar checkbox baseado no estado checked_order -->
+                            <input type="checkbox" class="form-check-input item-select" data-item-id="<%= item.id %>" <%= item.checked_order ? 'checked' : '' %>>
                           </td>
                           <td>
                             <% if is_ignored %>
@@ -425,6 +427,69 @@ $(document).ready(function() {
   let currentNegativeStockIndex = -1;
   const showingIgnored = <%= @show_ignored ? 'true' : 'false' %>;
 
+  function updateRealSelectionCount() {
+    const checkedOrderItems = $('.item-row:not(.item-ignored) .checked-order-toggle:checked').length;
+    const selectedItems = $('.item-row:visible .item-select:checked').length;
+    const totalItems = $('.item-row:not(.item-ignored)').length;
+    
+    console.log('[v0] Contadores - Checked Order:', checkedOrderItems, 'Selected:', selectedItems, 'Total:', totalItems);
+    
+    // Atualiza o contador de itens selecionados no card
+    $('#checked-items-count').text(checkedOrderItems);
+    
+    // Atualiza o contador de itens pendentes
+    $('#pending-items-count').text(totalItems - checkedOrderItems);
+    
+    // Atualiza a barra de progresso
+    const progressPercentage = totalItems > 0 ? Math.round((checkedOrderItems / totalItems) * 100) : 0;
+    $('.progress-bar').css('width', progressPercentage + '%').attr('aria-valuenow', checkedOrderItems);
+    
+    // Atualiza o contador da barra de ações em lote
+    $('#selected-count').text(selectedItems);
+    
+    if (selectedItems > 0) {
+      $('#bulk-actions-bar').show();
+    } else {
+      $('#bulk-actions-bar').hide();
+    }
+  }
+
+  function syncSelectionCheckboxes() {
+    console.log('[v0] Sincronizando checkboxes...');
+    
+    $('.item-row').each(function() {
+      const row = $(this);
+      const itemId = row.data('item-id');
+      const isCheckedOrder = row.data('checked-order') === 'true' || row.data('checked-order') === true;
+      const selectCheckbox = row.find('.item-select');
+      const checkedOrderToggle = row.find('.checked-order-toggle');
+      
+      console.log('[v0] Item', itemId, '- Checked Order:', isCheckedOrder, 'Toggle exists:', checkedOrderToggle.length > 0);
+      
+      // Sincroniza o checkbox de seleção múltipla com o estado checked_order
+      selectCheckbox.prop('checked', isCheckedOrder);
+      
+      // Garante que o toggle também esteja correto
+      if (checkedOrderToggle.length > 0) {
+        checkedOrderToggle.prop('checked', isCheckedOrder);
+      }
+      
+      // Atualiza as classes visuais
+      if (isCheckedOrder) {
+        row.removeClass('selection-pending').addClass('selection-checked');
+      } else {
+        row.removeClass('selection-checked').addClass('selection-pending');
+      }
+      
+      // Habilita/desabilita o input de quantidade
+      const quantityInput = row.find('.quantity-order-input');
+      quantityInput.prop('disabled', !isCheckedOrder);
+    });
+    
+    updateRealSelectionCount();
+    updateSupplierSelectAll();
+  }
+
   function initStockNavigation() {
     negativeStockRows = $('tr.stock-negative:not(.item-ignored):visible').toArray();
     const negativeStockCount = negativeStockRows.length;
@@ -468,14 +533,7 @@ $(document).ready(function() {
   }
 
   function updateSelectionCount() {
-    const selectedCount = $('.item-select:checked').length;
-    $('#selected-count').text(selectedCount);
-    
-    if (selectedCount > 0) {
-      $('#bulk-actions-bar').show();
-    } else {
-      $('#bulk-actions-bar').hide();
-    }
+    updateRealSelectionCount();
   }
 
   function updateSupplierSelectAll() {
@@ -544,10 +602,37 @@ $(document).ready(function() {
     highlightAndScrollToRow(currentRow);
   });
 
-  // Seleção múltipla - EVENTOS PRINCIPAIS
   $(document).on('change', '.item-select', function() {
-    console.log('Item selecionado:', $(this).data('item-id'), 'Checked:', $(this).is(':checked'));
-    updateSelectionCount();
+    const itemId = $(this).data('item-id');
+    const isChecked = $(this).is(':checked');
+    const row = $(this).closest('.item-row');
+    const checkedOrderToggle = row.find('.checked-order-toggle');
+    
+    console.log('[v0] Item selecionado:', itemId, 'Checked:', isChecked);
+    
+    // Sincroniza com o toggle checked_order se existir
+    if (checkedOrderToggle.length > 0) {
+      checkedOrderToggle.prop('checked', isChecked);
+      
+      // Atualiza o data attribute
+      row.attr('data-checked-order', isChecked ? 'true' : 'false');
+      
+      // Atualiza as classes visuais
+      if (isChecked) {
+        row.removeClass('selection-pending').addClass('selection-checked');
+      } else {
+        row.removeClass('selection-checked').addClass('selection-pending');
+      }
+      
+      // Habilita/desabilita o input de quantidade
+      const quantityInput = row.find('.quantity-order-input');
+      quantityInput.prop('disabled', !isChecked);
+      
+      // Mostra/esconde o botão de salvar
+      toggleSaveButton(itemId);
+    }
+    
+    updateRealSelectionCount();
     updateSupplierSelectAll();
   });
 
@@ -558,22 +643,24 @@ $(document).ready(function() {
     
     console.log('Supplier select all:', supplier, 'Checked:', isChecked);
     
-    supplierGroup.find('.item-row:visible .item-select').prop('checked', isChecked);
-    updateSelectionCount();
+    supplierGroup.find('.item-row:visible .item-select').each(function() {
+      $(this).prop('checked', isChecked).trigger('change');
+    });
   });
 
   $('#select-all-items').on('change', function() {
     const isChecked = $(this).is(':checked');
     console.log('Select all items:', isChecked);
     
-    $('.item-row:visible .item-select').prop('checked', isChecked);
+    $('.item-row:visible .item-select').each(function() {
+      $(this).prop('checked', isChecked).trigger('change');
+    });
     $('.supplier-select-all').prop('checked', isChecked);
-    updateSelectionCount();
   });
 
   $('#clear-selection').on('click', function() {
     $('.item-select, .supplier-select-all, #select-all-items').prop('checked', false);
-    updateSelectionCount();
+    $('.item-select').trigger('change');
   });
 
   // CORREÇÃO: Event listener para botão de adicionar fornecedor
@@ -847,6 +934,67 @@ $(document).ready(function() {
     toggleSaveButton(itemId);
   });
 
+  $(document).on('click', '.save-item-btn', function() {
+    const itemId = $(this).data('item-id');
+    const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
+    const quantityValue = parseFloat($(`input[name="quantity_order[${itemId}]"]`).val());
+    
+    if (!checkedOrder || isNaN(quantityValue) || quantityValue <= 0) {
+      showAlert('Por favor, marque o item como incluir e defina uma quantidade válida', 'warning');
+      return;
+    }
+    
+    const button = $(this);
+    const originalHtml = button.html();
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+      url: `/sale_order_items/${itemId}/update_item`,
+      method: 'PATCH',
+      data: {
+        sale_order_item: {
+          checked_order: checkedOrder,
+          quantity_order: quantityValue
+        }
+      },
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response.success) {
+          showAlert(response.message || 'Item salvo com sucesso!', 'success');
+          
+          button.addClass('d-none');
+          
+          updateRealSelectionCount();
+          
+          const row = button.closest('.item-row');
+          row.removeClass('selection-pending').addClass('selection-saved');
+          
+        } else {
+          showAlert(response.message || 'Erro ao salvar item', 'error');
+          button.prop('disabled', false).html(originalHtml);
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        const message = response ? response.message : 'Erro ao salvar item';
+        showAlert(message, 'error');
+        button.prop('disabled', false).html(originalHtml);
+      }
+    });
+  });
+
+  // Outros eventos...
+  $(document).on('change', '.checked-order-toggle', function() {
+    const itemId = $(this).data('item-id');
+    const isChecked = $(this).is(':checked');
+    const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
+    
+    quantityInput.prop('disabled', !isChecked);
+    toggleSaveButton(itemId);
+  });
+
   function toggleSaveButton(itemId) {
     const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
     const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
@@ -860,11 +1008,6 @@ $(document).ready(function() {
       saveButton.addClass('d-none');
     }
   }
-
-  $(document).on('input', '.quantity-order-input', function() {
-    const itemId = $(this).data('item-id');
-    toggleSaveButton(itemId);
-  });
 
   $('#supplier-filter').on('change', function() {
     const selectedSupplier = $(this).val();
@@ -1031,15 +1174,59 @@ $(document).ready(function() {
     });
   });
 
+  $(document).on('change', '.checked-order-toggle', function() {
+    const itemId = $(this).data('item-id');
+    const isChecked = $(this).is(':checked');
+    const row = $(this).closest('.item-row');
+    const itemSelectCheckbox = row.find('.item-select');
+    
+    console.log('[v0] Checked order toggle:', itemId, 'Checked:', isChecked);
+    
+    // Sincroniza com o checkbox de seleção múltipla
+    itemSelectCheckbox.prop('checked', isChecked);
+    
+    // Atualiza o data attribute
+    row.attr('data-checked-order', isChecked ? 'true' : 'false');
+    
+    // Atualiza as classes visuais
+    if (isChecked) {
+      row.removeClass('selection-pending').addClass('selection-checked');
+    } else {
+      row.removeClass('selection-checked').addClass('selection-pending');
+    }
+    
+    const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
+    quantityInput.prop('disabled', !isChecked);
+    
+    toggleSaveButton(itemId);
+    updateRealSelectionCount();
+    updateSupplierSelectAll();
+  });
+
+  function initializeSelectionStates() {
+    console.log('[v0] Inicializando estados de seleção...');
+    
+    setTimeout(function() {
+      // Sincroniza todos os checkboxes com o estado checked_order
+      syncSelectionCheckboxes();
+      
+      // Inicializa a navegação
+      initStockNavigation();
+      
+      // Debug: Verificar se os elementos existem
+      console.log('[v0] Bulk actions bar:', $('#bulk-actions-bar').length);
+      console.log('[v0] Item selects:', $('.item-select').length);
+      console.log('[v0] Selected count element:', $('#selected-count').length);
+      console.log('[v0] Checked order toggles:', $('.checked-order-toggle').length);
+      console.log('[v0] Items with checked_order=true:', $('.item-row[data-checked-order="true"]').length);
+      console.log('[v0] Items with .selection-checked class:', $('.selection-checked').length);
+      
+      updateRealSelectionCount();
+    }, 100);
+  }
+
   // Inicialização
-  initStockNavigation();
-  
-  // Debug: Verificar se os elementos existem
-  console.log('Bulk actions bar:', $('#bulk-actions-bar').length);
-  console.log('Item selects:', $('.item-select').length);
-  console.log('Selected count element:', $('#selected-count').length);
-  console.log('Add supplier buttons:', $('.add-supplier-btn').length);
-  console.log('Remove item buttons:', $('.remove-item-btn').length);
+  initializeSelectionStates();
 });
 <% end %>
 
@@ -1228,5 +1415,15 @@ body {
 .form-select:focus, .form-control:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.selection-saved {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-left: 4px solid #28a745;
+}
+
+.selection-pending {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-left: 4px solid #ffc107;
 }
 </style>
