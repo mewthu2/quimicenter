@@ -288,6 +288,27 @@
                           </td>
                           <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
+                                  <div class="form-check form-switch d-inline-block me-2">
+                                    <input class="form-check-input checked-order-toggle" type="checkbox" 
+                                           name="checked_order[<%= item.id %>]" 
+                                           id="checked_order[<%= item.id %>]" 
+                                           value="1" 
+                                           <%= item.checked_order ? 'checked' : '' %>
+                                           data-item-id="<%= item.id %>">
+                                    <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
+                                  </div>
+                                  
+                                  <% if item.sale_order_item_supply.present? %>
+                                    <% if item.checked_order %>
+                                      <button type="button" class="btn btn-sm btn-outline-danger save-item-btn" data-item-id="<%= item.id %>" data-action="remove">
+                                        <i class="fas fa-times"></i>
+                                      </button>
+                                    <% else %>
+                                      <button type="button" class="btn btn-sm btn-outline-success save-item-btn" data-item-id="<%= item.id %>" data-action="save">
+                                        <i class="fas fa-save"></i>
+                                      </button>
+                                    <% end %>
+                                  <% end %>
                               <% if is_ignored %>
                                 <button type="button" class="btn btn-sm btn-outline-success restore-item-btn" 
                                         data-item-id="<%= item.id %>"
@@ -296,15 +317,8 @@
                                 </button>
                               <% else %>
                                 <% if item.sale_order_item_supply.present? %>
-                                  <div class="form-check form-switch">
-                                    <%= check_box_tag "checked_order[#{item.id}]", '1', item.checked_order, 
-                                        class: "form-check-input checked-order-toggle", 
-                                        data: { item_id: item.id } %>
-                                    <label class="form-check-label ms-1 text-white small" for="checked_order[<%= item.id %>]">Incluir</label>
-                                  </div>
-                                  <button type="button" class="btn btn-sm btn-outline-success save-item-btn <%= item.checked_order ? '' : 'd-none' %>" data-item-id="<%= item.id %>">
-                                    <i class="fas fa-save"></i>
-                                  </button>
+                                  
+                                  
                                 <% else %>
                                   <button type="button" class="btn btn-sm btn-outline-warning add-supplier-btn"
                                           data-bs-toggle="modal" data-bs-target="#supplierModal"
@@ -936,51 +950,61 @@ $(document).ready(function() {
 
   $(document).on('click', '.save-item-btn', function() {
     const itemId = $(this).data('item-id');
-    const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
-    const quantityValue = parseFloat($(`input[name="quantity_order[${itemId}]"]`).val());
+    const action = $(this).data('action');
+    const newCheckedState = action === 'save';
     
-    if (!checkedOrder || isNaN(quantityValue) || quantityValue <= 0) {
-      showAlert('Por favor, marque o item como incluir e defina uma quantidade válida', 'warning');
-      return;
+    if (newCheckedState) {
+      const quantityValue = parseFloat($(`input[name="quantity_order[${itemId}]"]`).val());
+      if (isNaN(quantityValue) || quantityValue <= 0) {
+        showAlert('Por favor, defina uma quantidade válida', 'warning');
+        return;
+      }
     }
     
     const button = $(this);
-    const originalHtml = button.html();
-    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-    
+    const quantityValue = parseFloat($(`input[name="quantity_order[${itemId}]"]`).val()) || 0;
+
     $.ajax({
       url: `/sale_order_items/${itemId}/update_item`,
       method: 'PATCH',
       data: {
         sale_order_item: {
-          checked_order: checkedOrder,
+          checked_order: newCheckedState,
           quantity_order: quantityValue
         }
       },
-      headers: {
-        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        button.prop('disabled', true);
+        button.find('i').removeClass('fa-save fa-times').addClass('fa-spinner fa-spin');
       },
       success: function(response) {
-        if (response.success) {
-          showAlert(response.message || 'Item salvo com sucesso!', 'success');
-          
-          button.addClass('d-none');
-          
-          updateRealSelectionCount();
-          
-          const row = button.closest('.item-row');
-          row.removeClass('selection-pending').addClass('selection-saved');
-          
+        $(`input[name="checked_order[${itemId}]"]`).prop('checked', newCheckedState);
+        $(`input[name="quantity_order[${itemId}]"]`).prop('disabled', !newCheckedState);
+        
+        if (newCheckedState) {
+          // Change to remove button
+          button.removeClass('btn-outline-success').addClass('btn-outline-danger');
+          button.find('i').removeClass('fa-spinner fa-spin fa-save').addClass('fa-times');
+          button.attr('data-action', 'remove');
         } else {
-          showAlert(response.message || 'Erro ao salvar item', 'error');
-          button.prop('disabled', false).html(originalHtml);
+          // Change to save button
+          button.removeClass('btn-outline-danger').addClass('btn-outline-success');
+          button.find('i').removeClass('fa-spinner fa-spin fa-times').addClass('fa-save');
+          button.attr('data-action', 'save');
         }
+        
+        button.prop('disabled', false);
+        updateRealSelectionCount();
+        syncSelectionCheckboxes();
+        
+        showAlert('success', newCheckedState ? 'Item salvo com sucesso!' : 'Item removido com sucesso!');
       },
-      error: function(xhr) {
-        const response = xhr.responseJSON;
-        const message = response ? response.message : 'Erro ao salvar item';
-        showAlert(message, 'error');
-        button.prop('disabled', false).html(originalHtml);
+      error: function() {
+        showAlert('danger', 'Erro ao salvar item. Tente novamente.');
+      },
+      complete: function() {
+        button.prop('disabled', false);
       }
     });
   });
@@ -996,17 +1020,8 @@ $(document).ready(function() {
   });
 
   function toggleSaveButton(itemId) {
-    const quantityInput = $(`input[name="quantity_order[${itemId}]"]`);
-    const saveButton = $(`.save-item-btn[data-item-id="${itemId}"]`);
-    const checkedOrder = $(`input[name="checked_order[${itemId}]"]`).is(':checked');
-    const quantityValue = parseFloat(quantityInput.val());
-    const isQuantityValid = !isNaN(quantityValue) && quantityValue > 0;
-
-    if (checkedOrder && isQuantityValid) {
-      saveButton.removeClass('d-none');
-    } else {
-      saveButton.addClass('d-none');
-    }
+    updateRealSelectionCount();
+    syncSelectionCheckboxes();
   }
 
   $('#supplier-filter').on('change', function() {

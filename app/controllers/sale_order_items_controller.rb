@@ -81,8 +81,7 @@ class SaleOrderItemsController < ApplicationController
       end
 
       item.update!(
-        purchase_order_created_at: Time.current,
-        processed: true
+        purchase_order_created_at: Time.current
       )
 
       render json: {
@@ -98,27 +97,6 @@ class SaleOrderItemsController < ApplicationController
       render json: {
         success: false,
         message: "Erro ao processar item: #{e.message}"
-      }, status: :internal_server_error
-    end
-  end
-
-  def ignore_item
-    begin
-      item = SaleOrderItem.find(params[:id])
-      item.update!(ignore_order: true)
-      render json: { 
-        success: true, 
-        message: 'Item ignorado com sucesso!' 
-      }
-    rescue ActiveRecord::RecordNotFound
-      render json: { 
-        success: false, 
-        message: 'Item não encontrado' 
-      }, status: :not_found
-    rescue StandardError => e
-      render json: { 
-        success: false, 
-        message: "Erro ao ignorar item: #{e.message}" 
       }, status: :internal_server_error
     end
   end
@@ -148,8 +126,7 @@ class SaleOrderItemsController < ApplicationController
       end
 
       items.update_all(
-        purchase_order_created_at: Time.current,
-        processed: true
+        purchase_order_created_at: Time.current
       )
 
       render json: { 
@@ -160,6 +137,27 @@ class SaleOrderItemsController < ApplicationController
       render json: { 
         success: false, 
         message: "Erro ao processar itens: #{e.message}" 
+      }, status: :internal_server_error
+    end
+  end
+
+  def ignore_item
+    begin
+      item = SaleOrderItem.find(params[:id])
+      item.update!(ignore_order: true)
+      render json: { 
+        success: true, 
+        message: 'Item ignorado com sucesso!' 
+      }
+    rescue ActiveRecord::RecordNotFound
+      render json: { 
+        success: false, 
+        message: 'Item não encontrado' 
+      }, status: :not_found
+    rescue StandardError => e
+      render json: { 
+        success: false, 
+        message: "Erro ao ignorar item: #{e.message}" 
       }, status: :internal_server_error
     end
   end
