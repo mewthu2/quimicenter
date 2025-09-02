@@ -20,10 +20,8 @@ class SaleOrderItemsController < ApplicationController
       hash[supplier_name] << item
     end
 
-    # Remover grupos vazios
     @items_by_supplier.reject! { |_, items| items.empty? }
 
-    # Calcular estatísticas baseadas no modo de visualização
     @total_items_count = @items.count
     if @view_mode == 'ready'
       @ready_for_processing_count = @total_items_count
@@ -216,6 +214,24 @@ class SaleOrderItemsController < ApplicationController
         success: false, 
         message: 'Item não encontrado' 
       }, status: :not_found
+    end
+  end
+
+  def execute_purchase_order_job
+    begin
+      # Execute the job immediately, bypassing schedule checks
+      job_result = CreatePurchaseOrderJob.new.perform_now
+      
+      render json: {
+        success: true,
+        message: 'Job de criação de pedidos de compra executado com sucesso!'
+      }
+    rescue StandardError => e
+      Rails.logger.error "Error executing purchase order job: #{e.message}"
+      render json: {
+        success: false,
+        message: "Erro ao executar job: #{e.message}"
+      }, status: :internal_server_error
     end
   end
 

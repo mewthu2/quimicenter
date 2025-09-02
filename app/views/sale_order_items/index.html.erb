@@ -30,6 +30,10 @@
           <%= link_to sale_order_items_path(view_mode: 'migrated'), class: "btn btn-outline-info" do %>
             <i class="fas fa-check-double me-2"></i>Ver Migrados
           <% end %>
+          <!-- Added execute job button for immediate job execution -->
+          <button class="btn btn-warning" id="execute-job-btn" title="Executar job de criação de pedidos de compra imediatamente">
+            <i class="fas fa-bolt me-2"></i>Executar Job Agora
+          </button>
         <% end %>
         <button class="btn btn-outline-secondary" id="refresh-data">
           <i class="fas fa-sync-alt me-2"></i>Atualizar
@@ -397,6 +401,44 @@
 <%= javascript_tag do %>
 $(document).ready(function() {
   <% unless @view_mode == 'migrated' %>
+    $('#execute-job-btn').on('click', function() {
+      const button = $(this);
+      const originalHtml = button.html();
+      
+      if (!confirm('Tem certeza que deseja executar o job de criação de pedidos de compra agora? Esta ação irá processar todos os itens prontos.')) {
+        return;
+      }
+      
+      button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Executando Job...');
+      
+      $.ajax({
+        url: '/sale_order_items/execute_purchase_order_job',
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+          if (response.success) {
+            showAlert(response.message, 'success');
+            
+            // Recarrega a página após 2 segundos para mostrar os resultados
+            setTimeout(function() {
+              window.location.reload();
+            }, 2000);
+          } else {
+            showAlert(response.message, 'error');
+            button.prop('disabled', false).html(originalHtml);
+          }
+        },
+        error: function(xhr) {
+          const response = xhr.responseJSON;
+          const message = response ? response.message : 'Erro ao executar job';
+          showAlert(message, 'error');
+          button.prop('disabled', false).html(originalHtml);
+        }
+      });
+    });
+
     function updateSelectionCount() {
       const selectedCount = $('.item-select:checked').length;
       $('#selected-count').text(selectedCount);
@@ -531,7 +573,6 @@ $(document).ready(function() {
           success: function(response) {
             if (response.success) {
               showAlert(response.message, 'success');
-              
               // Recarrega a página após 1 segundo
               setTimeout(function() {
                 window.location.reload();

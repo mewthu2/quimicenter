@@ -1,7 +1,5 @@
 class CreatePurchaseOrderJob < ApplicationJob
-  def perform
-    return unless should_execute_now?
-
+  def perform_now
     items = SaleOrderItem.where(checked_order: true)
                          .where.not(quantity_order: [nil, 0])
                          .where(bling_order_id: nil)
@@ -13,13 +11,23 @@ class CreatePurchaseOrderJob < ApplicationJob
 
     items_by_supplier.delete(nil)
 
+    results = []
     items_by_supplier.each do |supplier_id, supplier_items|
-      create_order_for_supplier(supplier_id, supplier_items)
+      result = create_order_for_supplier(supplier_id, supplier_items)
+      results << result
     end
+
+    results
+  end
+
+  def perform
+    return unless should_execute_now?
+
+    perform_now
   end
 
   def should_execute_now?
-    config = SyncConfiguration.active.first
+    config = SyncConfiguration.find_by(active: true)
     return false unless config&.active?
 
     current_time = Time.current
@@ -36,7 +44,7 @@ class CreatePurchaseOrderJob < ApplicationJob
   end
 
   def self.next_scheduled_execution
-    config = SyncConfiguration.active.first
+    config = SyncConfiguration.find_by(active: true)
     return nil unless config&.active?
 
     current_time = Time.current
@@ -126,8 +134,7 @@ class CreatePurchaseOrderJob < ApplicationJob
         status: :error,
         error: e.message.truncate(255),
         exception: e.class.to_s,
-        message: "Falha ao criar pedido: #{e.message}".truncate(255),
-        backtrace: e.backtrace&.first(5)&.join("\n")&.truncate(500)
+        message: "Falha ao criar pedido: #{e.message}".truncate(255)
       )
       raise e if Rails.env.development? || Rails.env.test?
     ensure

@@ -68,6 +68,7 @@ Rails.application.routes.draw do
       get :index
       post :process_multiple
       post :ignore_multiple
+      post :execute_purchase_order_job
     end
 
     member do
